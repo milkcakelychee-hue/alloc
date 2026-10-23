@@ -287,7 +287,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
         {next && <MonthStrip item={next} before={item} month={month} amountOf={amountOfWith(afterItems)} />}
 
         <div className="list form-rows">
-          <button className="row" onClick={() => setView('group')}><span className="tx"><span className="t1 lab">หมวด</span></span><span className="val">{group.name}</span><Icon name="chevron" size={16} stroke={2} /></button>
+          <button className="row hr-plain" onClick={() => setView('group')}><span className="help-space" aria-hidden="true" /><span className="tx"><span className="t1 lab">หมวด</span></span><span className="val">{group.name}</span><Icon name="chevron" size={16} stroke={2} /></button>
           {expenseLike && (
             <HelpRow id="h-cats" open={help === 'cats'} onHelp={() => setHelp(help === 'cats' ? null : 'cats')} onOpen={() => setView('cats')}
               label="ผูกกับหมวดในบันทึก" sub={<>ใช้ตอนจดรายจ่ายใน<span className="nw">เมนู บันทึก</span></>}
@@ -300,7 +300,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
             <HelpRow id="h-acc" open={help === 'acc'} onHelp={() => setHelp(help === 'acc' ? null : 'acc')} onOpen={() => setView('account')}
               label="แยกบัญชี" sub="โอนเงินก้อนนี้ไปไว้ที่ไหน"
               value={<span className="val">{accounts.find((a) => a.id === accountId)?.name ?? 'ไม่โอน'}</span>}
-              help={<>โอนเงินแยกเข้าบัญชีตามหน้าที่<span className="nw">ทันทีที่เงินเดือนออก</span> ให้รู้ว่าเงินก้อนไหนใช้ทำอะไร เช่น เงินออมโอนไปบัญชีออม ค่ากินโอนไปบัญชีใช้จ่าย · ยอดรวมของแต่ละบัญชีดูได้ที่<span className="nw">"แยกบัญชี" ท้ายหน้าแผน</span></>} />
+              help={<>โอนเงินแยกเข้าบัญชีตามหน้าที่<span className="nw">ทันทีที่เงินเดือนออก</span> ให้รู้ว่า<span className="nw">เงินก้อนไหนใช้ทำอะไร</span> เช่น เงินออมโอนไปบัญชีออม ค่ากินโอนไปบัญชีใช้จ่าย · ยอดรวมของแต่ละบัญชีดูได้ที่<span className="nw">"แยกบัญชี" ท้ายหน้าแผน</span></>} />
           )}
           {kind !== 'income' && (
             <HelpRow id="h-due" open={help === 'due'} onHelp={() => setHelp(help === 'due' ? null : 'due')} onOpen={() => setView('due')}
@@ -329,8 +329,8 @@ function HelpRow({ id, label, sub, value, help, open, onHelp, onOpen }: {
   return (
     <div className="help-row">
       <div className="hr-line">
-        <button className="hr-main" onClick={onOpen}><span className="tx"><span className="t1 lab">{label}</span><span className="t2">{sub}</span></span></button>
         <button className="help-q" aria-label={`${label}คืออะไร`} aria-expanded={open} aria-controls={id} onClick={onHelp}><span>?</span></button>
+        <button className="hr-main" onClick={onOpen}><span className="tx"><span className="t1 lab">{label}</span><span className="t2">{sub}</span></span></button>
         <button className="hr-val" onClick={onOpen} aria-label={`เลือก${label}`}>{value}<Icon name="chevron" size={16} stroke={2} /></button>
       </div>
       {open && <div id={id} className="note hr-help"><span>{help}</span></div>}
