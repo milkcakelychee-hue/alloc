@@ -140,7 +140,7 @@ export default function Goals() {
                   <>
                     <span className="ic"><Icon name={CAT[t].icon} size={20} stroke={1.9} /></span>
                     <span className="nm">{t === 'goalSpend' ? <>รายจ่าย<br />ตามเป้าหมาย</> : CAT[t].name}</span>
-                    <span className="ex">{EMPTY_EX[t]}</span>
+                    <span className="ex">{EMPTY_EX[t].split(' · ').map((x, i) => <span key={x}>{i ? ' · ' : ''}<span className="nw">{x}</span></span>)}</span>
                     <span className="cta"><Icon name="plus" size={16} stroke={2.4} />{t === 'pvd' ? 'ตั้งค่า PVD' : 'ตั้งเป้า'}</span>
                   </>
                 ) : (

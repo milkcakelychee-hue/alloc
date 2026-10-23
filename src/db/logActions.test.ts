@@ -57,3 +57,26 @@ describe('บันทึก', () => {
     expect([(await d.planItems.get(a.id))!.logCategoryIds, (await d.planItems.get(b.id))!.logCategoryIds]).toEqual([[c.id], []]);
   });
 });
+
+describe('แก้/ลบหมวด', () => {
+  it('แก้ชื่อหมวดที่แอปมีให้', async () => {
+    const { updateCategory } = await import('./logActions');
+    const d = await fresh();
+    await updateCategory(d, 'c-fun', { name: ' สตรีมมิ่ง ' });
+    expect((await d.logCategories.get('c-fun'))!.name).toBe('สตรีมมิ่ง');
+  });
+
+  it('ลบหมวด: รายการย้ายไป อื่น ๆ · เอาออกจากแผน · อื่น ๆ ลบไม่ได้', async () => {
+    const { deleteCategory } = await import('./logActions');
+    const d = await fresh();
+    await addEntry(d, { type: 'expense', amount: B(220), categoryId: 'c-fun', date: '2026-10-05', note: 'ดูหนัง' });
+    const it1 = item('variable', 'บันเทิง', 500, { logCategoryIds: ['c-fun', 'c-drink'] });
+    await d.planItems.put(it1);
+    expect(await deleteCategory(d, 'c-fun')).toBe(1);
+    expect(await d.logCategories.get('c-fun')).toBeUndefined();
+    expect((await d.logEntries.toArray())[0].categoryId).toBe('c-other');
+    expect((await d.planItems.get(it1.id))!.logCategoryIds).toEqual(['c-drink']);
+    expect(await deleteCategory(d, 'c-other')).toBe(0);
+    expect(await d.logCategories.get('c-other')).toBeDefined();
+  });
+});

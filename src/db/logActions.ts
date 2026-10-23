@@ -79,3 +79,29 @@ export async function setCategoryLinks(db: AllocDB, categoryId: string, planItem
 }
 
 export const cycleOfEntry = (e: LogEntry): Month | null => e.cycleMonth ?? null;
+
+/** แก้ชื่อ ไอคอน สีของหมวด (รายการเก่ายังอยู่ในหมวดเดิม) */
+export async function updateCategory(db: AllocDB, id: string, patch: Partial<Pick<LogCategory, 'name' | 'icon' | 'bg' | 'fg'>>, now = Date.now()) {
+  await db.logCategories.update(id, { ...patch, ...(patch.name ? { name: patch.name.trim() } : {}), updatedAt: now });
+}
+
+/** หมวดสำรองที่ลบไม่ได้: รายการจากการ์ด "จ่ายหรือยัง" ที่ไม่ได้ผูกหมวดใช้หมวดนี้ */
+export const FALLBACK_CAT: Record<LogType, string> = { expense: 'c-other', income: 'i-other' };
+
+/**
+ * ลบหมวด: รายการที่จดในหมวดนี้ย้ายไป "อื่น ๆ" ของประเภทเดียวกัน · เอาหมวดออกจากรายการในแผนที่ผูกไว้
+ * หมวด "อื่น ๆ" ลบไม่ได้
+ */
+export async function deleteCategory(db: AllocDB, id: string, now = Date.now()) {
+  const cat = await db.logCategories.get(id);
+  if (!cat || id === FALLBACK_CAT[cat.type]) return 0;
+  const to = FALLBACK_CAT[cat.type];
+  return db.transaction('rw', [db.logCategories, db.logEntries, db.planItems], async () => {
+    const moved = await db.logEntries.where('categoryId').equals(id).modify({ categoryId: to, updatedAt: now });
+    for (const it of await db.planItems.toArray()) {
+      if (it.logCategoryIds.includes(id)) await db.planItems.update(it.id, { logCategoryIds: it.logCategoryIds.filter((c) => c !== id), updatedAt: now });
+    }
+    await db.logCategories.delete(id);
+    return moved;
+  });
+}

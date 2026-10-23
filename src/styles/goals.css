@@ -348,3 +348,7 @@
 .gx-card .hd { gap: 10px; }
 .gx-card .hd .gx-iconbtn { width: 40px; height: 40px; }
 .gx-card .hd .gx-editic { width: 32px; margin-right: -2px; }
+/* ก้อนหมวดทุกก้อนสูงเท่ากัน (รวมก้อนว่างเส้นประ) · ข้อความตัวอย่างตัดเหลือ 2 บรรทัด */
+.gx-grid { grid-auto-rows: 1fr; }
+.gx-tile { flex: 1; }
+.t-empty .ex { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

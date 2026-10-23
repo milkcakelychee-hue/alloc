@@ -29,6 +29,16 @@ const P: Record<string, ReactNode> = {
 };
 export const NEW_CAT_ICONS = ['n-clock', 'n-heart', 'n-basket', 'n-house', 'n-bike', 'n-up'];
 export const NEW_CAT_BGS = ['#FCE9DF', '#E4EEF8', '#E6F2EA', '#F6E4EF', '#FFF1D6', '#ECE6F7', '#FBE3E3', '#E8F3E4'];
+/** สีเส้นคู่กับสีพื้น (ตามหมวดตั้งต้น) */
+export const FG_OF: Record<string, string> = {
+  '#FCE9DF': '#A6461F', '#E4EEF8': '#2A5F8F', '#E6F2EA': '#2F6B47', '#F6E4EF': '#93306A',
+  '#FFF1D6': '#8A5A00', '#ECE6F7': '#5B3FA0', '#FBE3E3': '#A63D3D', '#E8F3E4': '#3C6B2A'
+};
+/** ไอคอนที่เลือกได้ตอนเพิ่ม/แก้หมวด */
+export const CAT_ICONS = {
+  expense: ['food', 'drink', 'travel', 'household', 'shopping', 'health', 'fun', 'bill', 'edu', 'pet', 'other', 'n-clock', 'n-heart', 'n-basket', 'n-house', 'n-bike'],
+  income: ['salary', 'side', 'refund', 'dividend', 'gift', 'other', 'n-clock', 'n-heart', 'n-up', 'n-house']
+};
 
 export function CatIcon({ icon, size = 20 }: { icon: string; size?: number }) {
   return (
