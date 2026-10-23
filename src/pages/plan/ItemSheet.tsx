@@ -35,6 +35,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
   const [dueDay, setDueDay] = useState<number | null>(item?.dueDay ?? null);
   const [newAcc, setNewAcc] = useState('');
   const [busy, setBusy] = useState(false);
+  const [help, setHelp] = useState<'cats' | 'acc' | 'due' | null>(null);
 
   const group = groups.find((g) => g.id === gid)!;
   const kind = group.kind;
@@ -120,7 +121,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
     const usedBy = (cid: string) => items.filter((i) => i.id !== item?.id && i.logCategoryIds.includes(cid)).map((i) => i.name);
     return sub('ผูกกับหมวดในบันทึก', (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <p className="muted" style={{ margin: 0, fontSize: 13 }}>จดรายจ่ายในหมวดที่ติ๊ก แล้วนับเข้างบ <b style={{ color: 'var(--ink)' }}>"{name || 'รายการนี้'}"</b> · <span className="nw">หมวดเดียวใช้กับหลายรายการได้</span> งบรวมกัน · <span className="nw">ไม่ผูก = นอกงบ</span></p>
+        <p className="muted" style={{ margin: 0, fontSize: 13 }}>เวลาจดรายจ่ายใน<span className="nw">เมนู บันทึก</span> ในหมวดที่ติ๊ก ยอดจะนับเข้างบ <b style={{ color: 'var(--ink)' }}>"{name || 'รายการนี้'}"</b> · <span className="nw">หมวดเดียวใช้กับหลายรายการได้</span> งบรวมกัน · <span className="nw">ไม่ผูก = นอกงบ</span></p>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="muted num" style={{ fontSize: 13 }}>เลือกแล้ว {effCats.length} หมวด</span>
           <button className="link-btn" onClick={() => { setCats(ICON_DEFAULT_CATEGORIES[icon] ?? []); setCatsTouched(true); }}>ใช้ค่าเริ่มต้นตามไอคอน</button>
@@ -252,44 +253,61 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
         <label className="field"><span className="label">ยอดในแผน (บาท)</span>
           <input className="num amt" inputMode="decimal" autoComplete="off" placeholder="0.00" value={amountText} aria-invalid={amountBad}
             onChange={(e) => setAmountText(e.target.value)} onBlur={() => amount !== null && setAmountText(formatBaht(amount))} />
-          {amountBad ? <span className="err">ใส่ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง</span>
-            : item && month in item.monthOverrides && <span className="hint num">ปกติ {formatBaht(item.defaultAmount)} / เดือน</span>}
+          {amountBad && <span className="err">ใส่ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง</span>}
         </label>
 
         {item && (
-          <div className="field"><span className="label" id="apply">ใช้ยอดนี้กับ</span>
-            <div className="radio3 two" role="radiogroup" aria-labelledby="apply">
-              <button role="radio" aria-checked={scope === 'month'} onClick={() => setScope('month')}>เฉพาะ <span className="num">{shortM(month)}</span></button>
-              <button role="radio" aria-checked={scope === 'from'} onClick={() => setScope('from')}>ทุกเดือนตั้งแต่ <span className="num">{shortM(month).split(' ')[0]}</span></button>
+          <div className="field"><span className="label" id="apply">ยอดนี้ใช้กับเดือนไหน</span>
+            <div className="list" role="radiogroup" aria-labelledby="apply">
+              <button className="row" role="radio" aria-checked={scope === 'month'} onClick={() => setScope('month')}>
+                <span className={`radio-dot${scope === 'month' ? ' on' : ''}`} aria-hidden="true" />
+                <span className="tx"><span className="t1">เฉพาะ <span className="num">{shortM(month)}</span></span>
+                  <span className="t2">เดือนอื่น<span className="nw">ยังเป็นยอดปกติ</span> <span className="num nw">{formatBaht(item.defaultAmount)}</span></span></span>
+              </button>
+              <button className="row" role="radio" aria-checked={scope === 'from'} onClick={() => setScope('from')}>
+                <span className={`radio-dot${scope === 'from' ? ' on' : ''}`} aria-hidden="true" />
+                <span className="tx"><span className="t1">ทุกเดือน ตั้งแต่ <span className="num">{shortM(month)}</span></span>
+                  <span className="t2">เปลี่ยน<span className="nw">ยอดปกติ</span> · <span className="nw">เดือนก่อนหน้ายังเป็นยอดเดิม</span></span></span>
+              </button>
             </div>
           </div>
         )}
 
+        <div className="field"><span className="label">รายการนี้อยู่ในแผนช่วงไหน</span>
+          <div className="list form-rows">
+            <button className="row" onClick={() => setView('period')}>
+              <span className="ic"><Icon name="calendar" size={18} stroke={2} /></span>
+              <span className="tx"><span className="t1 num">{shortM(period.start)} – {period.endMode === 'month' && period.endMonth ? shortM(period.endMonth) : period.endMode === 'goal' ? 'ถึงเป้า' : 'ไม่กำหนด'}</span>
+                <span className="t2">เดือนนอกช่วงนี้<span className="nw">ไม่มีรายการนี้</span> (ยอด 0)</span></span>
+              <Icon name="chevron" size={16} stroke={2} />
+            </button>
+          </div>
+        </div>
+
+        {next && <MonthStrip item={next} before={item} month={month} amountOf={amountOfWith(afterItems)} />}
+
         <div className="list form-rows">
           <button className="row" onClick={() => setView('group')}><span className="tx"><span className="t1 lab">หมวด</span></span><span className="val">{group.name}</span><Icon name="chevron" size={16} stroke={2} /></button>
           {expenseLike && (
-            <button className="row" onClick={() => setView('cats')}>
-              <span className="tx"><span className="t1 lab">ผูกกับหมวดในบันทึก</span><span className="t2">{catChips.length ? 'แตะเพื่อแก้' : 'ไม่ผูก = นอกงบ'}</span></span>
-              <span className="chips">{catChips.slice(0, 2).map((c) => <span key={c!.id} className="chip" style={{ background: c!.bg, color: c!.fg }}>{c!.name}</span>)}{catChips.length > 2 && <span className="chip">+{catChips.length - 2}</span>}</span>
-              <Icon name="chevron" size={16} stroke={2} />
-            </button>
+            <HelpRow id="h-cats" open={help === 'cats'} onHelp={() => setHelp(help === 'cats' ? null : 'cats')} onOpen={() => setView('cats')}
+              label="ผูกกับหมวดในบันทึก" sub={<>ใช้ตอนจดรายจ่ายใน<span className="nw">เมนู บันทึก</span></>}
+              value={catChips.length
+                ? <span className="chips">{catChips.slice(0, 1).map((c) => <span key={c!.id} className="chip" style={{ background: c!.bg, color: c!.fg }}>{c!.name}</span>)}{catChips.length > 1 && <span className="chip">+{catChips.length - 1}</span>}</span>
+                : <span className="val muted">ไม่ผูก</span>}
+              help={<>เวลาจดรายจ่ายใน<b>เมนู บันทึก</b> แล้วเลือกหมวดที่ผูกไว้ ยอดจะ<span className="nw">นับเข้างบของรายการนี้</span> เช่น ผูก "ค่ากิน" กับ อาหาร + เครื่องดื่ม แล้วจดข้าว 50 บาทในหมวดอาหาร <span className="nw">งบค่ากินจะเหลือน้อยลง 50 บาท</span> · หมวดเดียว<span className="nw">ผูกได้หลายรายการ</span> งบรวมกัน · หมวดที่ไม่ผูกกับรายการไหน<span className="nw">นับเป็นนอกงบ</span></>} />
           )}
           {kind !== 'income' && (
-            <button className="row" onClick={() => setView('account')}>
-              <span className="tx"><span className="t1 lab">แยกบัญชี</span><span className="t2">โอนเงินก้อนนี้ไปไว้ที่ไหน</span></span>
-              <span className="val">{accounts.find((a) => a.id === accountId)?.name ?? 'ไม่โอน'}</span><Icon name="chevron" size={16} stroke={2} />
-            </button>
+            <HelpRow id="h-acc" open={help === 'acc'} onHelp={() => setHelp(help === 'acc' ? null : 'acc')} onOpen={() => setView('account')}
+              label="แยกบัญชี" sub="โอนเงินก้อนนี้ไปไว้ที่ไหน"
+              value={<span className="val">{accounts.find((a) => a.id === accountId)?.name ?? 'ไม่โอน'}</span>}
+              help={<>โอนเงินแยกเข้าบัญชีตามหน้าที่<span className="nw">ทันทีที่เงินเดือนออก</span> ให้รู้ว่าเงินก้อนไหนใช้ทำอะไร เช่น เงินออมโอนไปบัญชีออม ค่ากินโอนไปบัญชีใช้จ่าย · ยอดรวมของแต่ละบัญชีดูได้ที่<span className="nw">"แยกบัญชี" ท้ายหน้าแผน</span></>} />
           )}
           {kind !== 'income' && (
-            <button className="row" onClick={() => setView('due')}>
-              <span className="tx"><span className="t1 lab">ครบกำหนดวันที่</span><span className="t2">มีการ์ดเตือนในหน้าหลัก</span></span>
-              <span className="val num">{dueDay ?? 'ไม่กำหนด'}</span><Icon name="chevron" size={16} stroke={2} />
-            </button>
+            <HelpRow id="h-due" open={help === 'due'} onHelp={() => setHelp(help === 'due' ? null : 'due')} onOpen={() => setView('due')}
+              label="ครบกำหนดวันที่" sub="ใส่หรือไม่ใส่ก็ได้"
+              value={<span className="val num">{dueDay ?? 'ไม่กำหนด'}</span>}
+              help={<>เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span> ในหน้าหลัก ติ๊กจ่ายแล้ว แอป<span className="nw">บันทึกรายจ่ายในเมนู บันทึก</span>ให้เอง ด้วยยอดในแผนและหมวดแรกที่ผูกไว้</>} />
           )}
-          <button className="row" onClick={() => setView('period')}>
-            <span className="tx"><span className="t1 lab">ช่วงเวลา</span></span>
-            <span className="val num">{shortM(period.start)} – {period.endMode === 'month' && period.endMonth ? shortM(period.endMonth) : period.endMode === 'goal' ? 'ถึงเป้า' : 'ไม่กำหนด'}</span><Icon name="chevron" size={16} stroke={2} />
-          </button>
         </div>
 
         {next && diff !== 0 && (
@@ -301,5 +319,46 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
         {!isNew && <button className="btn text-danger" onClick={() => setView('delete')}>ลบหรือหยุดรายการนี้</button>}
       </div>
     </Sheet>
+  );
+}
+
+/** แถวที่มีปุ่ม ? อธิบายเพิ่ม (กดแถว = เปิดตัวเลือก · กด ? = เปิด/ปิดคำอธิบาย) */
+function HelpRow({ id, label, sub, value, help, open, onHelp, onOpen }: {
+  id: string; label: string; sub: React.ReactNode; value: React.ReactNode; help: React.ReactNode; open: boolean; onHelp: () => void; onOpen: () => void;
+}) {
+  return (
+    <div className="help-row">
+      <div className="hr-line">
+        <button className="hr-main" onClick={onOpen}><span className="tx"><span className="t1 lab">{label}</span><span className="t2">{sub}</span></span></button>
+        <button className="help-q" aria-label={`${label}คืออะไร`} aria-expanded={open} aria-controls={id} onClick={onHelp}><span>?</span></button>
+        <button className="hr-val" onClick={onOpen} aria-label={`เลือก${label}`}>{value}<Icon name="chevron" size={16} stroke={2} /></button>
+      </div>
+      {open && <div id={id} className="note hr-help"><span>{help}</span></div>}
+    </div>
+  );
+}
+
+/** ยอดของรายการ 6 เดือน (ก่อน 2 เดือน ถึงหลัง 3 เดือน) หลังบันทึก ให้เห็นว่ายอดกับช่วงเวลาทำงานร่วมกันยังไง */
+function MonthStrip({ item, before, month, amountOf }: { item: PlanItem; before: PlanItem | null; month: Month; amountOf: (i: PlanItem, m: Month) => number }) {
+  const months = Array.from({ length: 6 }, (_, i) => addMonths(month, i - 2));
+  const short = (s: number) => (s % 100 === 0 ? formatBaht(s, { decimals: false }) : formatBaht(s));
+  return (
+    <div className="mstrip" aria-label="ยอดแต่ละเดือนหลังบันทึก">
+      <span className="label">ยอดแต่ละเดือนหลังบันทึก</span>
+      <div className="mstrip-row">
+        {months.map((m) => {
+          const a = amountOf(item, m);
+          // เดือนก่อนหน้าที่ถูกเก็บยอดเดิมไว้ตอนเลือก "ทุกเดือน" ไม่ใช่ยอดเฉพาะเดือนที่ผู้ใช้ตั้ง
+          const special = m in item.monthOverrides && item.monthOverrides[m] !== item.defaultAmount && (m >= month || (!!before && m in before.monthOverrides));
+          return (
+            <span key={m} className={`ms${m === month ? ' cur' : ''}${a === 0 ? ' off' : ''}${special ? ' special' : ''}`}>
+              <small>{thaiMonth(m).split(' ')[0]}</small>
+              <b className="num">{a === 0 ? '–' : short(a)}</b>
+            </span>
+          );
+        })}
+      </div>
+      <span className="ms-legend"><i className="lg cur" />เดือนที่แก้ <i className="lg special" />ยอดเฉพาะเดือน <i className="lg off" />นอกช่วง</span>
+    </div>
   );
 }
