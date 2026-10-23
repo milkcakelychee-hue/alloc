@@ -590,3 +590,37 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .pe-bot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.16); font-size: 13px; color: var(--hero-ink2); }
 .pe-v b { font-size: 17px; font-weight: 600; color: var(--hero-ink); margin-left: 4px; }
 .pe-v b.neg { color: #FFB4A3; }
+
+/* หน้าหลัก สรุป (บอร์ด HomeB) */
+.hero.assets { display: flex; flex-direction: column; gap: 12px; }
+.as-top { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--hero-ink2); }
+.as-top button { width: 44px; height: 44px; margin: -12px -12px -12px 0; color: var(--hero-ink2); display: flex; align-items: center; justify-content: center; }
+.as-v { font-weight: 700; letter-spacing: -.8px; line-height: 1.1; color: var(--hero-ink); }
+.as-v .big { font-size: 42px; } .as-v .dec { font-size: 22px; font-weight: 600; }
+.as-v .u { font-size: 15px; font-weight: 500; margin-left: 6px; color: var(--hero-ink2); letter-spacing: 0; }
+.as-split { display: flex; align-items: center; gap: 14px; padding-top: 14px; margin-top: 2px; border-top: 1px solid rgba(255, 255, 255, .16); }
+.as-legend { flex: 1; display: flex; gap: 14px; flex-wrap: wrap; }
+.as-legend > div { display: flex; align-items: center; gap: 7px; }
+.as-legend .sw { width: 22px; height: 22px; border-radius: 7px; color: #1E3B2C; display: flex; align-items: center; justify-content: center; flex: none; }
+.as-legend .t { display: flex; flex-direction: column; line-height: 1.4; }
+.as-legend .t > span:first-child { font-size: 12px; color: var(--hero-ink2); } .as-legend .t b { color: var(--hero-ink); font-weight: 700; }
+.as-legend .t > span + span { font-size: 11px; color: var(--hero-ink2); }
+.card.sr { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.sr-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+.sr-top > div { display: flex; flex-direction: column; gap: 2px; }
+.sr-top .k { font-size: 13px; color: var(--ink3); } .sr-top .k + .k, .sr-top > .k { font-size: 12px; }
+.sr-top .v { font-weight: 700; letter-spacing: -.5px; line-height: 1.2; } .sr-top .v b { font-size: 32px; } .sr-top .v small { font-size: 18px; font-weight: 600; }
+.sr-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; gap: 2px; }
+.sr-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.sr-tiles > div { display: flex; flex-direction: column; gap: 1px; padding: 7px 9px; border-radius: 12px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); min-width: 0; }
+.sr-tiles .h { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink2); }
+.sr-tiles .h i { width: 8px; height: 8px; border-radius: 2px; }
+.sr-tiles .b { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; }
+.sr-tiles .b span:first-child { font-size: 13px; font-weight: 700; } .sr-tiles .b span + span { font-size: 10.5px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.todo-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 12px; min-height: 64px; box-sizing: border-box; border-radius: 20px; color: var(--ink); text-decoration: none; text-align: left; width: 100%; }
+.todo-card.red { background: var(--danger-bg); } .todo-card.amb { background: var(--warning-bg); }
+.todo-card .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--card); display: flex; align-items: center; justify-content: center; flex: none; }
+.todo-card.red .ic { color: var(--danger); } .todo-card.amb .ic { color: var(--warning); }
+.todo-card .tx { flex: 1; display: flex; flex-direction: column; gap: 1px; line-height: 1.45; min-width: 0; }
+.todo-card .t1 { font-size: 15px; font-weight: 600; } .todo-card .t2 { font-size: 13px; color: var(--ink2); }
+.todo-card > svg { color: var(--ink3); flex: none; }

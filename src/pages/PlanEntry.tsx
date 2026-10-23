@@ -27,7 +27,7 @@ export function PlanEntry() {
       <span className="pe-bot">
         <span className="pe-m">แผน <span className="num">{thaiMonth(cur)}</span></span>
         {hasPlan
-          ? <span className="pe-v">เงินเหลือ <b className={`num${t.leftover < 0 ? ' neg' : ''}`}>{t.leftover < 0 ? '−' : ''}{formatBaht(Math.abs(t.leftover))}</b></span>
+          ? <span className="pe-v">เงินเหลือ {s.hideNumbers ? <b>••••••</b> : <b className={`num${t.leftover < 0 ? ' neg' : ''}`}>{t.leftover < 0 ? '−' : ''}{formatBaht(Math.abs(t.leftover))}</b>}</span>
           : <span className="pe-v">ยังไม่มีแผน · <b>เริ่มวางแผน</b></span>}
       </span>
     </Link>

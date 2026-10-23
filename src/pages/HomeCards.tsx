@@ -1,5 +1,5 @@
 // การ์ดในหน้าหลัก (ต้องทำ): เงินเดือนเข้าแล้วหรือยัง · ก่อนเงินเข้า · จ่ายหรือยัง (ต้นแบบ B + docs/decisions.md)
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { applyActualSalary, confirmPay, markDuePaid, salaryItemFor, snoozePay } from '../db/actions';
@@ -14,7 +14,8 @@ import { weekday } from '../calc/payday';
 import { iconOf } from './plan/planUi';
 import { usePlanData } from './plan/usePlanData';
 
-export function HomeCards() {
+/** extra: การ์ดต้องทำอื่นจากหน้าหลัก (วางแผนเดือนหน้า · สำรองข้อมูล) ต่อท้าย */
+export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
   const data = usePlanData();
   const checks = useLiveQuery(() => db.paidChecks.toArray(), []);
   const receipts = useLiveQuery(() => db.payReceipts.toArray(), []);
@@ -81,12 +82,12 @@ export function HomeCards() {
   })();
 
   const up = pp.upcoming;
-  const count = (pp.confirm ? 1 : 0) + due.length + (up ? 1 : 0);
+  const count = (pp.confirm ? 1 : 0) + due.length + (up ? 1 : 0) + extra.length;
   if (count === 0) return toast ? <div className="toast" role="status">{toast}</div> : null;
 
   return (
     <section className="todo" aria-labelledby="todo-h">
-      <div className="todo-h"><h2 id="todo-h">ต้องทำ</h2><span className="num muted">{(pp.confirm ? 1 : 0) + due.length}</span></div>
+      <div className="todo-h"><h2 id="todo-h">ต้องทำ</h2><span className="num muted">{(pp.confirm ? 1 : 0) + due.length + extra.length}</span></div>
       {confirmCard}
       {up && (
         <div className={`pay-card${up.expected > up.nominal ? ' late' : ''}`}>
@@ -120,6 +121,7 @@ export function HomeCards() {
           </div>
         );
       })}
+      {extra}
       {toast && <div className="toast" role="status">{toast}</div>}
     </section>
   );

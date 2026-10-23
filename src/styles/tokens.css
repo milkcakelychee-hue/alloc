@@ -26,6 +26,7 @@
   --peach: #8A4B14;    --peach-bg: #FAEBDD;
   --inv: #2A5F8F;      --inv-bg: #E4EEF8;
   --track: #F1F1EC;
+  --exp: #DCDCD4;
   --shadow: rgba(22, 35, 28, .08);
   --scrim: rgba(13, 22, 17, .42);
 
@@ -69,6 +70,7 @@
   --peach: #E8A770;    --peach-bg: #2F2113;
   --inv: #7FB0DE;      --inv-bg: #13212F;
   --track: #243A2E;
+  --exp: #3A4B41;
   --shadow: rgba(0, 0, 0, .4);
 
   --c1: #e0602e; --c3: #c08400; --c4: #d96a93; --c5: #7462e0;
