@@ -142,7 +142,7 @@ export function StyleSheet({ name, icon, color, onPick, onClose }: { name: strin
 }
 
 /** แก้เป้า: ชื่อ สี/ไอคอน ยอดเป้า วันครบ โน้ต (ไม่เปลี่ยนแผนเอง) */
-export function EditGoalSheet({ goal, onClose }: { goal: Goal; onClose: () => void; focusDue?: boolean }) {
+export function EditGoalSheet({ goal, onClose, onDelete }: { goal: Goal; onClose: () => void; onDelete?: () => void }) {
   const [name, setName] = useState(goal.name);
   const [style, setStyle] = useState({ icon: goal.icon, color: goal.color });
   const [target, setTarget] = useState(baht(goal.target));
@@ -178,6 +178,7 @@ export function EditGoalSheet({ goal, onClose }: { goal: Goal; onClose: () => vo
           onClose();
         }}>บันทึก</button>
       </div>
+      {onDelete && <button className="gx-ghost gx-delgoal" onClick={onDelete}><Icon name="close" size={16} stroke={2.2} />ลบเป้านี้</button>}
       {picking && <StyleSheet name={name} icon={style.icon} color={style.color} onPick={setStyle} onClose={() => setPicking(false)} />}
     </GSheet>
   );

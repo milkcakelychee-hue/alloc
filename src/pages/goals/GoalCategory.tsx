@@ -19,7 +19,6 @@ export default function GoalCategory() {
   const { cat } = useParams();
   const type = typeOfPath(cat);
   const data = useGoalsData();
-  const [edit, setEdit] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [adjust, setAdjust] = useState<Goal | null>(null);
   const [editing, setEditing] = useState<{ goal: Goal; due?: boolean } | null>(null);
@@ -44,8 +43,7 @@ export default function GoalCategory() {
   return (
     <main className="page gx">
       <BackHead to="/goals" label="กลับไปหน้าเป้าหมาย" title={CAT[type].name}>
-        <button className="gx-hbtn" aria-pressed={edit} onClick={() => setEdit(!edit)}>{edit ? 'เสร็จ' : 'แก้ไข'}</button>
-        {!spend && <Link to={`/goals/new?type=${type}`} aria-label="เพิ่มเป้าในหมวดนี้" className="gx-add"><Icon name="plus" size={20} stroke={2.2} /></Link>}
+        {!spend && <Link to={`/goals/new?type=${type}&from=${CAT[type].path}`} aria-label="เพิ่มเป้าในหมวดนี้" className="gx-add"><Icon name="plus" size={20} stroke={2.2} /></Link>}
       </BackHead>
 
       <section className={`gx-sum ${SUM_BG[type]}`} aria-label={`สรุปหมวด${CAT[type].name}`}>
@@ -76,18 +74,13 @@ export default function GoalCategory() {
               <GoalRing pct={o.pct} icon={g.icon} />
               <span className="nm">
                 <span>{g.name}</span>
-                <span className="n2 num"><b>{baht(o.balance)}</b> / {baht(g.target)} · <b className="pc">{pctText(o.pct)}</b></span>
+                <span className="n2 num"><span className="nw"><b>{baht(o.balance)}</b> / {baht(g.target)}</span> <span className="nw">· <b className="pc">{pctText(o.pct)}</b></span></span>
               </span>
+              <button className="gx-editic" aria-label={`แก้เป้า ${g.name}`} onClick={() => setEditing({ goal: g })}><Icon name="edit" size={18} stroke={2} /></button>
               {spend
                 ? g.dueMonth && <span className="gx-pill num">{thaiMonth(g.dueMonth)}</span>
                 : <button className="gx-iconbtn" aria-label={`ดูเพิ่มเติม ${g.name}`} aria-expanded={expanded} onClick={() => setOpen({ ...open, [g.id]: !expanded })}><Icon name="chevDown" size={20} stroke={2} /></button>}
             </div>
-            {edit && (
-              <div className="gx-editrow">
-                <button onClick={() => setEditing({ goal: g })}><Icon name="edit" size={16} stroke={2} />แก้เป้า</button>
-                <button className="dl" onClick={() => setDel(g)}><Icon name="close" size={16} stroke={2.2} />ลบเป้า</button>
-              </div>
-            )}
             {expanded && (spend
               ? <SpendBody g={g} o={o} data={data} cur={cur} onAdjust={() => setAdjust(g)} />
               : <SaveBody g={g} o={o} type={type} items={data.items} onDue={() => setEditing({ goal: g, due: true })} onAdjust={() => setAdjust(g)} />)}
@@ -95,12 +88,12 @@ export default function GoalCategory() {
         );
       })}
 
-      <Link to={`/goals/new?type=${type}`} className={`gx-dashadd${spend ? ' spend' : ''}`}>
+      <Link to={`/goals/new?type=${type}&from=${CAT[type].path}`} className={`gx-dashadd${spend ? ' spend' : ''}`}>
         <Icon name="plus" size={18} stroke={2.2} />{spend ? 'เพิ่มเป้า เช่น ทริปเที่ยวเพชรบุรี' : `เพิ่มเป้าในหมวด${CAT[type].name}`}
       </Link>
 
       {adjust && <AdjustSheet goal={adjust} balance={goalBalance(adjust, data.adjustments)} onClose={() => setAdjust(null)} />}
-      {editing && <EditGoalSheet goal={editing.goal} focusDue={editing.due} onClose={() => setEditing(null)} />}
+      {editing && <EditGoalSheet goal={editing.goal} onDelete={() => { setDel(editing.goal); setEditing(null); }} onClose={() => setEditing(null)} />}
       {del && (
         <div className="gx-alert-wrap" onClick={() => setDel(null)}>
           <div className="gx-alert" role="alertdialog" aria-labelledby="dg-title" onClick={(e) => e.stopPropagation()}>

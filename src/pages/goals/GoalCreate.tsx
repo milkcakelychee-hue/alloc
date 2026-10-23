@@ -28,6 +28,8 @@ export default function GoalCreate() {
   const nav = useNavigate();
   const [sp] = useSearchParams();
   const qType = sp.get('type') as GoalType | null;
+  // เปิดจากหน้าหมวด: ปิดแล้วกลับไปหมวดเดิม
+  const back = sp.get('from') ? `/goals/${sp.get('from')}` : '/goals';
   const [type, setType] = useState<GoalType | null>(qType && GOAL_TYPES.includes(qType) ? qType : null);
   const [name, setName] = useState('');
   const [style, setStyle] = useState<{ icon: string; color: string } | null>(null);
@@ -89,7 +91,7 @@ export default function GoalCreate() {
   return (
     <main className="page gx" style={{ gap: 14 }}>
       <div className="gx-head">
-        <Link to="/goals" aria-label="ปิด" className="gx-hbtn gx-sq"><Icon name="close" size={18} stroke={2.2} /></Link>
+        <Link to={back} aria-label="ปิด" className="gx-hbtn gx-sq"><Icon name="close" size={18} stroke={2.2} /></Link>
         <h1 style={{ fontSize: 20 }}>เป้าหมายใหม่</h1>
       </div>
 

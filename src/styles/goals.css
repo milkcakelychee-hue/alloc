@@ -342,3 +342,9 @@
 .gx-monthf input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; border: 0; padding: 0; cursor: pointer; }
 .gx-monthf input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .gx-seg2.three button { font-size: 13px; padding: 0 2px; white-space: nowrap; }
+.gx-editic { width: 36px; height: 44px; border-radius: 12px; color: var(--ink3); display: flex; align-items: center; justify-content: center; flex: none; margin-right: -4px; }
+.gx-delgoal { color: var(--danger); background: transparent; }
+:root[data-theme='dark'] .gx-delgoal { color: #F08F7A; }
+.gx-card .hd { gap: 10px; }
+.gx-card .hd .gx-iconbtn { width: 40px; height: 40px; }
+.gx-card .hd .gx-editic { width: 32px; margin-right: -2px; }

@@ -35,9 +35,7 @@ export default function GoalPvd() {
 
   return (
     <main className="page gx">
-      <BackHead to="/goals" label="กลับไปหน้าเป้าหมาย" title="PVD">
-        <button className="gx-hbtn" onClick={() => setSheet('edit')}>แก้ไข</button>
-      </BackHead>
+      <BackHead to="/goals" label="กลับไปหน้าเป้าหมาย" title="PVD" />
 
       <section className="gx-sum t-pvd" aria-label="สรุป PVD">
         <div className="row1">
@@ -47,6 +45,7 @@ export default function GoalPvd() {
             <span className="s sub">กองทุนสำรองเลี้ยงชีพ · แยกจากงบ</span>
           </span>
           <span className="p num">{pctText(o.pct)}</span>
+          <button className="gx-editic" aria-label="แก้เป้า PVD" onClick={() => setSheet('edit')}><Icon name="edit" size={18} stroke={2} /></button>
         </div>
         <span className="gx-bar"><span style={{ width: barW(o.pct) }} /></span>
         <span className="foot sub num">{o.done ? 'ครบเป้าแล้ว' : <>เหลืออีก <b>{baht(o.remaining)}</b>{o.reachMonth && <> · ครบเป้าประมาณ <b>{thaiMonth(o.reachMonth)}</b></>}</>}</span>
