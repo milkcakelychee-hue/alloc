@@ -17,6 +17,7 @@ export interface Settings extends Base {
   lastBackupAt: number | null;
   schemaVersion: number;
   receiveInfo: string; // ข้อความช่องทางรับเงินในใบสรุปบิล ห้ามเก็บเลขบัตร/รหัส
+  onboardedAt?: number | null; // ผ่านหน้า Welcome แล้ว (ไม่มี = ยังไม่ผ่าน)
 }
 
 export interface Account extends Base { name: string; order: number }

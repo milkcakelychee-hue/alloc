@@ -10,7 +10,14 @@ export const P: Record<string, ReactNode> = {
   info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>,
   plan: <><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></>,
   bill: <><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z" /><path d="M9 8.5h6M9 12h6" /></>,
-  chevron: <path d="m9 5 7 7-7 7" />
+  chevron: <path d="m9 5 7 7-7 7" />,
+  back: <path d="m15 5-7 7 7 7" />,
+  check: <path d="m5 12 5 5 9-10" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  restore: <><path d="M4 12a8 8 0 1 0 2.4-5.7" /><path d="M4 4v4h4M12 8v4l3 2" /></>,
+  backup: <><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M4.5 17v2.5h15V17" /></>,
+  upload: <><path d="M12 20V9M7.5 13.5 12 9l4.5 4.5" /><path d="M4.5 7V4.5h15V7" /></>,
+  lock: <><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></>
 };
 
 type Props = { name: keyof typeof P; size?: number; stroke?: number; fill?: boolean };

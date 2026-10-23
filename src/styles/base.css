@@ -104,3 +104,48 @@ h1, h2, h3 { margin: 0; }
 .row .t2 { font-size: 12px; color: var(--ink3); }
 .row .val { font-size: 14px; color: var(--ink2); }
 .block { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+.btn:disabled { opacity: .45; cursor: default; }
+.icon-btn { width: 44px; height: 44px; border-radius: 14px; background: var(--card2); color: var(--ink); display: flex; align-items: center; justify-content: center; flex: none; }
+
+/* ช่องกรอก */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field .label { font-size: 13px; font-weight: 600; color: var(--ink2); }
+.field input, .field select {
+  min-height: 52px; padding: 0 14px; border-radius: var(--r-btn); border: 0; outline: none;
+  background: var(--card2); color: var(--ink); font-size: 20px; font-weight: 600; width: 100%;
+  -webkit-appearance: none; appearance: none;
+}
+.field input:focus, .field select:focus { box-shadow: inset 0 0 0 2px var(--sel); }
+.field input[aria-invalid='true'] { box-shadow: inset 0 0 0 2px var(--danger); }
+.field .err { font-size: 12.5px; color: var(--danger); }
+
+/* กล่องข้อความแนะนำ / เตือน */
+.note { display: flex; gap: 8px; align-items: flex-start; padding: 12px; border-radius: 14px; background: var(--card2); color: var(--ink2); font-size: 12.5px; line-height: 1.5; }
+.note svg { flex: none; margin-top: 2px; }
+.note.warn { background: var(--warning-bg); color: var(--warning); }
+
+/* หน้า Welcome */
+.welcome { min-height: 100dvh; padding-bottom: calc(env(safe-area-inset-bottom) + 24px); gap: 14px; }
+.welcome .hello { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 34px 0 10px; }
+.welcome .hello h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-top: 4px; }
+.welcome .hello > span:last-child { font-size: 15px; color: var(--ink2); line-height: 1.5; }
+.option { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: var(--card); box-shadow: var(--cardline); text-align: left; color: var(--ink); }
+.option .ic { width: 44px; height: 44px; border-radius: 13px; background: var(--card2); display: flex; align-items: center; justify-content: center; flex: none; }
+.option .tx { flex: 1; display: flex; flex-direction: column; gap: 2px; line-height: 1.35; }
+.option .t1 { font-size: 15.5px; font-weight: 600; }
+.option .t2 { font-size: 12.5px; color: var(--ink3); }
+.option > svg { color: var(--ink3); }
+.step-head { display: flex; align-items: center; gap: 10px; }
+.step-head h1 { font-size: 20px; font-weight: 700; }
+.step-head > span { display: flex; flex-direction: column; line-height: 1.25; }
+.actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.welcome.done { align-items: center; text-align: center; padding-top: calc(env(safe-area-inset-top) + 70px); }
+.done-mark { width: 76px; height: 76px; border-radius: 999px; background: var(--g-income-head); color: var(--income); display: flex; align-items: center; justify-content: center; }
+.welcome.done h1 { font-size: 24px; font-weight: 700; }
+.tips { width: 100%; margin: 10px 0 0; padding: 0; list-style: none; counter-reset: tip; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.tips li { counter-increment: tip; display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 16px; background: var(--card); box-shadow: var(--cardline); font-size: 13.5px; }
+.tips li::before { content: counter(tip); font-family: var(--font-num); width: 26px; height: 26px; border-radius: 999px; background: var(--card2); display: flex; align-items: center; justify-content: center; font-weight: 700; flex: none; }
+.row.alert { background: var(--warning-bg); }
+.row.alert .ic { background: var(--card); color: var(--warning); }
+.pill-btn { min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--pri); color: var(--onpri); font-size: 13px; font-weight: 600; flex: none; }

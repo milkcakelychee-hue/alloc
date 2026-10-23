@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { HashRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { HashRouter, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import './styles/tokens.css';
 import './styles/base.css';
 import { applyTheme, syncThemeFromDb } from './lib/theme';
@@ -12,20 +12,33 @@ import Home from './pages/Home';
 import Goals from './pages/Goals';
 import Log from './pages/Log';
 import Settings from './pages/Settings';
+import Welcome from './pages/Welcome';
+import { useSettings } from './db/hooks';
 
 function Shell() {
   const [upd, setUpd] = useState(hasPendingUpdate());
   useEffect(() => onPendingUpdate(() => setUpd(true)), []);
+  const live = useSettings();
+  // ระหว่างกู้คืน ตาราง settings ถูกล้างชั่วครู่ ใช้ค่าล่าสุดไว้ก่อน ไม่ให้หน้า Welcome หลุดขั้น
+  const last = useRef(live);
+  if (live) last.current = live;
+  const settings = last.current;
+  const loc = useLocation();
+  if (!settings) return null; // รอ ensureDefaults ครั้งแรก
+  const onWelcome = loc.pathname === '/welcome';
+  // ยังไม่ผ่านหน้าเริ่มใช้งาน → ไป Welcome ก่อน (หน้า Welcome เองจัดการขั้น "พร้อมใช้แล้ว")
+  if (!settings.onboardedAt && !onWelcome) return <Navigate to="/welcome" replace />;
   return (
     <>
       <Routes>
+        <Route path="/welcome" element={<Welcome />} />
         <Route path="/" element={<Home />} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/log" element={<Log />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <TabBar />
+      {!onWelcome && <TabBar />}
       {upd && <button className="toast" onClick={() => applyUpdate()}>มีอัปเดตใหม่ · แตะเพื่อรีเฟรช</button>}
     </>
   );

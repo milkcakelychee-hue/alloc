@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { Sheet } from '../components/Sheet';
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme';
 import { APP_VERSION, CHANGELOG } from '../lib/version';
+import { db } from '../db/db';
+import { exportBackup } from '../db/backup';
+import { useSettings } from '../db/hooks';
+import { backupStatus } from '../calc/reminders';
+import { localToday, thaiDate } from '../calc/dates';
+import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
 
 const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'light', label: 'สว่าง' },
@@ -14,6 +20,19 @@ export default function Settings() {
   const [theme, setTheme] = useState(getThemePref());
   const [news, setNews] = useState(false);
   const pick = (t: ThemePref) => { setTheme(t); setThemePref(t); };
+  const settings = useSettings();
+  const picker = useRef<RestorePickerHandle>(null);
+  const [toast, setToast] = useState('');
+  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
+
+  const bs = backupStatus(settings?.lastBackupAt);
+  const lastText = bs.never || !settings?.lastBackupAt
+    ? 'ยังไม่เคยสำรอง'
+    : `ล่าสุด ${thaiDate(localToday(new Date(settings.lastBackupAt)))} · ${bs.days === 0 ? 'วันนี้' : `${bs.days} วันที่แล้ว`}`;
+  const backup = async () => {
+    const r = await exportBackup(db);
+    if (r !== 'cancelled') flash('สำรองข้อมูลแล้ว');
+  };
 
   return (
     <main className="page">
@@ -33,6 +52,26 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      <span className="sec">ข้อมูล</span>
+      <div className="list">
+        <div className={`row${bs.due ? ' alert' : ''}`} style={{ paddingTop: 12, paddingBottom: 12 }}>
+          <span className="ic"><Icon name="backup" size={18} stroke={2} /></span>
+          <span className="tx"><span className="t1">สำรองข้อมูล</span><span className="t2 num">{lastText}</span></span>
+          <button className="pill-btn" onClick={backup}>สำรองตอนนี้</button>
+        </div>
+        <button className="row" onClick={() => picker.current?.pick()}>
+          <span className="ic"><Icon name="upload" size={18} stroke={2} /></span>
+          <span className="tx"><span className="t1">กู้คืนจากไฟล์สำรอง</span><span className="t2">แทนที่ข้อมูลทั้งหมดในเครื่องนี้</span></span>
+          <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
+        </button>
+      </div>
+      <div className="note">
+        <Icon name="info" size={16} stroke={2} />
+        <span>ข้อมูลอยู่ในเครื่องนี้เท่านั้น iPhone อาจล้างข้อมูลเว็บเองถ้าไม่ได้เปิดแอปนาน ๆ ควรสำรองเก็บไว้ในแอปไฟล์หรือ iCloud Drive</span>
+      </div>
+      <RestorePicker ref={picker} onRestored={() => { setTheme(getThemePref()); flash('กู้คืนเรียบร้อย'); }} />
+      {toast && <div className="toast" role="status">{toast}</div>}
 
       <span className="sec">เกี่ยวกับ</span>
       <div className="list">

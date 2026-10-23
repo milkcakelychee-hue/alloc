@@ -40,7 +40,7 @@ export const ICON_DEFAULT_CATEGORIES: Record<string, string[]> = {
 
 export const defaultSettings = (now: number): Settings => ({
   id: 'app', createdAt: now, updatedAt: now,
-  payday: 27, theme: 'system', hideNumbers: false, lastBackupAt: null, schemaVersion: SCHEMA_VERSION, receiveInfo: ''
+  payday: 27, theme: 'system', hideNumbers: false, lastBackupAt: null, schemaVersion: SCHEMA_VERSION, receiveInfo: '', onboardedAt: null
 });
 
 export async function ensureDefaults(db: AllocDB, now = Date.now()) {
