@@ -282,3 +282,7 @@
 :root[data-theme='dark'] :is(.lga, .lga-vars).exp { --act: #E79988; } :root[data-theme='dark'] :is(.lga, .lga-vars).inc { --ac: #2F6B47; --act: #8FCCA3; }
 .lga-amt.on { box-shadow: inset 0 0 0 2px var(--act); } .lga-amt .caret { background: var(--act); }
 .lga-grid > [aria-pressed='true'] { box-shadow: inset 0 0 0 2px var(--act); }
+/* ใช้ได้วันละ: ตัวเล็กลง ชิดบน ไม่เบียดยอดเหลือ */
+.lg-hero .top { align-items: flex-start; gap: 12px; }
+.lg-hero .l { flex: 1; }
+.lg-hero .r { padding-top: 2px; gap: 2px; } .lg-hero .r .k { font-size: 12px; } .lg-hero .r b { font-size: 18px; }
