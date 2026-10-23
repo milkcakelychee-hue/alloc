@@ -96,7 +96,7 @@ export default function GoalCategory() {
       })}
 
       <Link to={`/goals/new?type=${type}`} className={`gx-dashadd${spend ? ' spend' : ''}`}>
-        <Icon name="plus" size={18} stroke={2.2} />{spend ? 'เพิ่มเป้า เช่น ทริปเที่ยว' : `เพิ่มเป้าในหมวด${CAT[type].name}`}
+        <Icon name="plus" size={18} stroke={2.2} />{spend ? 'เพิ่มเป้า เช่น ทริปเที่ยวเพชรบุรี' : `เพิ่มเป้าในหมวด${CAT[type].name}`}
       </Link>
 
       {adjust && <AdjustSheet goal={adjust} balance={goalBalance(adjust, data.adjustments)} onClose={() => setAdjust(null)} />}
