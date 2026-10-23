@@ -1,21 +1,33 @@
 // ธีม สว่าง / มืด / ตามเครื่อง
-// ขั้นที่ 1 เก็บใน localStorage ชั่วคราว · ขั้นที่ 2 ย้ายเข้า settings ใน IndexedDB
-export type ThemePref = 'light' | 'dark' | 'system';
+// ตัวจริงเก็บใน settings (IndexedDB) · localStorage เป็นสำเนาให้ใส่ธีมได้ทันทีตอนเปิดแอป ไม่กะพริบ
+import { db } from '../db/db';
+import type { ThemePref } from '../db/types';
+export type { ThemePref };
 
 const KEY = 'alloc.theme';
 const media = window.matchMedia('(prefers-color-scheme: dark)');
+const valid = (v: unknown): v is ThemePref => v === 'light' || v === 'dark' || v === 'system';
 
 export function getThemePref(): ThemePref {
   try {
     const v = localStorage.getItem(KEY);
-    if (v === 'light' || v === 'dark' || v === 'system') return v;
+    if (valid(v)) return v;
   } catch { /* โหมดส่วนตัว */ }
   return 'system';
 }
 
-export function setThemePref(p: ThemePref) {
-  try { localStorage.setItem(KEY, p); } catch { /* โหมดส่วนตัว */ }
+const cache = (p: ThemePref) => { try { localStorage.setItem(KEY, p); } catch { /* โหมดส่วนตัว */ } };
+
+export async function setThemePref(p: ThemePref) {
+  cache(p);
   applyTheme(p);
+  await db.settings.update('app', { theme: p, updatedAt: Date.now() });
+}
+
+/** ดึงธีมจาก settings มาทับสำเนา (เช่น หลังกู้คืนไฟล์สำรอง) */
+export async function syncThemeFromDb() {
+  const t = (await db.settings.get('app'))?.theme;
+  if (valid(t) && t !== getThemePref()) { cache(t); applyTheme(t); }
 }
 
 export function applyTheme(p: ThemePref = getThemePref()) {

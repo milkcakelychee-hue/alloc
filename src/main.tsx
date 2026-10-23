@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter, Route, Routes, Navigate } from 'react-router-dom';
 import './styles/tokens.css';
 import './styles/base.css';
-import { applyTheme } from './lib/theme';
+import { applyTheme, syncThemeFromDb } from './lib/theme';
+import { db } from './db/db';
+import { ensureDefaults } from './db/defaults';
 import { applyUpdate, hasPendingUpdate, onPendingUpdate } from './lib/update';
 import { TabBar } from './components/TabBar';
 import Home from './pages/Home';
@@ -30,6 +32,9 @@ function Shell() {
 }
 
 applyTheme();
+ensureDefaults(db).then(syncThemeFromDb);
+// ขอให้เบราว์เซอร์ไม่ลบข้อมูลเอง (iOS ไม่รับประกัน จึงยังต้องสำรองไฟล์)
+navigator.storage?.persist?.().catch(() => {});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

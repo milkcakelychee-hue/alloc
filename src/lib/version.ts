@@ -4,5 +4,6 @@ declare const __APP_VERSION__: string;
 export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 
 export const CHANGELOG: { version: string; items: string[] }[] = [
+  { version: '0.2', items: ['ฐานข้อมูลในเครื่อง พร้อมหมวดตั้งต้น', 'ตัวคำนวณแผน เป้าหมาย งบรายวัน และบิลแชร์ (ยังไม่มีหน้าจอ)', 'ธีมเก็บในฐานข้อมูลของแอป'] },
   { version: '0.1', items: ['โครงแอป เมนูล่าง 4 แท็บ', 'ธีมสว่าง / มืด / ตามเครื่อง', 'ติดตั้งลงหน้าจอโฮมและใช้ออฟไลน์ได้'] }
 ];
