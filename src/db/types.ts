@@ -9,9 +9,15 @@ export interface Base { id: string; createdAt: number; updatedAt: number }
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
+import type { PayRule } from '../calc/dates';
+import type { WeekendShift } from '../calc/payday';
+export type { PayRule, WeekendShift };
+
 export interface Settings extends Base {
   id: 'app';
-  payday: number;
+  pay: PayRule; // กฎวันเงินเดือนเข้า (วันที่ตั้งไว้ ใช้แบ่งรอบงบ)
+  weekendShift: WeekendShift; // ตรงเสาร์อาทิตย์เงินเข้าก่อน/หลัง/ไม่เลื่อน
+  payOverrides: Record<Month, DateStr>; // แก้วันเงินเข้าเฉพาะเดือน (ไม่เปลี่ยนรอบงบ)
   theme: ThemePref;
   hideNumbers: boolean;
   lastBackupAt: number | null;
@@ -42,6 +48,7 @@ export interface PlanItem extends Base {
   goalId: string | null;
   logCategoryIds: string[];
   order: number;
+  dueDay: number | null; // ครบกำหนดวันที่ (ไม่บังคับ) · ขึ้นการ์ด "จ่ายหรือยัง" ในหน้าหลัก
 }
 
 export interface PaidCheck extends Base { cycleMonth: Month; planItemId: string; checked: boolean }
@@ -92,5 +99,14 @@ export interface Person extends Base { name: string; icon: string; colorIndex: n
 export interface Bill extends Base { title: string; cycleMonth: Month; dateLabel: string; note: string; peopleIds: string[] }
 export interface BillItem extends Base { billId: string; name: string; price: Satang; order: number; peopleIds: string[]; logEntryId: string | null }
 export interface Payment extends Base { billId: string; personId: string; amount: Satang; date: DateStr; channel: 'transfer' | 'cash' }
+
+// วันเงินเดือนเข้าจริงและยอดจริงต่อรอบ (ยืนยันจากการ์ดในหน้าหลัก)
+export interface PayReceipt extends Base {
+  id: Month; // รอบ
+  status: 'received' | 'snoozed';
+  date: DateStr | null; // วันที่เงินเข้าจริง
+  amount: Satang | null; // ยอดที่เข้าจริง
+  snoozeUntil: DateStr | null; // "ยังไม่เข้า" เตือนอีกครั้งวันนี้
+}
 
 export const ME_ID = 'me';

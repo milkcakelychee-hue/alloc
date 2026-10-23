@@ -11,9 +11,9 @@ afterEach(async () => { await cur?.delete(); });
 describe('เริ่มใหม่', () => {
   it('ตั้งวันเงินเดือนเข้า สร้างเงินเดือนในหมวดรายรับ เริ่มรอบของวันนี้', async () => {
     cur = new AllocDB(`onb-${n++}`);
-    await startFresh(cur, { salary: B(31000), payday: 25, today: '2026-10-25', now: 5 });
+    await startFresh(cur, { salary: B(31000), pay: { kind: 'day', day: 25 }, weekendShift: 'after', today: '2026-10-25', now: 5 });
     const s = await cur.settings.get('app');
-    expect(s).toMatchObject({ payday: 25, onboardedAt: 5 });
+    expect(s).toMatchObject({ pay: { kind: 'day', day: 25 }, weekendShift: 'after', onboardedAt: 5 });
     const [it1] = await cur.planItems.toArray();
     const g = await cur.planGroups.get(it1.groupId);
     expect(g?.kind).toBe('income');
@@ -22,7 +22,7 @@ describe('เริ่มใหม่', () => {
 
   it('ข้ามเงินเดือนได้', async () => {
     cur = new AllocDB(`onb-${n++}`);
-    await startFresh(cur, { salary: null, payday: 27, today: '2026-10-18' });
+    await startFresh(cur, { salary: null, pay: { kind: 'endOfMonth' }, weekendShift: 'before', today: '2026-10-18' });
     expect(await cur.planItems.count()).toBe(0);
     expect((await cur.settings.get('app'))?.onboardedAt).toBeTruthy();
   });

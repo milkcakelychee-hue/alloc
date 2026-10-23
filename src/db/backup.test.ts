@@ -61,3 +61,30 @@ describe('สำรอง / กู้คืน', () => {
     expect(() => parseBackup(old, {}, 2)).toThrow('ไม่มีวิธีแปลง');
   });
 });
+
+describe('migration v1 → v2', () => {
+  it('ไฟล์สำรองเก่า: payday → กฎวันเงินเข้า · รายการได้ dueDay = null', () => {
+    const v1 = JSON.stringify({ app: 'alloc', schemaVersion: 1, exportedAt: 'x', tables: {
+      settings: [{ id: 'app', payday: 25, theme: 'dark' }],
+      planItems: [{ id: 'i1', name: 'ค่าเน็ต', defaultAmount: 59900 }]
+    } });
+    const f = parseBackup(v1);
+    expect(f.schemaVersion).toBe(2);
+    expect(f.tables.settings[0]).toEqual({ id: 'app', theme: 'dark', pay: { kind: 'day', day: 25 }, weekendShift: 'before', payOverrides: {}, schemaVersion: 2 });
+    expect(f.tables.planItems[0]).toMatchObject({ id: 'i1', dueDay: null });
+    expect(f.tables.payReceipts).toEqual([]);
+  });
+
+  it('ฐานข้อมูลในเครื่อง v1 อัปเกรดเป็น v2 เองตอนเปิดแอป', async () => {
+    const name = `upgrade-${n++}`;
+    const Dexie = (await import('dexie')).default;
+    const old = new Dexie(name);
+    old.version(1).stores({ settings: 'id', planItems: 'id, groupId, accountId, goalId, *logCategoryIds' });
+    await old.table('settings').put({ id: 'app', payday: 25, theme: 'system' });
+    await old.table('planItems').put({ id: 'i1', groupId: 'g', logCategoryIds: [] });
+    old.close();
+    const d = new AllocDB(name); dbs.push(d);
+    expect(await d.settings.get('app')).toMatchObject({ pay: { kind: 'day', day: 25 }, weekendShift: 'before' });
+    expect((await d.planItems.get('i1'))?.dueDay).toBeNull();
+  });
+});

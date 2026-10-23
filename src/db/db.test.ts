@@ -14,7 +14,7 @@ describe('ข้อมูลตั้งต้น', () => {
     cur = fresh();
     await ensureDefaults(cur, 1);
     const s = await cur.settings.get('app');
-    expect(s).toMatchObject({ payday: 27, theme: 'system', schemaVersion: SCHEMA_VERSION, lastBackupAt: null });
+    expect(s).toMatchObject({ pay: { kind: 'day', day: 27 }, weekendShift: 'before', payOverrides: {}, theme: 'system', schemaVersion: SCHEMA_VERSION, lastBackupAt: null });
     expect((await cur.people.get(ME_ID))?.name).toBe('ฉัน');
     expect((await cur.planGroups.orderBy('order').toArray()).map((g) => g.kind))
       .toEqual(['income', 'fixed', 'variable', 'goalSpend', 'saving', 'invest']);
@@ -24,10 +24,10 @@ describe('ข้อมูลตั้งต้น', () => {
   it('รันซ้ำไม่ทับสิ่งที่ผู้ใช้แก้', async () => {
     cur = fresh();
     await ensureDefaults(cur, 1);
-    await cur.settings.update('app', { payday: 25 });
+    await cur.settings.update('app', { pay: { kind: 'day', day: 25 } });
     await cur.logCategories.update('c-food', { name: 'ข้าว' });
     await ensureDefaults(cur, 2);
-    expect((await cur.settings.get('app'))?.payday).toBe(25);
+    expect((await cur.settings.get('app'))?.pay).toEqual({ kind: 'day', day: 25 });
     expect((await cur.logCategories.get('c-food'))?.name).toBe('ข้าว');
   });
 

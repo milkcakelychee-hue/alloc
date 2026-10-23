@@ -33,14 +33,14 @@ export const ICON_DEFAULT_CATEGORIES: Record<string, string[]> = {
   food: ['c-food', 'c-drink'],
   home: ['c-bill'],
   travel: ['c-travel'],
-  shopping: ['c-household', 'c-shopping'],
+  shop: ['c-household', 'c-shopping'],
   card: ['c-bill'],
-  subscription: ['c-fun']
+  sub: ['c-fun']
 };
 
 export const defaultSettings = (now: number): Settings => ({
   id: 'app', createdAt: now, updatedAt: now,
-  payday: 27, theme: 'system', hideNumbers: false, lastBackupAt: null, schemaVersion: SCHEMA_VERSION, receiveInfo: '', onboardedAt: null
+  pay: { kind: 'day', day: 27 }, weekendShift: 'before', payOverrides: {}, theme: 'system', hideNumbers: false, lastBackupAt: null, schemaVersion: SCHEMA_VERSION, receiveInfo: '', onboardedAt: null
 });
 
 export async function ensureDefaults(db: AllocDB, now = Date.now()) {

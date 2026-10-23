@@ -29,19 +29,31 @@ const daysInMonth = (m: Month) => {
   const [y, mo] = m.split('-').map(Number);
   return new Date(Date.UTC(y, mo, 0)).getUTCDate();
 };
-// payday ที่เกินจำนวนวันของเดือน (เช่น 31 ใน ก.พ.) ใช้วันสุดท้ายของเดือน
-const paydayIn = (m: Month, payday: number): DateStr => `${m}-${pad(Math.min(payday, daysInMonth(m)))}`;
+// กฎวันเงินเดือนเข้า · ตัวเลขเดียว = "ทุกวันที่ X" (รูปแบบเดิมก่อน schema 2)
+export type PayRule = { kind: 'day'; day: number } | { kind: 'endOfMonth' } | { kind: 'lastBusinessDay' };
+export type Pay = number | PayRule;
+export const toRule = (p: Pay): PayRule => (typeof p === 'number' ? { kind: 'day', day: p } : p);
+const isWeekend = (d: DateStr) => { const w = toDate(d).getUTCDay(); return w === 0 || w === 6; };
 
-/** รอบเงินเดือนของวันที่ d */
-export function cycleOf(d: DateStr, payday: number): Month {
-  const m = d.slice(0, 7);
-  return d >= paydayIn(m, payday) ? addMonths(m, 1) : m;
+/** วันที่ตั้งไว้ของเดือน m (ใช้แบ่งรอบงบ ไม่เลื่อนตามวันหยุด) · วันที่เกินจำนวนวันของเดือนใช้วันสุดท้าย */
+export function nominalPayDate(p: Pay, m: Month): DateStr {
+  const rule = toRule(p);
+  if (rule.kind === 'day') return `${m}-${pad(Math.min(rule.day, daysInMonth(m)))}`;
+  let d: DateStr = `${m}-${pad(daysInMonth(m))}`;
+  if (rule.kind === 'lastBusinessDay') while (isWeekend(d)) d = addDays(d, -1);
+  return d;
 }
 
-/** ช่วงวันของรอบ m: start รวม, end รวม */
-export function cycleRange(m: Month, payday: number) {
-  const start = paydayIn(addMonths(m, -1), payday);
-  const end = addDays(paydayIn(m, payday), -1);
+/** รอบเงินเดือนของวันที่ d */
+export function cycleOf(d: DateStr, p: Pay): Month {
+  const m = d.slice(0, 7);
+  return d >= nominalPayDate(p, m) ? addMonths(m, 1) : m;
+}
+
+/** ช่วงวันของรอบ m: start รวม, end รวม · ยึดวันที่ตั้งไว้ ไม่ขยับตามวันเงินเข้าจริง */
+export function cycleRange(m: Month, p: Pay) {
+  const start = nominalPayDate(p, addMonths(m, -1));
+  const end = addDays(nominalPayDate(p, m), -1);
   return { start, end, days: daysBetween(start, end) + 1 };
 }
 

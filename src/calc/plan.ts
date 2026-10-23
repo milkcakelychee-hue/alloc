@@ -1,6 +1,6 @@
 // แผนรายเดือน (SPEC 6.2)
 import type { GroupKind, Month, PlanGroup, PlanItem, Satang } from '../db/types';
-import { monthDiff } from './dates';
+import { addMonths, monthDiff } from './dates';
 
 /** ยอดของรายการในเดือน m ถ้าไม่จำกัดด้วยเป้า (endMode 'goal' ให้ goals.ts ตัดเดือนสุดท้าย) */
 export type AmountOf = (item: PlanItem, m: Month) => Satang;
@@ -46,4 +46,27 @@ export function accountTransfers(groups: PlanGroup[], items: PlanItem[], m: Mont
   let transferred = 0;
   for (const v of byAccount.values()) transferred += v;
   return { byAccount, salaryLeft: income - transferred };
+}
+
+/**
+ * แก้ยอดรายการ: 'month' = เฉพาะเดือน m (เท่ากับยอดปกติ = ลบยอดเฉพาะเดือน)
+ * 'from' = ทุกเดือนตั้งแต่ m · เดือนก่อนหน้าที่ใช้ยอดปกติเดิมถูกเก็บเป็นยอดเฉพาะเดือน ไม่ให้ประวัติเปลี่ยน
+ */
+export function applyAmountChange(item: PlanItem, m: Month, amount: Satang, scope: 'month' | 'from'): PlanItem {
+  const overrides = { ...item.monthOverrides };
+  if (scope === 'month') {
+    if (amount === item.defaultAmount) delete overrides[m];
+    else overrides[m] = amount;
+    return { ...item, monthOverrides: overrides };
+  }
+  for (let x = item.period.start; monthDiff(x, m) > 0; x = addMonths(x, 1)) {
+    if (!(x in overrides)) overrides[x] = item.defaultAmount;
+  }
+  delete overrides[m];
+  return { ...item, defaultAmount: amount, monthOverrides: overrides };
+}
+
+/** หยุดรายการตั้งแต่เดือน m (เดือนสุดท้าย = เดือนก่อน m) · เดือนก่อนหน้ายังอยู่ในประวัติ */
+export function stopFrom(item: PlanItem, m: Month): PlanItem {
+  return { ...item, period: { ...item.period, endMode: 'month', endMonth: addMonths(m, -1) } };
 }

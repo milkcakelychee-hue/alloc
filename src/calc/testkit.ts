@@ -12,7 +12,7 @@ export function item(kind: string, name: string, baht: number, extra: Partial<Pl
   return {
     id: `i${seq++}`, createdAt: 0, updatedAt: 0, groupId: gid(kind), name, icon: 'other',
     defaultAmount: B(baht), monthOverrides: {}, period: { start: '2026-01', endMode: 'none' },
-    accountId: null, goalId: null, logCategoryIds: [], order: seq, ...extra
+    accountId: null, goalId: null, logCategoryIds: [], order: seq, dueDay: null, ...extra
   };
 }
 

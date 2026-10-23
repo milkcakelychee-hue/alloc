@@ -4,7 +4,9 @@ import { useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../db/db';
 import { startFresh } from '../db/onboarding';
-import { cycleOf, cycleRange, localToday, thaiDate, thaiMonth } from '../calc/dates';
+import { cycleOf, cycleRange, localToday, thaiDate, thaiMonth, type PayRule } from '../calc/dates';
+import type { WeekendShift } from '../calc/payday';
+import { PayRuleFields } from '../components/PayRuleFields';
 import { parseBaht } from '../calc/money';
 import { AppMark } from '../components/AppMark';
 import { AppGuide } from '../components/AppGuide';
@@ -12,7 +14,6 @@ import { Icon } from '../components/Icon';
 import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
 
 type Step = 'start' | 'salary' | 'done';
-const PAYDAYS = Array.from({ length: 28 }, (_, i) => i + 1);
 
 export default function Welcome() {
   const nav = useNavigate();
@@ -21,20 +22,21 @@ export default function Welcome() {
   const [step, setStep] = useState<Step>('start');
   const [restored, setRestored] = useState(false);
   const [salaryText, setSalaryText] = useState('');
-  const [payday, setPayday] = useState(27);
+  const [pay, setPay] = useState<PayRule>({ kind: 'day', day: 27 });
+  const [shift, setShift] = useState<WeekendShift>('before');
   const [busy, setBusy] = useState(false);
   const picker = useRef<RestorePickerHandle>(null);
 
   const today = localToday();
   const salary = parseBaht(salaryText);
   const invalid = salaryText.trim() !== '' && (salary === null || salary <= 0);
-  const cycle = cycleOf(today, payday);
-  const range = cycleRange(cycle, payday);
+  const cycle = cycleOf(today, pay);
+  const range = cycleRange(cycle, pay);
 
   const save = async (withSalary: boolean) => {
     setBusy(true);
     try {
-      if (!preview) await startFresh(db, { salary: withSalary ? salary : null, payday, today });
+      if (!preview) await startFresh(db, { salary: withSalary ? salary : null, pay, weekendShift: shift, today });
       setStep('done');
     }
     finally { setBusy(false); }
@@ -58,18 +60,13 @@ export default function Welcome() {
             : <span className="hint">ใส่ยอดเงินสุทธิ<span className="nw">ที่เข้าบัญชี</span> ไม่รวม<span className="nw">ประกันสังคม</span> PVD ภาษี และ<span className="nw">รายการหักอื่น ๆ</span></span>}
         </label>
 
-        <label className="field">
-          <span className="label">เงินเดือนเข้าทุกวันที่</span>
-          <select className="num" value={payday} onChange={(e) => setPayday(Number(e.target.value))}>
-            {PAYDAYS.map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </label>
+        <PayRuleFields rule={pay} shift={shift} from={cycle} onChange={(r, s) => { setPay(r); setShift(s); }} />
 
         <div className="note">
           <Icon name="info" size={16} stroke={2} />
           <span>
             เดือนในแอปนับตาม<span className="nw">รอบเงินเดือน</span> ตอนนี้<span className="nw">อยู่รอบ <b className="num">{thaiMonth(cycle)}</b></span>{' '}
-            (<span className="num nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span>) · <span className="nw">เงินเดือนนับตั้งแต่รอบนี้</span>
+            (<span className="num nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span>) · <span className="nw">เงินเดือนนับตั้งแต่รอบนี้</span> · รอบงบยึด<span className="nw">วันที่ตั้งไว้</span> เงินที่เข้าก่อนหรือหลังกำหนดยังเป็น<span className="nw">รายรับของเดือนนั้น</span>
           </span>
         </div>
 

@@ -10,6 +10,8 @@ import { useSettings } from '../db/hooks';
 import { backupStatus } from '../calc/reminders';
 import { localToday, thaiDate } from '../calc/dates';
 import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
+import { PayRuleSheet } from '../components/PayRuleSheet';
+import { payRuleLabel } from '../components/PayRuleFields';
 
 const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'light', label: 'สว่าง' },
@@ -24,6 +26,7 @@ export default function Settings() {
   const settings = useSettings();
   const picker = useRef<RestorePickerHandle>(null);
   const [toast, setToast] = useState('');
+  const [payOpen, setPayOpen] = useState(false);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
 
   const bs = backupStatus(settings?.lastBackupAt);
@@ -54,6 +57,20 @@ export default function Settings() {
           <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
         </Link>
       </div>
+
+      <span className="sec">เงินเดือน</span>
+      <div className="list">
+        <button className="row" onClick={() => setPayOpen(true)} disabled={!settings}>
+          <span className="ic"><Icon name="calendar" size={18} stroke={2} /></span>
+          <span className="tx">
+            <span className="t1">วันเงินเดือนเข้า</span>
+            <span className="t2">{settings ? payRuleLabel(settings.pay, settings.weekendShift).sub : ''}</span>
+          </span>
+          <span className="val num" style={{ fontWeight: 600, color: 'var(--ink)' }}>{settings ? payRuleLabel(settings.pay, settings.weekendShift).main : ''}</span>
+          <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
+        </button>
+      </div>
+      {payOpen && settings && <PayRuleSheet settings={settings} onClose={() => setPayOpen(false)} />}
 
       <span className="sec">การแสดงผล</span>
       <div className="list">

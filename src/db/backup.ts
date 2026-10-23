@@ -1,6 +1,7 @@
 // สำรอง / กู้คืนเป็นไฟล์ .alloc (JSON เดียว มี schemaVersion + ทุกตาราง) · กู้คืนแล้วได้ทุกอย่างเหมือนเดิม
 import type { AllocDB, TableName } from './db';
 import { SCHEMA_VERSION, TABLES } from './db';
+import { migrateV1toV2 } from './migrations';
 
 export const BACKUP_APP = 'alloc';
 
@@ -14,7 +15,7 @@ export interface BackupFile {
 // migration ของไฟล์สำรอง: MIGRATIONS[n] แปลงไฟล์จาก schemaVersion n เป็น n + 1
 // เพิ่มรายการที่นี่ทุกครั้งที่ขึ้น SCHEMA_VERSION
 type Migration = (tables: Record<string, unknown[]>) => Record<string, unknown[]>;
-export const MIGRATIONS: Record<number, Migration> = {};
+export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1toV2 };
 
 export async function buildBackup(db: AllocDB, now = new Date()): Promise<BackupFile> {
   const tables = {} as Record<TableName, unknown[]>;

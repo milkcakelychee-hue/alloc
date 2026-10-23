@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accountTransfers, planTotals, rawAmount } from './plan';
+import { accountTransfers, applyAmountChange, planTotals, rawAmount, stopFrom } from './plan';
 import { B, groups, item } from './testkit';
 
 const M = '2026-10';
@@ -53,5 +53,27 @@ describe('6.2 แผนรายเดือน', () => {
   it('หมวดที่ปิดไม่นับ', () => {
     const off = groups.map((g) => (g.kind === 'goalSpend' ? { ...g, enabled: false } : g));
     expect(planTotals(off, items, M).leftover).toBe(B(2349.25));
+  });
+});
+
+describe('แก้ยอดรายการ', () => {
+  const base = () => item('variable', 'ค่ากิน', 4800, { period: { start: '2026-08', endMode: 'none' }, monthOverrides: { '2026-12': B(5500) } });
+
+  it('เฉพาะเดือนนี้: เก็บเป็นยอดเฉพาะเดือน · ใส่เท่ายอดปกติ = ลบยอดเฉพาะเดือน', () => {
+    const a = applyAmountChange(base(), '2026-10', B(4500), 'month');
+    expect(a.monthOverrides).toEqual({ '2026-10': B(4500), '2026-12': B(5500) });
+    expect(applyAmountChange(a, '2026-10', B(4800), 'month').monthOverrides).toEqual({ '2026-12': B(5500) });
+  });
+
+  it('ทุกเดือนตั้งแต่เดือนนี้: เดือนก่อนหน้าคงยอดเดิม เดือนนี้เป็นต้นไปใช้ยอดใหม่', () => {
+    const a = applyAmountChange(base(), '2026-10', B(5000), 'from');
+    expect(a.defaultAmount).toBe(B(5000));
+    expect(['2026-08', '2026-09', '2026-10', '2026-11', '2026-12'].map((m) => rawAmount(a, m)))
+      .toEqual([B(4800), B(4800), B(5000), B(5000), B(5500)]);
+  });
+
+  it('หยุดตั้งแต่เดือนนี้: เดือนก่อนยังอยู่ เดือนนี้เป็นต้นไปเป็น 0', () => {
+    const s = stopFrom(base(), '2026-10');
+    expect(['2026-09', '2026-10'].map((m) => rawAmount(s, m))).toEqual([B(4800), 0]);
   });
 });

@@ -25,6 +25,25 @@ export const P: Record<string, ReactNode> = {
   wallet: <><path d="M4 7.5h14.5a1.5 1.5 0 0 1 1.5 1.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 18.5z" /><path d="M4 7.5 15 4v3.5M16 13.5h.01" /></>,
   history: <><path d="M4 12a8 8 0 1 0 2.4-5.7" /><path d="M4 4v4h4M12 8v4l3 2" /></>,
   edit: <><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></>,
+  // ไอคอนรายการในแผน (ต้นแบบ PlanSheet)
+  food: <><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z" /><path d="M9 7c0-1.5 1-1.5 1-3M14 7c0-1.5 1-1.5 1-3" /></>,
+  travel: <><rect x="5" y="3.5" width="14" height="14" rx="3" /><path d="M5 11h14M8 20.5v-3M16 20.5v-3" /></>,
+  shop: <><path d="M5 8h14l-1 12H6z" /><path d="M9 8a3 3 0 0 1 6 0" /></>,
+  card: <><rect x="3" y="5.5" width="18" height="13" rx="2.5" /><path d="M3 10h18M7 15h3" /></>,
+  sub: <><rect x="3" y="5" width="18" height="14" rx="3" /><path d="m10 9 5 3-5 3z" /></>,
+  salary: <><rect x="3" y="6" width="18" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6.5 9.5v5M17.5 9.5v5" /></>,
+  piggy: <><path d="M5 11a6 5 0 0 1 11.5-2H19v3l-1.5 1v3h-2.5l-.5 2h-3l-.5-1.5h-2L8.5 18h-3l-.5-3A5 5 0 0 1 5 11z" /><path d="M10 7.5h3" /></>,
+  trend: <><path d="M3.5 17 9.5 11l4 4 7-7.5" /><path d="M15 7.5h5.5V13" /></>,
+  gift: <><rect x="4" y="9" width="16" height="11" rx="1.5" /><path d="M3 9h18M12 9v11M12 9c-2-4-6-3.5-5-1s5 1 5 1zM12 9c2-4 6-3.5 5-1s-5 1-5 1z" /></>,
+  phone: <><rect x="7" y="3" width="10" height="18" rx="2.5" /><path d="M11 17.5h2" /></>,
+  health: <path d="M12 20s-7.5-4.5-7.5-10A4 4 0 0 1 12 7a4 4 0 0 1 7.5 3c0 5.5-7.5 10-7.5 10z" />,
+  edu: <><path d="M3 9.5 12 5l9 4.5-9 4.5z" /><path d="M7 11.5V16c2.5 2 7.5 2 10 0v-4.5" /></>,
+  pet: <><circle cx="8" cy="8" r="1.8" /><circle cx="16" cy="8" r="1.8" /><circle cx="5" cy="12.5" r="1.6" /><circle cx="19" cy="12.5" r="1.6" /><path d="M12 12c3 0 5 3.5 4 5.5-1 1.5-2.5 1-4 1s-3 .5-4-1c-1-2 1-5.5 4-5.5z" /></>,
+  other: <><circle cx="6" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="18" cy="12" r="1.4" /></>,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
+  more: <><circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" /></>,
+  chevDown: <path d="m6 9 6 6 6-6" />,
+  checkSq: <path d="m6 12.5 4 4 8-9" />,
   lock: <><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></>
 };
 

@@ -1,9 +1,9 @@
 // บันทึกรายรับรายจ่ายและงบ (SPEC 6.4) · รายจ่ายนับ myShare เสมอ
 import type { DateStr, LogEntry, Month, PlanGroup, PlanItem, Satang } from '../db/types';
-import { cycleOf, cycleRange, daysBetween } from './dates';
+import { cycleOf, cycleRange, daysBetween, type Pay } from './dates';
 import { rawAmount, type AmountOf } from './plan';
 
-export const expensesIn = (entries: LogEntry[], cycle: Month, payday: number) =>
+export const expensesIn = (entries: LogEntry[], cycle: Month, payday: Pay) =>
   entries.filter((e) => e.type === 'expense' && cycleOf(e.date, payday) === cycle);
 
 export function spentByCategory(entries: LogEntry[]) {
@@ -30,7 +30,7 @@ export function categoryBudget(categoryId: string, items: PlanItem[], cycleExpen
 }
 
 /** วันที่ของรอบ: วันที่ผ่านไป (รวมวันนี้) และจำนวนวันที่เหลือหลังวันนี้ */
-export function cycleDays(today: DateStr, payday: number) {
+export function cycleDays(today: DateStr, payday: Pay) {
   const r = cycleRange(cycleOf(today, payday), payday);
   const elapsed = daysBetween(r.start, today) + 1;
   return { ...r, elapsed, daysLeft: r.days - elapsed };
@@ -40,7 +40,7 @@ export function cycleDays(today: DateStr, payday: number) {
  * งบใช้จ่ายรายวัน = ผลรวมรายการในหมวดผันแปรที่ผูกหมวดบันทึกอย่างน้อย 1 หมวด − ที่ใช้ไปในหมวดเหล่านั้น
  * ใช้ได้วันละ = ที่เหลือ ÷ จำนวนวันที่เหลือหลังวันนี้ · วันสุดท้ายของรอบใช้ที่เหลือทั้งหมด
  */
-export function dailyBudget(groups: PlanGroup[], items: PlanItem[], entries: LogEntry[], today: DateStr, payday: number, amountOf: AmountOf = rawAmount) {
+export function dailyBudget(groups: PlanGroup[], items: PlanItem[], entries: LogEntry[], today: DateStr, payday: Pay, amountOf: AmountOf = rawAmount) {
   const cycle = cycleOf(today, payday);
   const variable = new Set(groups.filter((g) => g.enabled && g.kind === 'variable').map((g) => g.id));
   const linked = items.filter((i) => variable.has(i.groupId) && i.logCategoryIds.length > 0);
@@ -54,7 +54,7 @@ export function dailyBudget(groups: PlanGroup[], items: PlanItem[], entries: Log
 }
 
 /** จังหวะงบ: ใช้ไป% เทียบวันที่ผ่านไป% · คาดการณ์ปลายรอบ = ใช้ไป ÷ วันที่ผ่าน × วันในรอบ */
-export function pace(spent: Satang, budget: Satang, today: DateStr, payday: number) {
+export function pace(spent: Satang, budget: Satang, today: DateStr, payday: Pay) {
   const d = cycleDays(today, payday);
   return {
     usedRatio: budget === 0 ? 0 : spent / budget,

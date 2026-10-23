@@ -1,10 +1,11 @@
 import Dexie, { type Table } from 'dexie';
 import type {
-  Account, Bill, BillItem, Goal, GoalAdjustment, LogCategory, LogEntry, PaidCheck, Payment, Person, PlanGroup, PlanItem, Settings
+  Account, Bill, BillItem, Goal, GoalAdjustment, LogCategory, LogEntry, PaidCheck, Payment, PayReceipt, Person, PlanGroup, PlanItem, Settings
 } from './types';
+import { migrateV1toV2 } from './migrations';
 
 // เลขเวอร์ชันโครงข้อมูล: เก็บใน settings และในไฟล์สำรอง · เพิ่มเมื่อเปลี่ยนโครงตาราง แล้วเขียน migration ใน migrations.ts
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export class AllocDB extends Dexie {
   settings!: Table<Settings, string>;
@@ -20,6 +21,7 @@ export class AllocDB extends Dexie {
   bills!: Table<Bill, string>;
   billItems!: Table<BillItem, string>;
   payments!: Table<Payment, string>;
+  payReceipts!: Table<PayReceipt, string>;
 
   constructor(name = 'alloc') {
     super(name);
@@ -38,12 +40,20 @@ export class AllocDB extends Dexie {
       billItems: 'id, billId',
       payments: 'id, billId, personId'
     });
+    // v2: กฎวันเงินเดือนเข้า + วันครบกำหนดของรายการ + ประวัติเงินเข้าจริง
+    this.version(2).stores({ payReceipts: 'id' }).upgrade(async (tx) => {
+      const settings = await tx.table('settings').toArray();
+      const items = await tx.table('planItems').toArray();
+      const out = migrateV1toV2({ settings, planItems: items });
+      await tx.table('settings').bulkPut(out.settings);
+      await tx.table('planItems').bulkPut(out.planItems);
+    });
   }
 }
 
 export const TABLES = [
   'settings', 'accounts', 'planGroups', 'planItems', 'paidChecks', 'goals', 'goalAdjustments',
-  'logCategories', 'logEntries', 'people', 'bills', 'billItems', 'payments'
+  'logCategories', 'logEntries', 'people', 'bills', 'billItems', 'payments', 'payReceipts'
 ] as const;
 export type TableName = (typeof TABLES)[number];
 
