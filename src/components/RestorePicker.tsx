@@ -65,7 +65,7 @@ export const RestorePicker = forwardRef<RestorePickerHandle, { onRestored: () =>
               รายการในแผน {s.planItems} · เป้าหมาย {s.goals} · บันทึก {s.logEntries} · บิล {s.bills}
             </span>
           </div>
-          <div className="note warn" style={{ marginBottom: 14 }}>ข้อมูลทั้งหมดในเครื่องนี้จะถูกแทนที่ด้วยข้อมูลในไฟล์ และย้อนกลับไม่ได้</div>
+          <div className="note warn" style={{ marginBottom: 14 }}>ข้อมูลทั้งหมดใน<span className="nw">เครื่องนี้</span>จะถูกแทนที่ด้วย<span className="nw">ข้อมูลในไฟล์</span> และ<span className="nw">ย้อนกลับไม่ได้</span></div>
           <button className="btn btn-pri" style={{ width: '100%' }} disabled={busy} onClick={confirm}>{busy ? 'กำลังกู้คืน…' : 'กู้คืน'}</button>
           <button className="btn btn-ghost" style={{ width: '100%', marginTop: 8 }} disabled={busy} onClick={() => setFile(null)}>ยกเลิก</button>
         </Sheet>

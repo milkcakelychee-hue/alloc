@@ -17,8 +17,8 @@ export default function Log() {
         onChange={(v) => setSp(v === 'bills' ? { tab: 'bills' } : {}, { replace: true })}
       />
       {tab === 'entries'
-        ? <Empty icon="log" title="ยังไม่มีรายการ" text="ปฏิทินรอบเงินเดือนและงบใช้จ่ายรายวัน จะแสดงที่นี่" />
-        : <Empty icon="bill" title="ยังไม่มีบิล" text="บิลที่หารกับคนอื่นและยอดค้างรับ จะแสดงที่นี่" />}
+        ? <Empty icon="log" title="ยังไม่มีรายการ" text={<><span className="nw">ปฏิทินรอบเงินเดือน</span>และ<span className="nw">งบใช้จ่ายรายวัน</span> <span className="nw">จะแสดงที่นี่</span></>} />
+        : <Empty icon="bill" title="ยังไม่มีบิล" text={<>บิลที่หารกับคนอื่นและ<span className="nw">ยอดค้างรับ</span> <span className="nw">จะแสดงที่นี่</span></>} />}
     </main>
   );
 }

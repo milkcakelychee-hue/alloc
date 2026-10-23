@@ -45,14 +45,16 @@ export default function Welcome() {
         {preview && <PreviewBar onClose={exit} />}
         <div className="step-head">
           <button className="icon-btn" aria-label="ย้อนกลับ" onClick={() => setStep('start')}><Icon name="back" size={20} stroke={2} /></button>
-          <span><span className="muted" style={{ fontSize: 12 }}>เริ่มใหม่</span><h1>ตั้งเงินเดือน</h1></span>
+          <h1>ตั้งเงินเดือน</h1>
         </div>
 
         <label className="field">
           <span className="label">เงินเดือนต่อเดือน (บาท)</span>
           <input className="num" inputMode="decimal" autoComplete="off" placeholder="0.00" value={salaryText}
             onChange={(e) => setSalaryText(e.target.value)} aria-invalid={invalid} />
-          {invalid && <span className="err">ใส่ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง</span>}
+          {invalid
+            ? <span className="err">ใส่ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง</span>
+            : <span className="hint">ใส่ยอดเงินสุทธิ<span className="nw">ที่เข้าบัญชี</span> ไม่รวม<span className="nw">ประกันสังคม</span> PVD ภาษี และ<span className="nw">รายการหักอื่น ๆ</span></span>}
         </label>
 
         <label className="field">
@@ -65,8 +67,8 @@ export default function Welcome() {
         <div className="note">
           <Icon name="info" size={16} stroke={2} />
           <span>
-            เดือนในแอปนับตามรอบเงินเดือน ตอนนี้อยู่รอบ <b className="num">{thaiMonth(cycle)}</b>{' '}
-            (<span className="num">{thaiDate(range.start)} – {thaiDate(range.end)}</span>) · เงินเดือนนับตั้งแต่รอบนี้
+            เดือนในแอปนับตาม<span className="nw">รอบเงินเดือน</span> ตอนนี้<span className="nw">อยู่รอบ <b className="num">{thaiMonth(cycle)}</b></span>{' '}
+            (<span className="num nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span>) · <span className="nw">เงินเดือนนับตั้งแต่รอบนี้</span>
           </span>
         </div>
 
@@ -86,9 +88,9 @@ export default function Welcome() {
         <h1>{restored ? 'กู้คืนเรียบร้อย' : 'พร้อมใช้แล้ว'}</h1>
         <span className="muted">{restored ? 'ข้อมูลจากไฟล์สำรองกลับมาครบแล้ว' : 'เริ่มวางแผนให้ทุกบาทมีหน้าที่ได้เลย'}</span>
         <ol className="tips">
-          {!restored && <li>วางแผนรายจ่ายที่หน้าหลัก → วางแผนรายจ่าย</li>}
-          <li>เพิ่มแอปไว้ที่หน้าจอโฮม (แชร์ → เพิ่มไปยังหน้าจอโฮม)</li>
-          <li>สำรองข้อมูลจากหน้าตั้งค่าเป็นประจำ เพราะข้อมูลอยู่ในเครื่องนี้เท่านั้น</li>
+          {!restored && <li><span>วางแผนรายจ่ายที่<span className="nw">หน้าหลัก</span> → <span className="nw">วางแผนรายจ่าย</span></span></li>}
+          <li><span>เพิ่มแอปไว้ที่<span className="nw">หน้าจอโฮม</span> <span className="nw">(แชร์ → เพิ่มไปยังหน้าจอโฮม)</span></span></li>
+          <li><span>สำรองข้อมูลจาก<span className="nw">หน้าตั้งค่า</span>เป็นประจำ <span className="nw">เพราะข้อมูลอยู่ในเครื่องนี้เท่านั้น</span></span></li>
         </ol>
         <button className="btn btn-pri" style={{ marginTop: 'auto', width: '100%' }} onClick={exit}>ไปหน้าหลัก</button>
       </main>
@@ -101,22 +103,22 @@ export default function Welcome() {
       <div className="hello">
         <AppMark size={76} />
         <h1>Alloc</h1>
-        <span>เงินเดือนเข้าแล้ว แบ่งให้ทุกบาทมีหน้าที่<br />วางแผน · จด · หารบิล ในแอปเดียว</span>
+        <span>เงินเดือนเข้าแล้ว แบ่งให้<span className="nw">ทุกบาทมีหน้าที่</span><br />วางแผน · จด · หารบิล <span className="nw">ในแอปเดียว</span></span>
       </div>
       <span className="sec">เริ่มต้นแบบไหนดี</span>
       <button className="option" onClick={() => setStep('salary')}>
         <span className="ic"><Icon name="plus" /></span>
-        <span className="tx"><span className="t1">เริ่มใหม่</span><span className="t2">ตั้งเงินเดือนก่อน แล้วค่อยวางแผนทีละหมวด</span></span>
+        <span className="tx"><span className="t1">เริ่มใหม่</span><span className="t2">ตั้งเงินเดือนก่อน แล้วค่อยวางแผน<span className="nw">ทีละหมวด</span></span></span>
         <Icon name="chevron" size={18} stroke={2} />
       </button>
       <button className="option" onClick={() => (preview ? (setRestored(true), setStep('done')) : picker.current?.pick())}>
         <span className="ic"><Icon name="restore" /></span>
-        <span className="tx"><span className="t1">กู้จากไฟล์สำรอง</span><span className="t2">ไฟล์ .alloc ที่สำรองไว้จากเครื่องเดิม</span></span>
+        <span className="tx"><span className="t1">กู้จากไฟล์สำรอง</span><span className="t2">ไฟล์ .alloc ที่สำรองไว้<span className="nw">จากเครื่องเดิม</span></span></span>
         <Icon name="chevron" size={18} stroke={2} />
       </button>
       <div className="note" style={{ marginTop: 'auto' }}>
         <Icon name="lock" size={16} stroke={2} />
-        <span>ข้อมูลทั้งหมดเก็บในเครื่องคุณเท่านั้น ไม่มีบัญชีผู้ใช้ ไม่ส่งขึ้นเซิร์ฟเวอร์ · สำรองเองได้จากหน้าตั้งค่า</span>
+        <span>ข้อมูลทั้งหมดเก็บใน<span className="nw">เครื่องคุณ</span>เท่านั้น <span className="nw">ไม่มีบัญชีผู้ใช้</span> <span className="nw">ไม่ส่งขึ้นเซิร์ฟเวอร์</span> · สำรองเองได้จาก<span className="nw">หน้าตั้งค่า</span></span>
       </div>
       <RestorePicker ref={picker} onRestored={() => { setRestored(true); setStep('done'); }} />
     </main>
@@ -125,8 +127,8 @@ export default function Welcome() {
 
 function PreviewBar({ onClose }: { onClose: () => void }) {
   return (
-    <div className="note warn" role="status" style={{ alignItems: 'center' }}>
-      <span style={{ flex: 1 }}>ดูตัวอย่างหน้าเริ่มใช้งาน · ไม่บันทึกข้อมูล</span>
+    <div className="note warn" role="status" style={{ alignItems: 'center', width: '100%', textAlign: 'left' }}>
+      <span style={{ flex: 1 }}>ดูตัวอย่าง<span className="nw">หน้าเริ่มใช้งาน</span> · <span className="nw">ไม่บันทึกข้อมูล</span></span>
       <button className="pill-btn" onClick={onClose}>ปิด</button>
     </div>
   );

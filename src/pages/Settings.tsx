@@ -50,7 +50,7 @@ export default function Settings() {
         {/* ชั่วคราวช่วงสร้างแอป: ให้เจ้าของดูหน้าเริ่มใช้งานได้ · เอาออกเมื่อแอปจริงเสร็จ */}
         <Link className="row" to="/welcome?preview=1">
           <span className="ic"><Icon name="plus" size={18} stroke={2} /></span>
-          <span className="tx"><span className="t1">ดูหน้าเริ่มใช้งาน</span><span className="t2">ตัวอย่าง ไม่บันทึกข้อมูล · มีเฉพาะช่วงสร้างแอป</span></span>
+          <span className="tx"><span className="t1">ดูหน้าเริ่มใช้งาน</span><span className="t2">ตัวอย่าง <span className="nw">ไม่บันทึกข้อมูล</span> · <span className="nw">มีเฉพาะช่วงสร้างแอป</span></span></span>
           <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
         </Link>
       </div>
@@ -85,7 +85,7 @@ export default function Settings() {
       </div>
       <div className="note">
         <Icon name="info" size={16} stroke={2} />
-        <span>ข้อมูลอยู่ในเครื่องนี้เท่านั้น iPhone อาจล้างข้อมูลเว็บเองถ้าไม่ได้เปิดแอปนาน ๆ ควรสำรองเก็บไว้ในแอปไฟล์หรือ iCloud Drive</span>
+        <span>ข้อมูลอยู่ใน<span className="nw">เครื่องนี้</span>เท่านั้น iPhone อาจล้าง<span className="nw">ข้อมูลเว็บ</span>เองถ้าไม่ได้เปิดแอปนาน ๆ ควรสำรองเก็บไว้ใน<span className="nw">แอปไฟล์</span>หรือ <span className="nw">iCloud Drive</span></span>
       </div>
       <RestorePicker ref={picker} onRestored={() => { setTheme(getThemePref()); flash('กู้คืนเรียบร้อย'); }} />
       {toast && <div className="toast" role="status">{toast}</div>}
@@ -98,7 +98,7 @@ export default function Settings() {
         <Sheet title="มีอะไรใหม่" onClose={() => setNews(false)}>
           {CHANGELOG.length === 0 ? (
             <p className="muted" style={{ margin: '0 0 16px', lineHeight: 1.6 }}>
-              ตอนนี้ Alloc ยังอยู่ระหว่างสร้าง รายการนี้จะเริ่มบอกเมื่อแอปพร้อมใช้จริง ว่าทำอะไรได้บ้าง และมีอะไรที่ปรับแก้หรือจะเพิ่มในอนาคต
+              ตอนนี้ Alloc ยังอยู่<span className="nw">ระหว่างสร้าง</span> รายการนี้จะเริ่มบอกเมื่อแอป<span className="nw">พร้อมใช้จริง</span> ว่าทำอะไรได้บ้าง และมีอะไรที่ปรับแก้หรือ<span className="nw">จะเพิ่มในอนาคต</span>
             </p>
           ) : CHANGELOG.map((c) => (
             <div key={c.version} className="card" style={{ marginBottom: 10 }}>

@@ -25,8 +25,8 @@ export default function Home() {
         onChange={(v) => setSp(v === 'plan' ? { tab: 'plan' } : {}, { replace: true })}
       />
       {tab === 'summary'
-        ? <Empty icon="home" title="สรุป" text="สินทรัพย์รวม Savings Rate และสิ่งที่ต้องทำ จะแสดงที่นี่" />
-        : <Empty icon="plan" title="วางแผนรายจ่าย" text="แผนรายเดือนตามรอบเงินเดือน จะแสดงที่นี่" />}
+        ? <Empty icon="home" title="สรุป" text={<>สินทรัพย์รวม Savings Rate และ<span className="nw">สิ่งที่ต้องทำ</span> <span className="nw">จะแสดงที่นี่</span></>} />
+        : <Empty icon="plan" title="วางแผนรายจ่าย" text={<>แผนรายเดือนตาม<span className="nw">รอบเงินเดือน</span> <span className="nw">จะแสดงที่นี่</span></>} />}
     </main>
   );
 }
