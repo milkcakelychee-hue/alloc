@@ -14,7 +14,6 @@ import Log from './pages/Log';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
 import { useSettings } from './db/hooks';
-import PaydayMock from './design/PaydayMock'; // ต้นแบบ ไม่ขึ้นเว็บ
 
 function Shell() {
   const [upd, setUpd] = useState(hasPendingUpdate());
@@ -37,10 +36,9 @@ function Shell() {
         <Route path="/goals" element={<Goals />} />
         <Route path="/log" element={<Log />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/design/payday" element={<PaydayMock />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {!onWelcome && !loc.pathname.startsWith('/design') && <TabBar />}
+      {!onWelcome && <TabBar />}
       {upd && <button className="toast" onClick={() => applyUpdate()}>มีอัปเดตใหม่ · แตะเพื่อรีเฟรช</button>}
     </>
   );
