@@ -35,6 +35,9 @@
   --g-goal-card: #FFFFFF;     --g-goal-head: #FAEBDD;     --g-goal-line: #ECECE6;     --g-goal-ic: #FAEBDD;
   --g-save-card: #FFFFFF;     --g-save-head: #E4EEF8;     --g-save-line: #ECECE6;     --g-save-ic: #E4EEF8;
 
+  /* สีกราฟ (ลำดับตายตัวจากสเปก หัวข้อ 3 · ตรวจ CVD ด้วย validate_palette แล้ว) */
+  --c1: #eb6834; --c2: #2a78d6; --c3: #eda100; --c4: #e87ba4; --c5: #6250d6; --c6: #1baf7a;
+
   --font: 'IBM Plex Sans Thai Looped', 'Sukhumvit Set', system-ui, sans-serif;
   --font-num: 'Work Sans', 'IBM Plex Sans Thai Looped', system-ui, sans-serif;
 
@@ -68,6 +71,7 @@
   --track: #243A2E;
   --shadow: rgba(0, 0, 0, .4);
 
+  --c1: #e0602e; --c3: #c08400; --c4: #d96a93; --c5: #7462e0;
   --g-income-card: #0F190D;   --g-income-head: #1B2B17;   --g-income-line: #283E23;   --g-income-ic: #294224;
   --g-expense-card: #1B0B0B;  --g-expense-head: #2F1313;  --g-expense-line: #431E1E;  --g-expense-ic: #481E1E;
   --g-goal-card: #1B130B;     --g-goal-head: #2F2113;     --g-goal-line: #43301E;     --g-goal-ic: #48321E;

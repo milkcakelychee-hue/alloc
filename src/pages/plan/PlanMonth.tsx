@@ -1,5 +1,6 @@
 // แท็บ วางแผนรายจ่าย · มุมมองเดือน (ต้นแบบ Plan1)
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import type { GroupKind, Month, PlanGroup, PlanItem } from '../../db/types';
@@ -14,6 +15,10 @@ import { usePlanData } from './usePlanData';
 import { TONE, groupAddLabel, iconOf, thaiMonthLong } from './planUi';
 import { ItemSheet } from './ItemSheet';
 import { PayDateSheet } from './PayDateSheet';
+import { PlanThree } from './PlanThree';
+import { PlanYearView } from './PlanYearView';
+
+type View = 'month' | '3m' | 'year';
 
 type Editing = { item: PlanItem | null; groupId: string } | null;
 
@@ -27,6 +32,9 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [payEdit, setPayEdit] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [sp, setSp] = useSearchParams();
+  const view: View = sp.get('v') === '3m' ? '3m' : sp.get('v') === 'year' ? 'year' : 'month';
+  const setView = (v: View) => setSp(v === 'month' ? { tab: 'plan' } : { tab: 'plan', v }, { replace: true });
 
   const s = data?.settings;
   const current = s ? cycleOf(today, s.pay) : null;
@@ -115,24 +123,39 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
     <main className="page">
       <div className="plan-head">
         <span className="tx">
-          <h1>{thaiMonthLong(m)}</h1>
-          <span className="sub num">รอบ <span className="nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span> (<span className="nw">{range.days} วัน</span>)</span>
+          {view === 'year' ? (
+            <><h1>ปี <span className="num">{Number(m.slice(0, 4)) + 543}</span></h1><span className="sub">แผน 12 เดือน · ม.ค. – ธ.ค.</span></>
+          ) : (
+            <><h1>{thaiMonthLong(m)}</h1>
+              <span className="sub num">{view === '3m' ? <>เทียบกับ<span className="nw">เดือนก่อนและเดือนถัดไป</span></> : <>รอบ <span className="nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span> (<span className="nw">{range.days} วัน</span>)</>}</span></>
+          )}
         </span>
-        <button className="icon-btn" aria-label="เดือนก่อน" onClick={() => setMonth(addMonths(m, -1))}><Icon name="back" size={20} stroke={2} /></button>
-        <button className="icon-btn" aria-label="เดือนถัดไป" onClick={() => setMonth(addMonths(m, 1))}><Icon name="chevron" size={20} stroke={2} /></button>
+        <button className="icon-btn" aria-label={view === 'year' ? 'ปีก่อน' : 'เดือนก่อน'} onClick={() => setMonth(addMonths(m, view === 'year' ? -12 : -1))}><Icon name="back" size={20} stroke={2} /></button>
+        <button className="icon-btn" aria-label={view === 'year' ? 'ปีถัดไป' : 'เดือนถัดไป'} onClick={() => setMonth(addMonths(m, view === 'year' ? 12 : 1))}><Icon name="chevron" size={20} stroke={2} /></button>
       </div>
-      <div className="plan-meta">
-        <button className="pay-edit" onClick={() => setPayEdit(true)}>
-          <Icon name="wallet" size={16} stroke={2} />
-          <span>เงินเข้า <span className="num">{dateWithDay(pay.date)}</span></span>
-          <Icon name="edit" size={14} stroke={2} />
-        </button>
-        {pay.reason !== 'onTime' && <span className="tag warn">{pay.reason === 'override' ? 'แก้เฉพาะเดือนนี้' : `เลื่อนจาก ${thaiDate(pay.nominal).split(' ').slice(0, 2).join(' ')}`}</span>}
-        {m !== current && <button className="link-btn" onClick={() => setMonth(null)}>กลับเดือนนี้</button>}
+      <div className="view-tabs" role="tablist" aria-label="มุมมองแผน">
+        {([['month', 'เดือน'], ['3m', '3 เดือน'], ['year', 'ปี']] as const).map(([v, l]) => (
+          <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}>{l}</button>
+        ))}
       </div>
+      {view === 'month' && (
+        <div className="plan-meta">
+          <button className="pay-edit" onClick={() => setPayEdit(true)}>
+            <Icon name="wallet" size={16} stroke={2} />
+            <span>เงินเข้า <span className="num">{dateWithDay(pay.date)}</span></span>
+            <Icon name="edit" size={14} stroke={2} />
+          </button>
+          {pay.reason !== 'onTime' && <span className="tag warn">{pay.reason === 'override' ? 'แก้เฉพาะเดือนนี้' : `เลื่อนจาก ${thaiDate(pay.nominal).split(' ').slice(0, 2).join(' ')}`}</span>}
+          {m !== current && <button className="link-btn" onClick={() => setMonth(null)}>กลับเดือนนี้</button>}
+        </div>
+      )}
+      {view !== 'month' && m !== current && <div className="plan-meta"><button className="link-btn" onClick={() => setMonth(null)}>กลับ{view === 'year' ? 'ปี' : 'เดือน'}นี้</button></div>}
 
       {segmented}
 
+      {view === '3m' && <PlanThree data={data} month={m} current={current} amountOf={amountOf} onEdit={(item) => setEditing({ item, groupId: item.groupId })} />}
+      {view === 'year' && <PlanYearView data={data} year={Number(m.slice(0, 4))} current={current} amountOf={amountOf} onPickMonth={(x) => { setMonth(x); setView('month'); }} />}
+      {view === 'month' && <>
       <section className="card plan-sum" aria-label="สรุปแผนเดือนนี้">
         <div className="sum-top"><span className="t">สรุปแผน{m === current ? 'เดือนนี้' : ` ${thaiMonth(m)}`}</span>
           <span className="muted">Savings Rate <b className="num" style={{ color: 'var(--ink)' }}>{pct1(t.saving + t.invest, t.income)}%</b></span></div>
@@ -182,6 +205,8 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
         {byAccount.size === 0 && <div className="acc-row muted"><span>ยังไม่ได้เลือก<span className="nw">บัญชีปลายทาง</span>ให้รายการไหน</span></div>}
         <div className="acc-left"><span>เหลือในบัญชีเงินเดือน</span><span className={`num${salaryLeft < 0 ? ' neg' : ''}`}>{formatBaht(salaryLeft)}</span></div>
       </section>
+
+      </>}
 
       {editing && <ItemSheet data={data} month={m} current={current} item={editing.item} groupId={editing.groupId} onClose={() => setEditing(null)} />}
       {payEdit && <PayDateSheet settings={s} cycle={m} onClose={() => setPayEdit(false)} />}

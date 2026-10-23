@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { applyActualSalary, confirmPay, markDuePaid, salaryItemFor, snoozePay } from '../db/actions';
-import { cycleOf, daysBetween, localToday } from '../calc/dates';
+import { cycleOf, daysBetween, localToday, thaiMonth } from '../calc/dates';
 import { formatBaht, parseBaht } from '../calc/money';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
@@ -59,7 +59,7 @@ export function HomeCards() {
               <input className="num" inputMode="decimal" value={actualText} onChange={(e) => setActualText(e.target.value)} aria-invalid={actual === null} />
             </label>
             {actual !== null && diff !== 0 && (
-              <div className="note warn"><span>{diff < 0 ? 'น้อยกว่า' : 'มากกว่า'}แผน <b className="num">{formatBaht(Math.abs(diff))}</b> · ถ้าใช้ยอดนี้ <span className="nw">เงินเหลือเดือนนี้</span>จะเป็น <b className="num nw">{formatBaht(left + diff)}</b> จาก <span className="num nw">{formatBaht(left)}</span></span></div>
+              <div className="note warn"><span>{diff < 0 ? 'น้อยกว่า' : 'มากกว่า'}แผน <b className="num">{formatBaht(Math.abs(diff))}</b> · ถ้าใช้ยอดนี้ <span className="nw">เงินเหลือ {thaiMonth(c.cycle)}</span> จะเป็น <b className="num nw">{formatBaht(left + diff)}</b> จาก <span className="num nw">{formatBaht(left)}</span></span></div>
             )}
             <button className="btn btn-pri" disabled={actual === null || !salary} onClick={async () => {
               if (actual === null || !salary) return;
