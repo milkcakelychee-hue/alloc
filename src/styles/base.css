@@ -576,3 +576,17 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .mbars .b { width: 100%; border-radius: 5px 5px 2px 2px; }
 .mbars small { font-size: 9.5px; font-weight: 700; color: var(--ink2); }
 .mbars em { font-style: normal; font-size: 10px; color: var(--ink3); }
+
+/* ปุ่มเข้าแผนบนหน้าภาพรวม */
+.plan-entry { display: flex; flex-direction: column; gap: 14px; padding: 18px 18px 16px; text-decoration: none; }
+.plan-entry:active { transform: scale(.985); }
+.plan-entry:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+.pe-top { display: flex; align-items: center; gap: 12px; }
+.pe-ic { width: 48px; height: 48px; border-radius: 14px; background: var(--lime); color: #16231C; display: flex; align-items: center; justify-content: center; flex: none; }
+.pe-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.5; }
+.pe-t b { font-size: 19px; font-weight: 700; }
+.pe-t > span { font-size: 13px; color: var(--hero-ink2); }
+.pe-go { width: 36px; height: 36px; border-radius: 999px; background: rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; flex: none; }
+.pe-bot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.16); font-size: 13px; color: var(--hero-ink2); }
+.pe-v b { font-size: 17px; font-weight: 600; color: var(--hero-ink); margin-left: 4px; }
+.pe-v b.neg { color: #FFB4A3; }
