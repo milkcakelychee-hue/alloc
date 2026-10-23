@@ -59,7 +59,7 @@ export interface Goal extends Base {
   dueMonth: Month | null;
   note: string;
   openingBalance: Satang;
-  closed: boolean; // รายจ่ายตามเป้าหมาย: กด "ใช้เงินเที่ยวนี้แล้ว"
+  closed: boolean; // รายจ่ายตามเป้าหมาย: กด "ใช้เงินก้อนนี้แล้ว"
   contributions?: PvdContribution[]; // เฉพาะ PVD
 }
 
