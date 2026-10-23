@@ -1,0 +1,40 @@
+import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom/client';
+import { HashRouter, Route, Routes, Navigate } from 'react-router-dom';
+import './styles/tokens.css';
+import './styles/base.css';
+import { applyTheme } from './lib/theme';
+import { applyUpdate, hasPendingUpdate, onPendingUpdate } from './lib/update';
+import { TabBar } from './components/TabBar';
+import Home from './pages/Home';
+import Goals from './pages/Goals';
+import Log from './pages/Log';
+import Settings from './pages/Settings';
+
+function Shell() {
+  const [upd, setUpd] = useState(hasPendingUpdate());
+  useEffect(() => onPendingUpdate(() => setUpd(true)), []);
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/goals" element={<Goals />} />
+        <Route path="/log" element={<Log />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <TabBar />
+      {upd && <button className="toast" onClick={() => applyUpdate()}>มีอัปเดตใหม่ · แตะเพื่อรีเฟรช</button>}
+    </>
+  );
+}
+
+applyTheme();
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <HashRouter>
+      <Shell />
+    </HashRouter>
+  </React.StrictMode>
+);

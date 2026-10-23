@@ -1,0 +1,14 @@
+node_modules
+dist
+*.tsbuildinfo
+.DS_Store
+# ข้อมูลการเงินจริงห้ามขึ้น repo สาธารณะ
+*.xlsx
+*.xls
+*.csv
+*.alloc
+.env*
+
+# สเปกมีตัวเลขจริง เก็บไว้นอก repo เท่านั้น
+SPEC.md
+ALLOC_SPEC.md

@@ -1,0 +1,76 @@
+/* Design tokens — SPEC.md หัวข้อ 3 · ชื่อตัวแปรตามต้นแบบบนแคนวาส */
+:root {
+  --bg: #FAFAF7;
+  --card: #FFFFFF;
+  --card2: #F1F1EC;
+  --line: #ECECE6;
+  --line-in: #F1F1EC;
+  --cardline: 0 0 0 1px #ECECE6;
+  --ink: #16231C;
+  --ink2: #46534B;
+  --ink3: #5E6862;
+  --pri: #1E3B2C;
+  --onpri: #FFFFFF;
+  --sel: #1E3B2C;
+  --onsel: #FFFFFF;
+  --link: #2F6B47;
+  --hero: linear-gradient(150deg, #3A6B50 0%, #1E3B2C 55%, #11251A 100%);
+  --hero-ink: #FFFFFF;
+  --hero-ink2: #C2D6C7;
+  --lime: #C6E43F;
+  --lime-card: linear-gradient(150deg, #E4F59A 0%, #C6E43F 55%, #A9CF24 100%);
+  --expense: #B8432A;  --expense-bg: #FCEDE7;
+  --income: #2F7A4D;
+  --danger: #A63D27;   --danger-bg: #F8E3DC;
+  --warning: #8A5A0B;  --warning-bg: #F6EBCF;
+  --peach: #8A4B14;    --peach-bg: #FAEBDD;
+  --inv: #2A5F8F;      --inv-bg: #E4EEF8;
+  --track: #F1F1EC;
+  --shadow: rgba(22, 35, 28, .08);
+  --scrim: rgba(13, 22, 17, .42);
+
+  /* การ์ดหมวดใหญ่ในแผน: พื้น / หัว / เส้น / พื้นไอคอน */
+  --g-income-card: #FFFFFF;   --g-income-head: #E6EFE4;   --g-income-line: #ECECE6;   --g-income-ic: #E6EFE4;
+  --g-expense-card: #FFFFFF;  --g-expense-head: #FFF0F0;  --g-expense-line: #ECECE6;  --g-expense-ic: #FFF0F0;
+  --g-goal-card: #FFFFFF;     --g-goal-head: #FAEBDD;     --g-goal-line: #ECECE6;     --g-goal-ic: #FAEBDD;
+  --g-save-card: #FFFFFF;     --g-save-head: #E4EEF8;     --g-save-line: #ECECE6;     --g-save-ic: #E4EEF8;
+
+  --font: 'IBM Plex Sans Thai Looped', 'Sukhumvit Set', system-ui, sans-serif;
+  --font-num: 'Work Sans', 'IBM Plex Sans Thai Looped', system-ui, sans-serif;
+
+  --r-card: 22px;
+  --r-hero: 28px;
+  --r-btn: 14px;
+  --r-pill: 999px;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0D1611;
+  --card: #15231B;
+  --card2: #1E3227;
+  --line: #243A2E;
+  --line-in: #243A2E;
+  --cardline: 0 0 0 0 transparent;
+  --ink: #FAFAF7;
+  --ink2: #BAC4BB;
+  --ink3: #8F9B93;
+  --pri: #2A4D3B;
+  --sel: #8FCCA3;
+  --onsel: #0D1611;
+  --link: #8FCCA3;
+  --expense: #EE927A;  --expense-bg: #3D2119;
+  --income: #8FCCA3;
+  --danger: #EE927A;   --danger-bg: #3D2119;
+  --warning: #E2B866;  --warning-bg: #3A2F17;
+  --peach: #E8A770;    --peach-bg: #2F2113;
+  --inv: #7FB0DE;      --inv-bg: #13212F;
+  --track: #243A2E;
+  --shadow: rgba(0, 0, 0, .4);
+
+  --g-income-card: #0F190D;   --g-income-head: #1B2B17;   --g-income-line: #283E23;   --g-income-ic: #294224;
+  --g-expense-card: #1B0B0B;  --g-expense-head: #2F1313;  --g-expense-line: #431E1E;  --g-expense-ic: #481E1E;
+  --g-goal-card: #1B130B;     --g-goal-head: #2F2113;     --g-goal-line: #43301E;     --g-goal-ic: #48321E;
+  --g-save-card: #0B131B;     --g-save-head: #13212F;     --g-save-line: #1E3043;     --g-save-ic: #1E3348;
+  color-scheme: dark;
+}
