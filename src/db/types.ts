@@ -24,6 +24,7 @@ export interface Settings extends Base {
   schemaVersion: number;
   receiveInfo: string; // ข้อความช่องทางรับเงินในใบสรุปบิล ห้ามเก็บเลขบัตร/รหัส
   onboardedAt?: number | null; // ผ่านหน้า Welcome แล้ว (ไม่มี = ยังไม่ผ่าน)
+  goalCats?: { order: GoalType[]; hidden: GoalType[] }; // ลำดับหมวดเป้าหมาย + หมวดที่ลบ (เพิ่มกลับได้จากหน้าสร้างเป้า)
 }
 
 export interface Account extends Base { name: string; order: number }
@@ -56,7 +57,8 @@ export interface PaidCheck extends Base { cycleMonth: Month; planItemId: string;
 export type GoalType = 'saving' | 'invest' | 'goalSpend' | 'pvd';
 
 // ยอดสมทบ PVD ต่อเดือน มีผลตั้งแต่เดือน from จนกว่าจะมีรายการใหม่
-export interface PvdContribution { from: Month; mine: Satang; employer: Satang }
+// ตั้งจาก % ของเงินเดือนก่อนหัก: gross + อัตรา (basis points 500 = 5%) แล้วคิด mine/employer เก็บไว้เป็นสตางค์
+export interface PvdContribution { from: Month; mine: Satang; employer: Satang; gross?: Satang; mineBp?: number; employerBp?: number }
 
 export interface Goal extends Base {
   type: GoalType;
@@ -69,9 +71,10 @@ export interface Goal extends Base {
   openingBalance: Satang;
   closed: boolean; // รายจ่ายตามเป้าหมาย: กด "ใช้เงินก้อนนี้แล้ว"
   contributions?: PvdContribution[]; // เฉพาะ PVD
+  depositFrom?: Month; // รอบแรกที่บวกตามแผนอัตโนมัติ (ไม่มี = รอบถัดจากรอบที่สร้าง)
 }
 
-export type AdjustmentKind = 'opening' | 'planDeposit' | 'withdraw' | 'correction' | 'employer' | 'spent';
+export type AdjustmentKind = 'opening' | 'planDeposit' | 'deposit' | 'withdraw' | 'correction' | 'employer' | 'spent';
 export interface GoalAdjustment extends Base {
   goalId: string;
   date: DateStr;
@@ -79,6 +82,7 @@ export interface GoalAdjustment extends Base {
   kind: AdjustmentKind;
   reason: string;
   cycleMonth?: Month; // planDeposit/employer: รอบที่ฝาก กันสร้างซ้ำ
+  note?: string;
 }
 
 export type LogType = 'expense' | 'income';

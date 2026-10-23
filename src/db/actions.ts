@@ -3,6 +3,7 @@ import type { AllocDB } from './db';
 import type { DateStr, GroupKind, LogEntry, Month, PlanItem, Satang } from './types';
 import { addDays } from '../calc/dates';
 import { applyAmountChange, rawAmount } from '../calc/plan';
+import { syncDeposits } from './goalActions';
 
 /**
  * ติ๊ก "จ่ายแล้ว" บนการ์ด: ติ๊กในแผน (จ่าย/โอนแล้ว) + บันทึกรายจ่ายในบันทึกให้อัตโนมัติ
@@ -36,10 +37,11 @@ export async function deleteLogEntry(db: AllocDB, id: string) {
   });
 }
 
-/** เงินเดือนเข้าแล้ว: เก็บวันที่และยอดจริง (ไม่แก้แผน) */
+/** เงินเดือนเข้าแล้ว: เก็บวันที่และยอดจริง (ไม่แก้แผน) แล้วบวกยอดเป้าตามแผนของรอบนั้น */
 export async function confirmPay(db: AllocDB, opts: { cycle: Month; date: DateStr; amount: Satang; now?: number }) {
   const now = opts.now ?? Date.now();
   await db.payReceipts.put({ id: opts.cycle, status: 'received', date: opts.date, amount: opts.amount, snoozeUntil: null, createdAt: now, updatedAt: now });
+  await syncDeposits(db, opts.date, now);
 }
 
 /** ยังไม่เข้า: ถามอีกครั้งพรุ่งนี้ */

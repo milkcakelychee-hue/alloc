@@ -27,7 +27,8 @@ export function PlanMonth() {
   const nav = useNavigate();
   const data = usePlanData();
   const today = localToday();
-  const [month, setMonth] = useState<Month | null>(null);
+  const [sp0] = useSearchParams();
+  const [month, setMonth] = useState<Month | null>(() => (/^\d{4}-\d{2}$/.test(sp0.get('m') ?? '') ? sp0.get('m') : null)); // ?m= มาจากหน้าเป้าหมาย
   const [editing, setEditing] = useState<Editing>(null);
   const [checkMode, setCheckMode] = useState(false);
   const [showZero, setShowZero] = useState(false);
@@ -37,7 +38,7 @@ export function PlanMonth() {
   const [editMonth, setEditMonth] = useState<Month | null>(null);
   const [sp, setSp] = useSearchParams();
   const view: View = sp.get('v') === '3m' ? '3m' : sp.get('v') === 'year' ? 'year' : 'month';
-  const setView = (v: View) => setSp(v === 'month' ? { tab: 'plan' } : { tab: 'plan', v }, { replace: true });
+  const setView = (v: View) => setSp(v === 'month' ? { tab: 'plan' } : { tab: 'plan', v }, { replace: true }); // ตัด ?m= ออก ใช้เดือนใน state แทน
 
   const s = data?.settings;
   const current = s ? cycleOf(today, s.pay) : null;

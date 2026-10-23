@@ -1,7 +1,7 @@
 // กฎวันเงินเดือนเข้า (docs/decisions.md)
 // แยก "วันที่ตั้งไว้" (nominal ใช้แบ่งรอบงบ) ออกจาก "วันที่เงินเข้าจริง" (expected/actual ใช้ดูเรื่องเวลา)
 import type { DateStr, Month } from '../db/types';
-import { addDays, cycleRange, nominalPayDate, toDate, type PayRule } from './dates';
+import { addDays, addMonths, cycleOf, cycleRange, nominalPayDate, toDate, type PayRule } from './dates';
 
 export type WeekendShift = 'before' | 'after' | 'none';
 export { nominalPayDate, type PayRule } from './dates';
@@ -26,4 +26,23 @@ export const cycleRangeByRule = (rule: PayRule, m: Month) => cycleRange(m, rule)
  */
 export function billsBeforePay(expected: DateStr, nominal: DateStr, dues: { name: string; date: DateStr }[]) {
   return dues.filter((b) => b.date >= nominal && b.date < expected);
+}
+
+/**
+ * เงินเดือนของรอบไหนถือว่าเข้าแล้ว (ใช้บวกยอดเป้าตามแผน)
+ * รอบ c เข้าแล้ว = ผู้ใช้กด "เงินเดือนเข้าแล้ว" หรือเลยวันที่เงินควรเข้ามา 7 วัน (ไม่เคยกดยืนยัน)
+ * คืนรอบล่าสุดที่เข้าแล้ว และวันที่ใช้บันทึก
+ */
+export function fundedThrough(opts: {
+  pay: PayRule; shift: WeekendShift; overrides: Record<string, string>; today: string;
+  received: Map<string, string | null>; // รอบ → วันที่เงินเข้าจริง
+}): { cycle: string; dateOf: (cycle: string) => string } {
+  const { pay, shift, overrides, today, received } = opts;
+  const cur = cycleOf(today, pay);
+  const expected = (c: string) => expectedPayDate(pay, shift, addMonths(c, -1), overrides).date;
+  const dateOf = (c: string) => received.get(c) ?? expected(c);
+  for (const c of [addMonths(cur, 1), cur]) {
+    if (received.has(c) || addDays(expected(c), 7) <= today) return { cycle: c, dateOf };
+  }
+  return { cycle: addMonths(cur, -1), dateOf };
 }

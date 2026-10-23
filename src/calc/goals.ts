@@ -130,3 +130,74 @@ export function totalAssets(goals: Goal[], adjustments: GoalAdjustment[]) {
   }
   return { saving, invest, total: saving + invest };
 }
+
+// ---------- ขั้นที่ 5: หน้าเป้าหมาย ----------
+
+/** ยอดสมทบ PVD จาก % ของเงินเดือนก่อนหัก · bp = basis points (500 = 5%) · ปัดเป็นสตางค์ */
+export const pvdFromRate = (gross: Satang, bp: number): Satang => Math.round((gross * bp) / 10000);
+
+/** ยอดตามแผนต่อเดือนของเป้า (PVD = ส่วนของฉัน + นายจ้าง) */
+export const planOf = (goal: Goal, items: PlanItem[]) => (goal.type === 'pvd' ? pvdMonthly(goal) : plannedFor(goal.id, items));
+
+/** รอบแรกที่ยังไม่ได้บวกตามแผน: ถ้ารอบนี้บวกแล้ว (เงินเดือนเข้าแล้ว) เริ่มรอบหน้า */
+export function nextDepositCycle(goal: Goal, adjustments: GoalAdjustment[], currentCycle: Month): Month {
+  const done = adjustments.some((a) => a.goalId === goal.id && a.cycleMonth === currentCycle && (a.kind === 'planDeposit' || a.kind === 'employer'));
+  return done ? addMonths(currentCycle, 1) : currentCycle;
+}
+
+/** ยอดต่อเดือนคงที่ → ครบเป้าเดือนไหน (นับ start เป็นเดือนแรก) */
+export function reachByMonthly(missing: Satang, perMonth: Satang, start: Month) {
+  if (missing <= 0) return { months: 0, reachMonth: start };
+  if (perMonth <= 0) return { months: 0, reachMonth: null as Month | null };
+  const months = Math.ceil(missing / perMonth);
+  return { months, reachMonth: addMonths(start, months - 1) as Month | null };
+}
+
+/** ยอดคงเหลือ ณ สิ้นรอบ m (ยอดยกมา + ทุกรายการที่อยู่ในรอบ m หรือก่อนหน้า) */
+export function balanceAt(goal: Goal, adjustments: GoalAdjustment[], m: Month, cycleOfAdj: (a: GoalAdjustment) => Month) {
+  let b = goal.openingBalance;
+  for (const a of adjustments) if (a.goalId === goal.id && monthDiff(cycleOfAdj(a), m) >= 0) b += a.delta;
+  return b;
+}
+
+export interface GoalOutlook {
+  balance: Satang; remaining: Satang; pct: number; planNow: Satang;
+  reachMonth: Month | null; done: boolean;
+  horizon: Month; atHorizon: Satang; // ยอดคาดการณ์ ณ ธ.ค. ปีหน้า (ถ้าไม่ครบก่อน)
+  stopsAt: { year: number; balance: Satang } | null; // แผนปีหน้าไม่มีรายการของเป้านี้
+  changes: { month: Month; amount: Satang }[]; // ยอดแผนเปลี่ยนใน 12 เดือนข้างหน้า
+}
+
+/**
+ * มุมมองของเป้าหนึ่งเป้า: ยอด % แผนรอบนี้ คาดการณ์วันครบ
+ * ขอบคาดการณ์ = ธ.ค. ของปีถัดไป · PVD ไม่ตัดเดือนสุดท้าย
+ */
+export function goalOutlook(goal: Goal, items: PlanItem[], adjustments: GoalAdjustment[], currentCycle: Month): GoalOutlook {
+  const balance = goalBalance(goal, adjustments);
+  const planFor = planOf(goal, items);
+  const year = Number(currentCycle.slice(0, 4));
+  const horizon = `${year + 1}-12`;
+  const from = nextDepositCycle(goal, adjustments, currentCycle);
+  const p = projectGoal({ balance, target: goal.target, from, planFor, maxMonths: 600, cap: goal.type !== 'pvd' });
+  const span = Math.max(monthDiff(from, horizon) + 1, 0);
+  const upTo = (end: Month) => p.months.filter((x) => monthDiff(x.month, end) >= 0).at(-1)?.balance ?? balance;
+  const atHorizon = p.reachMonth && monthDiff(p.reachMonth, horizon) >= 0 ? goal.target : (span ? upTo(horizon) : balance);
+  // แผนปีหน้าว่าง แต่ปีนี้ยังมีแผน และยังไม่ครบเป้าภายในปีนี้
+  let stopsAt: GoalOutlook['stopsAt'] = null;
+  const nextYear = Array.from({ length: 12 }, (_, i) => `${year + 1}-${String(i + 1).padStart(2, '0')}`);
+  const reachedThisYear = p.done || (p.reachMonth !== null && Number(p.reachMonth.slice(0, 4)) <= year);
+  const plannedThisYear = monthDiff(currentCycle, `${year}-12`) >= 0 && Array.from({ length: monthDiff(currentCycle, `${year}-12`) + 1 }, (_, i) => addMonths(currentCycle, i)).some((m) => planFor(m) > 0);
+  if (goal.type !== 'pvd' && !reachedThisYear && plannedThisYear && nextYear.every((m) => planFor(m) === 0)) {
+    stopsAt = { year: year + 1, balance: upTo(`${year}-12`) };
+  }
+  const changes: GoalOutlook['changes'] = [];
+  for (let i = 1; i <= 12; i++) {
+    const m = addMonths(currentCycle, i);
+    const a = planFor(m), prev = planFor(addMonths(m, -1));
+    if (a !== prev && a > 0 && !(p.reachMonth && monthDiff(p.reachMonth, m) > 0)) changes.push({ month: m, amount: a });
+  }
+  return {
+    balance, remaining: Math.max(goal.target - balance, 0), pct: goal.target > 0 ? balance / goal.target : 0,
+    planNow: planFor(currentCycle), reachMonth: p.reachMonth, done: p.done, horizon, atHorizon, stopsAt, changes
+  };
+}
