@@ -360,3 +360,16 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .form-rows .row.hr-plain { padding-left: 4px; gap: 2px; }
 .help-space { width: 36px; flex: none; }
 .hr-help { margin-left: 40px; }
+
+/* หน้าหลัก: ต้องทำ */
+.todo { display: flex; flex-direction: column; gap: 8px; }
+.todo-h { display: flex; align-items: baseline; gap: 6px; padding: 4px 2px 0; }
+.todo-h h2 { font-size: 17px; font-weight: 600; }
+.due-card { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 12px; border-radius: 20px; background: var(--card); box-shadow: var(--cardline); }
+.due-card .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.45; }
+.due-card .t1 { font-size: 15px; font-weight: 600; }
+.due-card .t2 { font-size: 12.5px; color: var(--ink2); }
+.due-warn { border-radius: 18px; }
+.due-warn .tx { flex: 1; display: flex; flex-direction: column; line-height: 1.45; }
+.due-warn .t1 { font-size: 15px; font-weight: 500; }
+.due-warn .t2 { font-size: 12.5px; color: var(--ink2); }

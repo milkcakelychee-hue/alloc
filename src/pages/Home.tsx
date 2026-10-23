@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Segmented } from '../components/Segmented';
 import { Empty } from '../components/Empty';
 import { PlanMonth } from './plan/PlanMonth';
+import { HomeCards } from './HomeCards';
 
 type Tab = 'summary' | 'plan';
 
@@ -30,6 +31,7 @@ export default function Home() {
         <h1>ภาพรวมการเงิน</h1>
       </div>
       {segmented}
+      <HomeCards />
       <Empty icon="home" title="สรุป" text={<>สินทรัพย์รวม Savings Rate และ<span className="nw">สิ่งที่ต้องทำ</span> <span className="nw">จะแสดงที่นี่</span></>} />
     </main>
   );

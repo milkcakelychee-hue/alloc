@@ -41,7 +41,7 @@ export class AllocDB extends Dexie {
       payments: 'id, billId, personId'
     });
     // v2: กฎวันเงินเดือนเข้า + วันครบกำหนดของรายการ + ประวัติเงินเข้าจริง
-    this.version(2).stores({ payReceipts: 'id' }).upgrade(async (tx) => {
+    this.version(2).stores({ payReceipts: 'id, status' }).upgrade(async (tx) => {
       const settings = await tx.table('settings').toArray();
       const items = await tx.table('planItems').toArray();
       const out = migrateV1toV2({ settings, planItems: items });

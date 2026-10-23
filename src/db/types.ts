@@ -51,7 +51,7 @@ export interface PlanItem extends Base {
   dueDay: number | null; // ครบกำหนดวันที่ (ไม่บังคับ) · ขึ้นการ์ด "จ่ายหรือยัง" ในหน้าหลัก
 }
 
-export interface PaidCheck extends Base { cycleMonth: Month; planItemId: string; checked: boolean }
+export interface PaidCheck extends Base { cycleMonth: Month; planItemId: string; checked: boolean; logEntryId?: string | null }
 
 export type GoalType = 'saving' | 'invest' | 'goalSpend' | 'pvd';
 
@@ -92,6 +92,8 @@ export interface LogEntry extends Base {
   categoryId: string;
   note: string;
   billItemId: string | null;
+  planItemId?: string | null; // บันทึกอัตโนมัติจากการ์ด "จ่ายหรือยัง" (ลบรายการนี้ = ยกเลิกติ๊กจ่ายแล้ว)
+  cycleMonth?: Month | null;
 }
 
 export interface Person extends Base { name: string; icon: string; colorIndex: number; note: string }
