@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { Sheet } from '../components/Sheet';
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme';
@@ -38,6 +39,22 @@ export default function Settings() {
     <main className="page">
       <div className="page-head"><h1>ตั้งค่า</h1></div>
 
+      <span className="sec">เกี่ยวกับ</span>
+      <div className="list">
+        <button className="row" onClick={() => setNews(true)}>
+          <span className="ic"><Icon name="info" size={18} stroke={2} /></span>
+          <span className="tx"><span className="t1">มีอะไรใหม่</span></span>
+          <span className="val num">{APP_VERSION}</span>
+          <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
+        </button>
+        {/* ชั่วคราวช่วงสร้างแอป: ให้เจ้าของดูหน้าเริ่มใช้งานได้ · เอาออกเมื่อแอปจริงเสร็จ */}
+        <Link className="row" to="/welcome?preview=1">
+          <span className="ic"><Icon name="plus" size={18} stroke={2} /></span>
+          <span className="tx"><span className="t1">ดูหน้าเริ่มใช้งาน</span><span className="t2">ตัวอย่าง ไม่บันทึกข้อมูล · มีเฉพาะช่วงสร้างแอป</span></span>
+          <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
+        </Link>
+      </div>
+
       <span className="sec">การแสดงผล</span>
       <div className="list">
         <div className="block">
@@ -73,23 +90,17 @@ export default function Settings() {
       <RestorePicker ref={picker} onRestored={() => { setTheme(getThemePref()); flash('กู้คืนเรียบร้อย'); }} />
       {toast && <div className="toast" role="status">{toast}</div>}
 
-      <span className="sec">เกี่ยวกับ</span>
-      <div className="list">
-        <button className="row" onClick={() => setNews(true)}>
-          <span className="ic"><Icon name="info" size={18} stroke={2} /></span>
-          <span className="tx"><span className="t1">มีอะไรใหม่</span></span>
-          <span className="val num">{APP_VERSION}</span>
-          <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
-        </button>
-      </div>
-
       <span className="muted" style={{ textAlign: 'center', fontSize: 12, paddingTop: 4 }}>
         Alloc <span className="num">{APP_VERSION}</span> · ข้อมูลเก็บในเครื่องนี้เท่านั้น
       </span>
 
       {news && (
         <Sheet title="มีอะไรใหม่" onClose={() => setNews(false)}>
-          {CHANGELOG.map((c) => (
+          {CHANGELOG.length === 0 ? (
+            <p className="muted" style={{ margin: '0 0 16px', lineHeight: 1.6 }}>
+              ตอนนี้ Alloc ยังอยู่ระหว่างสร้าง รายการนี้จะเริ่มบอกเมื่อแอปพร้อมใช้จริง ว่าทำอะไรได้บ้าง และมีอะไรที่ปรับแก้หรือจะเพิ่มในอนาคต
+            </p>
+          ) : CHANGELOG.map((c) => (
             <div key={c.version} className="card" style={{ marginBottom: 10 }}>
               <div className="num" style={{ fontWeight: 700, marginBottom: 6 }}>{c.version}</div>
               <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--ink2)' }}>
