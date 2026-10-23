@@ -34,7 +34,7 @@ export default function LogCats() {
       <div className="lg-head">
         <button className="lg-sq" aria-label="กลับ" onClick={() => nav(-1)}><Icon name="back" size={20} stroke={2} /></button>
         <span style={{ flex: 1 }} />
-        {!ed && <button className="lgc-addbtn" onClick={() => setForm({ cat: null })}><Icon name="plus" size={18} stroke={2.4} />เพิ่มหมวด{E ? 'รายจ่าย' : 'รายรับ'}</button>}
+        {!ed && <button className="lgc-addbtn" onClick={() => setForm({ cat: null })}><Icon name="plus" size={18} stroke={2.4} />เพิ่มหมวด</button>}
         <button className="gx-hbtn" aria-pressed={ed} onClick={() => setEd(!ed)} style={ed ? { background: 'var(--pri)', color: '#FFFFFF' } : undefined}>{ed ? 'เสร็จ' : 'จัดเรียง'}</button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, padding: '0 2px', marginTop: -2 }}><span style={{ fontSize: 12, color: 'var(--ink3)' }}>บันทึก</span><h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>จัดการหมวด</h1></div>
