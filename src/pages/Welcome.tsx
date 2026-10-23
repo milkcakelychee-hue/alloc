@@ -7,6 +7,7 @@ import { startFresh } from '../db/onboarding';
 import { cycleOf, cycleRange, localToday, thaiDate, thaiMonth } from '../calc/dates';
 import { parseBaht } from '../calc/money';
 import { AppMark } from '../components/AppMark';
+import { AppGuide } from '../components/AppGuide';
 import { Icon } from '../components/Icon';
 import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
 
@@ -84,15 +85,17 @@ export default function Welcome() {
     return (
       <main className="page welcome done">
         {preview && <PreviewBar onClose={exit} />}
-        <span className="done-mark"><Icon name="check" size={38} stroke={2.2} /></span>
-        <h1>{restored ? 'กู้คืนเรียบร้อย' : 'พร้อมใช้แล้ว'}</h1>
-        <span className="muted">{restored ? 'ข้อมูลจากไฟล์สำรองกลับมาครบแล้ว' : 'เริ่มวางแผนให้ทุกบาทมีหน้าที่ได้เลย'}</span>
-        <ol className="tips">
-          {!restored && <li><span>วางแผนรายจ่ายที่<span className="nw">หน้าหลัก</span> → <span className="nw">วางแผนรายจ่าย</span></span></li>}
-          <li><span>เพิ่มแอปไว้ที่<span className="nw">หน้าจอโฮม</span> <span className="nw">(แชร์ → เพิ่มไปยังหน้าจอโฮม)</span></span></li>
-          <li><span>สำรองข้อมูลจาก<span className="nw">หน้าตั้งค่า</span>เป็นประจำ <span className="nw">เพราะข้อมูลอยู่ในเครื่องนี้เท่านั้น</span></span></li>
-        </ol>
-        <button className="btn btn-pri" style={{ marginTop: 'auto', width: '100%' }} onClick={exit}>ไปหน้าหลัก</button>
+        <div className="done-head">
+          <span className="done-mark"><Icon name="check" size={30} stroke={2.4} /></span>
+          <h1>{restored ? 'กู้คืนเรียบร้อย' : 'พร้อมใช้แล้ว'}</h1>
+          <span className="muted">{restored
+            ? <>ข้อมูลจากไฟล์สำรอง<span className="nw">กลับมาครบแล้ว</span></>
+            : <>มาดูกันว่า Alloc <span className="nw">ช่วยอะไรได้บ้าง</span></>}</span>
+        </div>
+        <AppGuide restored={restored} />
+        <div className="sticky-cta">
+          <button className="btn btn-pri" style={{ width: '100%' }} onClick={exit}>ไปหน้าหลัก</button>
+        </div>
       </main>
     );
   }

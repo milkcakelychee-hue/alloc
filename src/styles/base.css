@@ -147,12 +147,66 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .step-head h1 { font-size: 20px; font-weight: 700; }
 
 .actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
-.welcome.done { align-items: center; text-align: center; padding-top: calc(env(safe-area-inset-top) + 70px); }
-.done-mark { width: 76px; height: 76px; border-radius: 999px; background: var(--g-income-head); color: var(--income); display: flex; align-items: center; justify-content: center; }
-.welcome.done h1 { font-size: 24px; font-weight: 700; }
-.tips { width: 100%; margin: 10px 0 0; padding: 0; list-style: none; counter-reset: tip; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-.tips li { counter-increment: tip; display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 16px; background: var(--card); box-shadow: var(--cardline); font-size: 13.5px; }
-.tips li::before { content: counter(tip); font-family: var(--font-num); width: 26px; height: 26px; border-radius: 999px; background: var(--card2); display: flex; align-items: center; justify-content: center; font-weight: 700; flex: none; }
 .row.alert { background: var(--warning-bg); }
 .row.alert .ic { background: var(--card); color: var(--warning); }
 .pill-btn { min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--pri); color: var(--onpri); font-size: 13px; font-weight: 600; flex: none; }
+
+/* หน้า พร้อมใช้แล้ว = คู่มือสั้น */
+.welcome.done { gap: 18px; padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+.done-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding-top: 18px; }
+.done-head h1 { font-size: 24px; font-weight: 700; margin-top: 6px; }
+.done-mark { width: 60px; height: 60px; border-radius: 999px; background: var(--g-income-head); color: var(--income); display: flex; align-items: center; justify-content: center; }
+.guide { display: flex; flex-direction: column; gap: 22px; }
+.guide section { display: flex; flex-direction: column; gap: 10px; }
+.guide h2 { font-size: 17px; font-weight: 700; padding: 0 2px; }
+.g-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.g-step { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px 10px 12px; border-radius: 18px; background: var(--card); box-shadow: var(--cardline); color: var(--ink); text-decoration: none; }
+.g-step > svg { color: var(--ink3); flex: none; }
+.g-step .tx { flex: 1; display: flex; flex-direction: column; line-height: 1.45; }
+.g-step .t1 { font-size: 15px; font-weight: 600; }
+.g-step .t2 { font-size: 12.5px; color: var(--ink3); }
+.g-num { width: 30px; height: 30px; border-radius: 999px; background: var(--sel); color: var(--onsel); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex: none; }
+.g-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 8px 6px; border-radius: 16px; background: var(--card); box-shadow: var(--cardline); }
+.g-bar span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--ink2); }
+.g-menu { background: var(--card); border-radius: var(--r-card); box-shadow: var(--cardline); padding: 14px 16px 6px; }
+.g-menu header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.g-menu h3 { flex: 1; font-size: 16px; font-weight: 700; }
+.g-ic { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
+.g-where { font-size: 12px; color: var(--ink3); padding: 3px 9px; border-radius: 999px; background: var(--card2); }
+.g-menu ul { margin: 0; padding: 0; list-style: none; }
+.g-menu li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; }
+.g-menu li + li { border-top: 1px solid var(--line-in); }
+.g-menu .tx { flex: 1; display: flex; flex-direction: column; line-height: 1.45; }
+.g-menu .t1 { font-size: 14.5px; font-weight: 600; }
+.g-menu .t2 { font-size: 13px; color: var(--ink2); }
+.g-sub { width: 28px; height: 28px; border-radius: 9px; background: var(--card2); color: var(--ink2); display: flex; align-items: center; justify-content: center; flex: none; margin-top: 1px; }
+.tone-income .g-ic { background: var(--g-income-head); color: var(--income); }
+.tone-inv .g-ic { background: var(--inv-bg); color: var(--inv); }
+.tone-peach .g-ic { background: var(--peach-bg); color: var(--peach); }
+.tone-plain .g-ic { background: var(--card2); color: var(--ink); }
+.sticky-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; padding: 12px 18px calc(env(safe-area-inset-bottom) + 12px); background: linear-gradient(to top, var(--bg) 70%, transparent); }
+.sticky-cta .btn { max-width: 444px; margin: 0 auto; display: flex; }
+
+/* ต้นแบบกฎวันเงินเข้า */
+.pay-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; border-top: 1px solid var(--line-in); font-size: 14.5px; }
+.pay-row:first-of-type { border-top: 0; }
+.tag { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--card2); color: var(--ink2); white-space: nowrap; }
+.tag.warn { background: var(--warning-bg); color: var(--warning); }
+.pay-card, .confirm-card { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 20px; background: var(--g-income-head); color: var(--ink); }
+.pay-card.late { background: var(--warning-bg); }
+.pay-card .ic, .confirm-card .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--card); color: var(--income); display: flex; align-items: center; justify-content: center; flex: none; }
+.pay-card .tx, .confirm-card .tx { flex: 1; display: flex; flex-direction: column; line-height: 1.45; }
+.pay-card .t1, .confirm-card .t1 { font-size: 15px; font-weight: 600; }
+.pay-card .t2, .confirm-card .t2 { font-size: 13px; color: var(--ink2); }
+.confirm-card { flex-direction: column; align-items: stretch; gap: 14px; background: var(--card); box-shadow: inset 0 0 0 2px var(--sel); }
+.confirm-card .ic { background: var(--g-income-head); }
+.confirm-actions { display: flex; flex-direction: column; gap: 8px; }
+.day-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.day-strip span { display: flex; flex-direction: column; align-items: center; padding: 8px 0 6px; border-radius: 14px; background: var(--card); box-shadow: var(--cardline); }
+.day-strip b { font-size: 20px; }
+.day-strip small { font-size: 11.5px; color: var(--ink3); }
+.day-strip .early { background: var(--warning-bg); box-shadow: none; }
+.day-strip .early b { color: var(--warning); }
+.pay-edit { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; min-height: 36px; padding: 0 12px; border-radius: 999px; background: var(--g-income-head); color: var(--income); font-size: 13.5px; font-weight: 600; }
+.radio-dot { width: 22px; height: 22px; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--ink3); flex: none; }
+.radio-dot.on { box-shadow: inset 0 0 0 7px var(--sel); }
