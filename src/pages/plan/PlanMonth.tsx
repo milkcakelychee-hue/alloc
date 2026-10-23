@@ -1,6 +1,6 @@
 // แท็บ วางแผนรายจ่าย · มุมมองเดือน (ต้นแบบ Plan1)
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import type { GroupKind, Month, PlanGroup, PlanItem } from '../../db/types';
@@ -15,14 +15,16 @@ import { usePlanData } from './usePlanData';
 import { TONE, groupAddLabel, iconOf, thaiMonthLong } from './planUi';
 import { ItemSheet } from './ItemSheet';
 import { PayDateSheet } from './PayDateSheet';
-import { PlanThree } from './PlanThree';
+import { PlanThree, TriLegend } from './PlanThree';
+import { payRuleLabel } from '../../components/PayRuleFields';
 import { PlanYearView } from './PlanYearView';
 
 type View = 'month' | '3m' | 'year';
 
 type Editing = { item: PlanItem | null; groupId: string } | null;
 
-export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
+export function PlanMonth() {
+  const nav = useNavigate();
   const data = usePlanData();
   const today = localToday();
   const [month, setMonth] = useState<Month | null>(null);
@@ -32,6 +34,7 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [payEdit, setPayEdit] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [editMonth, setEditMonth] = useState<Month | null>(null);
   const [sp, setSp] = useSearchParams();
   const view: View = sp.get('v') === '3m' ? '3m' : sp.get('v') === 'year' ? 'year' : 'month';
   const setView = (v: View) => setSp(v === 'month' ? { tab: 'plan' } : { tab: 'plan', v }, { replace: true });
@@ -46,6 +49,11 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
   const amountOf = goalAwareAmountOf(goals, items, adjustments, current);
   const t = planTotals(groups, items, m, amountOf);
   const range = cycleRange(m, s.pay);
+  // หัวมุมมอง 3 เดือน: "ต.ค. – ธ.ค. 69" (ข้ามปี: "พ.ย. 69 – ม.ค. 70") · มุมมองปี: จำนวนเดือนที่มีแผน
+  const m3 = addMonths(m, 2);
+  const triTitle = m.slice(0, 4) === m3.slice(0, 4) ? `${thaiMonth(m).split(' ')[0]} – ${thaiMonth(m3)}` : `${thaiMonth(m)} – ${thaiMonth(m3)}`;
+  const yearN = Array.from({ length: 12 }, (_, i) => `${m.slice(0, 4)}-${String(i + 1).padStart(2, '0')}`).filter((x) => planTotals(groups, items, x, amountOf).income > 0).length;
+  const yearSpan = yearN === 12 ? 'มีแผนครบ 12 เดือน' : yearN ? `มีแผน ${yearN} เดือน` : 'ยังไม่มีแผน';
   const payMonth = addMonths(m, -1); // เงินเดือนที่ใช้ในรอบ m เข้าเดือนก่อน
   const pay = expectedPayDate(s.pay, s.weekendShift, payMonth, s.payOverrides);
   const enabled = groups.filter((g) => g.enabled);
@@ -121,13 +129,16 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
 
   return (
     <main className="page">
+      <button className="back-link" onClick={() => nav('/', { replace: true })}><Icon name="back" size={16} stroke={2.2} />กลับหน้าสรุป</button>
       <div className="plan-head">
         <span className="tx">
           {view === 'year' ? (
-            <><h1>ปี <span className="num">{Number(m.slice(0, 4)) + 543}</span></h1><span className="sub">แผน 12 เดือน · ม.ค. – ธ.ค.</span></>
+            <><h1>ปี <span className="num">{Number(m.slice(0, 4)) + 543}</span></h1><span className="sub">{yearSpan}</span></>
+          ) : view === '3m' ? (
+            <><h1 className="num">{triTitle}</h1><span className="sub">เทียบ 3 เดือน · เงินเดือนเข้า{payRuleLabel(s.pay, s.weekendShift).main}</span></>
           ) : (
             <><h1>{thaiMonthLong(m)}</h1>
-              <span className="sub num">{view === '3m' ? <>เทียบกับ<span className="nw">เดือนก่อนและเดือนถัดไป</span></> : <>รอบ <span className="nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span> (<span className="nw">{range.days} วัน</span>)</>}</span></>
+              <span className="sub num">รอบ <span className="nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span> (<span className="nw">{range.days} วัน</span>)</span></>
           )}
         </span>
         <button className="icon-btn" aria-label={view === 'year' ? 'ปีก่อน' : 'เดือนก่อน'} onClick={() => setMonth(addMonths(m, view === 'year' ? -12 : -1))}><Icon name="back" size={20} stroke={2} /></button>
@@ -151,9 +162,8 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
       )}
       {view !== 'month' && m !== current && <div className="plan-meta"><button className="link-btn" onClick={() => setMonth(null)}>กลับ{view === 'year' ? 'ปี' : 'เดือน'}นี้</button></div>}
 
-      {segmented}
 
-      {view === '3m' && <PlanThree data={data} month={m} current={current} amountOf={amountOf} onEdit={(item) => setEditing({ item, groupId: item.groupId })} />}
+      {view === '3m' && <><PlanThree data={data} month={m} current={current} amountOf={amountOf} onEdit={(item, em) => { setEditMonth(em); setEditing({ item, groupId: item.groupId }); }} /><TriLegend /></>}
       {view === 'year' && <PlanYearView data={data} year={Number(m.slice(0, 4))} current={current} amountOf={amountOf} onPickMonth={(x) => { setMonth(x); setView('month'); }} />}
       {view === 'month' && <>
       <section className="card plan-sum" aria-label="สรุปแผนเดือนนี้">
@@ -208,7 +218,7 @@ export function PlanMonth({ segmented }: { segmented: React.ReactNode }) {
 
       </>}
 
-      {editing && <ItemSheet data={data} month={m} current={current} item={editing.item} groupId={editing.groupId} onClose={() => setEditing(null)} />}
+      {editing && <ItemSheet data={data} month={editMonth ?? m} current={current} item={editing.item} groupId={editing.groupId} onClose={() => { setEditing(null); setEditMonth(null); }} />}
       {payEdit && <PayDateSheet settings={s} cycle={m} onClose={() => setPayEdit(false)} />}
     </main>
   );

@@ -68,3 +68,28 @@ export function itemChanges(items: PlanItem[], months: Month[], amountOf: Amount
   }
   return out;
 }
+
+/**
+ * คัดลอกแผนปี y ไปปี y+1: ยอดแต่ละเดือนของปี y ไปเป็นยอดของเดือนเดียวกันในปี y+1
+ * รายการที่จบในปี y หรือยังไม่เริ่มในปี y ไม่ถูกคัดลอก · คืนเฉพาะรายการที่เปลี่ยน
+ */
+export function copyYearToNext(items: PlanItem[], year: number, amountOf: AmountOf): PlanItem[] {
+  const from = yearMonths(year);
+  const to = yearMonths(year + 1);
+  const out: PlanItem[] = [];
+  for (const item of items) {
+    const p = item.period;
+    if (p.endMode === 'month' && p.endMonth && p.endMonth < to[0]) continue;
+    if (p.start > from[11]) continue;
+    if (!from.some((m) => amountOf(item, m) > 0)) continue;
+    const overrides = { ...item.monthOverrides };
+    from.forEach((m, i) => {
+      const a = amountOf(item, m);
+      if (a === item.defaultAmount) delete overrides[to[i]];
+      else overrides[to[i]] = a;
+    });
+    const next = { ...item, monthOverrides: overrides };
+    if (JSON.stringify(next.monthOverrides) !== JSON.stringify(item.monthOverrides)) out.push(next);
+  }
+  return out;
+}

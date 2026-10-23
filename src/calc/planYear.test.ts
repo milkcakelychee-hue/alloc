@@ -44,3 +44,18 @@ describe('มุมมองปี', () => {
     ]);
   });
 });
+
+describe('คัดลอกแผนไปปีถัดไป', () => {
+  it('ยอดแต่ละเดือนไปเดือนเดียวกันปีหน้า · รายการที่จบแล้วไม่คัดลอก', async () => {
+    const { copyYearToNext } = await import('./planYear');
+    const changed = copyYearToNext(items, 2027, rawAmount);
+    expect(changed.map((i) => i.name)).toEqual(['เงินเดือน', 'ค่ากิน', 'กองทุน A']);
+    const food = changed.find((i) => i.name === 'ค่ากิน')!;
+    expect(rawAmount(food, '2028-12')).toBe(B(31500));
+    expect(rawAmount(food, '2028-11')).toBe(B(5000));
+    const sal = changed.find((i) => i.name === 'เงินเดือน')!;
+    expect(['2028-02', '2028-03'].map((m) => rawAmount(sal, m))).toEqual([0, B(32000)]);
+    const fund = changed.find((i) => i.name === 'กองทุน A')!;
+    expect(['2028-06', '2028-07'].map((m) => rawAmount(fund, m))).toEqual([0, B(3000)]);
+  });
+});

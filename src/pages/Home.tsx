@@ -22,8 +22,8 @@ export default function Home() {
       onChange={(v) => setSp(v === 'plan' ? { tab: 'plan' } : {}, { replace: true })}
     />
   );
-  // แท็บแผน: หัวหน้าเป็นชื่อเดือนของรอบ (ต้นแบบ Plan1)
-  if (tab === 'plan') return <PlanMonth segmented={segmented} />;
+  // แท็บแผน: ไม่มีปุ่มสลับ มีปุ่มกลับหน้าสรุปด้านบนแทน
+  if (tab === 'plan') return <PlanMonth />;
   return (
     <main className="page">
       <div className="page-head">
