@@ -10,7 +10,7 @@ let cur: AllocDB;
 afterEach(async () => { await cur?.delete(); });
 
 describe('ข้อมูลตั้งต้น', () => {
-  it('สร้าง settings, "ฉัน", หมวดใหญ่ 6 หมวด, หมวดบันทึก 11 หมวด', async () => {
+  it('สร้าง settings, "ฉัน", หมวดใหญ่ 6 หมวด, หมวดบันทึก รายจ่าย 11 รายรับ 6', async () => {
     cur = fresh();
     await ensureDefaults(cur, 1);
     const s = await cur.settings.get('app');
@@ -18,7 +18,7 @@ describe('ข้อมูลตั้งต้น', () => {
     expect((await cur.people.get(ME_ID))?.name).toBe('ฉัน');
     expect((await cur.planGroups.orderBy('order').toArray()).map((g) => g.kind))
       .toEqual(['income', 'fixed', 'variable', 'goalSpend', 'saving', 'invest']);
-    expect(await cur.logCategories.count()).toBe(11);
+    expect(await cur.logCategories.count()).toBe(17);
   });
 
   it('รันซ้ำไม่ทับสิ่งที่ผู้ใช้แก้', async () => {

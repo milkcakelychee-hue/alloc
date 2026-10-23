@@ -4,6 +4,7 @@ import { HashRouter, Route, Routes, Navigate, useLocation } from 'react-router-d
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/goals.css';
+import './styles/log.css';
 import { applyTheme, syncThemeFromDb } from './lib/theme';
 import { db } from './db/db';
 import { ensureDefaults } from './db/defaults';
@@ -14,6 +15,9 @@ import Goals from './pages/Goals';
 import GoalCategory from './pages/goals/GoalCategory';
 import GoalCreate from './pages/goals/GoalCreate';
 import GoalHistory from './pages/goals/GoalHistory';
+import LogAdd from './pages/log/LogAdd';
+import LogCats from './pages/log/LogCats';
+import LogSpend from './pages/log/LogSpend';
 import Log from './pages/Log';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
@@ -53,10 +57,13 @@ function Shell() {
         <Route path="/goals/g/:id" element={<GoalHistory />} />
         <Route path="/goals/:cat" element={<GoalCategory />} />
         <Route path="/log" element={<Log />} />
+        <Route path="/log/add" element={<LogAdd />} />
+        <Route path="/log/cats" element={<LogCats />} />
+        <Route path="/log/spend" element={<LogSpend />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {!onWelcome && loc.pathname !== '/goals/new' && <TabBar />}
+      {!onWelcome && loc.pathname !== '/goals/new' && loc.pathname !== '/log/add' && <TabBar />}
       {upd && <button className="toast" onClick={() => applyUpdate()}>มีอัปเดตใหม่ · แตะเพื่อรีเฟรช</button>}
     </>
   );

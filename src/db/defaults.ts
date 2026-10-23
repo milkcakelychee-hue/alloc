@@ -14,6 +14,16 @@ export const DEFAULT_GROUPS: { id: string; kind: GroupKind; name: string }[] = [
 ];
 
 // สีหมวดบันทึก SPEC หัวข้อ 3 (พื้น / เส้น)
+// หมวดรายรับ (บอร์ด LogAdd)
+export const DEFAULT_INCOME_CATEGORIES: { id: string; name: string; icon: string; bg: string; fg: string }[] = [
+  { id: 'i-salary', name: 'เงินเดือน', icon: 'salary', bg: '#E3EFE6', fg: '#2F6B47' },
+  { id: 'i-side', name: 'รายได้เสริม', icon: 'side', bg: '#EEF8C4', fg: '#3D4A1E' },
+  { id: 'i-refund', name: 'ได้เงินคืน', icon: 'refund', bg: '#E3EFE6', fg: '#2F6B47' },
+  { id: 'i-dividend', name: 'ปันผล / ดอกเบี้ย', icon: 'dividend', bg: '#E4EEF8', fg: '#2A5F8F' },
+  { id: 'i-gift', name: 'ของขวัญ', icon: 'gift', bg: '#F6E4EF', fg: '#93306A' },
+  { id: 'i-other', name: 'อื่น ๆ', icon: 'other', bg: '#F1F1EC', fg: '#46534B' }
+];
+
 export const DEFAULT_EXPENSE_CATEGORIES: { id: string; name: string; icon: string; bg: string; fg: string }[] = [
   { id: 'c-food', name: 'อาหาร', icon: 'food', bg: '#FCE9DF', fg: '#A6461F' },
   { id: 'c-drink', name: 'เครื่องดื่ม', icon: 'drink', bg: '#F3E6D8', fg: '#7A4A22' },
@@ -55,6 +65,12 @@ export async function ensureDefaults(db: AllocDB, now = Date.now()) {
     if ((await db.logCategories.count()) === 0) {
       await db.logCategories.bulkPut(DEFAULT_EXPENSE_CATEGORIES.map((c, i): LogCategory => ({
         ...c, type: 'expense', order: i, hidden: false, createdAt: now, updatedAt: now
+      })));
+    }
+    // หมวดรายรับเพิ่มในขั้นที่ 7: ผู้ใช้เดิมที่ยังไม่มีหมวดรายรับได้ชุดเริ่มต้น
+    if ((await db.logCategories.where('type').equals('income').count()) === 0) {
+      await db.logCategories.bulkPut(DEFAULT_INCOME_CATEGORIES.map((c, i): LogCategory => ({
+        ...c, type: 'income', order: i, hidden: false, createdAt: now, updatedAt: now
       })));
     }
   });

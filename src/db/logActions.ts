@@ -1,0 +1,81 @@
+// การกระทำในหน้าบันทึก (ขั้นที่ 7 · docs/decisions.md)
+import type { AllocDB } from './db';
+import type { DateStr, LogCategory, LogEntry, LogType, Month, Satang } from './types';
+
+const stamp = (now: number) => ({ id: crypto.randomUUID(), createdAt: now, updatedAt: now });
+
+export interface EntryInput { type: LogType; amount: Satang; categoryId: string; date: DateStr; note: string }
+
+/** เพิ่มรายการ · ไม่ได้หาร: ส่วนของฉัน = จ่ายจริง */
+export async function addEntry(db: AllocDB, e: EntryInput, now = Date.now()) {
+  const entry: LogEntry = { ...stamp(now), date: e.date, type: e.type, amountPaid: e.amount, myShare: e.amount, categoryId: e.categoryId, note: e.note.trim(), billItemId: null };
+  await db.logEntries.add(entry);
+  return entry;
+}
+
+/** แก้รายการ · รายการที่หารในบิล: ปรับส่วนของฉันตามสัดส่วนเดิม (บิลคำนวณใหม่ในขั้นบิลแชร์) */
+export async function updateEntry(db: AllocDB, id: string, e: EntryInput, now = Date.now()) {
+  const old = await db.logEntries.get(id);
+  if (!old) return;
+  const myShare = old.amountPaid && old.myShare !== old.amountPaid ? Math.round((e.amount * old.myShare) / old.amountPaid) : e.amount;
+  await db.logEntries.update(id, { type: e.type, amountPaid: e.amount, myShare, categoryId: e.categoryId, date: e.date, note: e.note.trim(), updatedAt: now });
+}
+
+/** จดซ้ำวันนี้: ยอด หมวด โน้ตเดิม วันที่วันนี้ (ไม่ผูกบิล/การ์ดจ่ายแล้ว) */
+export async function repeatEntry(db: AllocDB, id: string, today: DateStr, now = Date.now()) {
+  const old = await db.logEntries.get(id);
+  if (!old) return null;
+  return addEntry(db, { type: old.type, amount: old.amountPaid, categoryId: old.categoryId, date: today, note: old.note }, now);
+}
+
+/**
+ * แก้หมวดของรายการที่บันทึกจากการ์ด "จ่ายหรือยัง" แล้วผู้ใช้ตอบ "ใช้หมวดนี้กับรายการในแผน":
+ * หมวดใหม่ขึ้นเป็นหมวดแรกของรายการในแผน (การ์ดครั้งหน้าใช้หมวดนี้)
+ */
+export async function linkCategoryFirst(db: AllocDB, planItemId: string, categoryId: string, now = Date.now()) {
+  const it = await db.planItems.get(planItemId);
+  if (!it) return;
+  await db.planItems.update(planItemId, { logCategoryIds: [categoryId, ...it.logCategoryIds.filter((c) => c !== categoryId)], updatedAt: now });
+}
+
+// ---------- จัดการหมวด ----------
+
+export async function addCategory(db: AllocDB, c: { type: LogType; name: string; icon: string; bg: string; fg: string }, now = Date.now()) {
+  const order = (await db.logCategories.where('type').equals(c.type).toArray()).reduce((m, x) => Math.max(m, x.order), -1) + 1;
+  const cat: LogCategory = { ...stamp(now), type: c.type, name: c.name.trim(), icon: c.icon, bg: c.bg, fg: c.fg, order, hidden: false };
+  await db.logCategories.add(cat);
+  return cat;
+}
+
+/** เลื่อนลำดับหมวดในประเภทเดียวกัน (d = −1 ขึ้น, +1 ลง) */
+export async function moveCategory(db: AllocDB, id: string, d: -1 | 1, now = Date.now()) {
+  const cat = await db.logCategories.get(id);
+  if (!cat) return;
+  const list = (await db.logCategories.where('type').equals(cat.type).toArray()).sort((a, b) => a.order - b.order);
+  const i = list.findIndex((x) => x.id === id), j = i + d;
+  if (j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  await db.transaction('rw', db.logCategories, async () => {
+    for (let k = 0; k < list.length; k++) if (list[k].order !== k) await db.logCategories.update(list[k].id, { order: k, updatedAt: now });
+  });
+}
+
+/** ซ่อนหมวดที่ไม่ได้ใช้ (รายการเก่ายังอยู่) */
+export async function toggleCategoryHidden(db: AllocDB, id: string, now = Date.now()) {
+  const cat = await db.logCategories.get(id);
+  if (cat) await db.logCategories.update(id, { hidden: !cat.hidden, updatedAt: now });
+}
+
+/** ผูกหมวดกับรายการในแผนจากฝั่งหมวด: ใส่/เอาหมวดออกจาก logCategoryIds ของแต่ละรายการ */
+export async function setCategoryLinks(db: AllocDB, categoryId: string, planItemIds: string[], now = Date.now()) {
+  const want = new Set(planItemIds);
+  await db.transaction('rw', db.planItems, async () => {
+    for (const it of await db.planItems.toArray()) {
+      const has = it.logCategoryIds.includes(categoryId);
+      if (want.has(it.id) && !has) await db.planItems.update(it.id, { logCategoryIds: [...it.logCategoryIds, categoryId], updatedAt: now });
+      if (!want.has(it.id) && has) await db.planItems.update(it.id, { logCategoryIds: it.logCategoryIds.filter((c) => c !== categoryId), updatedAt: now });
+    }
+  });
+}
+
+export const cycleOfEntry = (e: LogEntry): Month | null => e.cycleMonth ?? null;
