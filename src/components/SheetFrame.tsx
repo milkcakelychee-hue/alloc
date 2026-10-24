@@ -1,4 +1,4 @@
-// โครงแผ่นเด้งร่วม: ปัดลงเพื่อปิด (จากที่จับ หรือทั้งแผ่นเมื่อเลื่อนอยู่บนสุด) · แตะพื้นหลังไม่ปิด กันข้อมูลที่กรอกหาย
+// โครงแผ่นเด้งร่วม: ปัดลงเพื่อปิด (จากที่จับ หรือทั้งแผ่นเมื่อเลื่อนอยู่บนสุด) หรือแตะพื้นหลังเพื่อปิด
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -49,7 +49,14 @@ export function SheetFrame({ label, className, onClose, children }: { label: str
       const x = d; d = null;
       if (!x.on) return;
       const v = x.dy / Math.max(performance.now() - x.t0, 1);
-      if (x.dy > CLOSE_AT || v > FLICK) { set(window.innerHeight, true); setTimeout(() => close.current(), 180); }
+      if (x.dy > CLOSE_AT || v > FLICK) {
+        set(window.innerHeight, true);
+        setTimeout(() => {
+          close.current();
+          // แผ่นเดิมยังอยู่ (เช่น หน้าย่อยกลับไปหน้ารายการในแผ่นเดียวกัน) → ดึงกลับขึ้นมา ไม่ให้ค้างเหลือแต่พื้นหลังเทา
+          requestAnimationFrame(() => { if (el.isConnected) set(0); });
+        }, 180);
+      }
       else set(0, true);
     };
     const ts = (e: TouchEvent) => start(e.touches[0].clientY, e.target);
@@ -71,7 +78,7 @@ export function SheetFrame({ label, className, onClose, children }: { label: str
   }, []);
 
   return createPortal(
-    <div className="scrim">
+    <div className="scrim" onClick={(e) => { if (e.target === e.currentTarget) close.current(); }}>
       <section ref={ref} className={className} role="dialog" aria-modal="true" aria-label={label}>
         <div className="grab" aria-hidden="true" />
         {children}
