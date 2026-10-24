@@ -38,6 +38,7 @@ export default function GoalCreate() {
   const [opening, setOpening] = useState('0');
   const [by, setBy] = useState<'date' | 'month'>('date');
   const [due, setDue] = useState<Month | ''>('');
+  const [startSel, setStartSel] = useState<Month | ''>('');
   const [perText, setPerText] = useState('');
   const [add, setAdd] = useState(true);
   const [pvd, setPvd] = useState({ gross: '', mine: '5', employer: '5', from: '' as Month });
@@ -46,7 +47,8 @@ export default function GoalCreate() {
   if (!data?.settings) return null;
   const s = data.settings;
   const cur = appCycle(localToday(), s.pay, s.startCycle);
-  const start = addMonths(cur, 1);
+  // รอบแรกที่เพิ่มลงแผน: ค่าเริ่มต้น = รอบปัจจุบัน เลือกเองได้
+  const start = startSel && startSel >= cur ? startSel : cur;
   const hasPvd = data.goals.some((g) => g.type === 'pvd');
   const t: GoalType = type ?? (qType && GOAL_TYPES.includes(qType) ? qType : 'saving');
   const st = style ?? pickStyle(t, data.goals);
@@ -56,7 +58,7 @@ export default function GoalCreate() {
   const have = parseBaht(opening || '0');
   const missing = tgt !== null && have !== null ? Math.max(tgt - have, 0) : 0;
   const dueM = due || addMonths(cur, 12);
-  const sugg = suggestMonthly(missing, cur, dueM);
+  const sugg = suggestMonthly(missing, addMonths(start, -1), dueM); // นับตั้งแต่รอบเริ่มถึงเดือนครบ
   const per = by === 'date' ? sugg.perMonth : parseBaht(perText) ?? 0;
   const reach = reachByMonthly(missing, per, start);
   const reachM = by === 'date' ? dueM : reach.reachMonth;
@@ -74,7 +76,7 @@ export default function GoalCreate() {
   const g = parseBaht(pvd.gross), a = parsePct(pvd.mine), b = parsePct(pvd.employer);
   const pvdOk = g !== null && g > 0 && a !== null && b !== null;
   const nameOk = isPvd || name.trim() !== '';
-  const ok = nameOk && tgt !== null && tgt > 0 && have !== null && have >= 0 && (isPvd ? pvdOk && !hasPvd : by === 'date' ? monthDiff(cur, dueM) > 0 : true) && (!add || isPvd || planAmt > 0);
+  const ok = nameOk && tgt !== null && tgt > 0 && have !== null && have >= 0 && (isPvd ? pvdOk && !hasPvd : by === 'date' ? monthDiff(start, dueM) >= 0 : true) && (!add || isPvd || planAmt > 0);
   const withPlan = add && !isPvd && planAmt > 0;
 
   const save = async () => {
@@ -151,6 +153,7 @@ export default function GoalCreate() {
               </span>
               <span className="gx-sw" aria-hidden="true" />
             </button>
+            {add && <MonthField label="เริ่มเพิ่มลงแผนรอบ" value={start} min={cur} onChange={(v) => v && setStartSel(v)} />}
             {add && planAmt > 0 && (
               <div className={`gx-impact${after < 0 ? ' isneg' : ''}`}>
                 <span className="t">ผลต่อแผน {thaiMonth(start)}</span>

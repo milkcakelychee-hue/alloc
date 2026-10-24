@@ -361,3 +361,5 @@
 .gx-grip .grip { width: 48px; min-height: 30px; border-radius: 10px; background: rgba(255, 255, 255, .7); color: var(--ink); transform: none; }
 .gx-grip .grip svg { transform: rotate(90deg); }
 :root[data-theme='dark'] .gx-grip .grip { background: rgba(0, 0, 0, .35); color: #F2F4EF; }
+.gx-card .nm .n3 { font-size: 12px; color: var(--gx-spend-ic); font-weight: 600; }
+:root[data-theme='dark'] .gx-card .nm .n3 { color: #E9C49F; }

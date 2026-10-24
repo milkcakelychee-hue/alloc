@@ -33,7 +33,7 @@ export default function GoalCategory() {
   const plan = goals.reduce((s, g) => s + planOf(g, data.items)(cur), 0);
   const pct = target ? balance / target : 0;
   const spend = type === 'goalSpend';
-  const isOpen = (g: Goal) => spend || !!open[g.id]; // ปิดไว้ก่อน แตะเพื่อดูรายละเอียด
+  const isOpen = (g: Goal) => !!open[g.id]; // ปิดไว้ก่อน แตะเพื่อดูรายละเอียด (ทุกหมวด)
 
   const delBody = (g: Goal) => {
     const items = data.items.filter((i) => i.goalId === g.id);
@@ -75,11 +75,10 @@ export default function GoalCategory() {
               <span className="nm">
                 <span>{g.name}</span>
                 <span className="n2 num"><span className="nw"><b>{baht(o.balance)}</b> / {baht(g.target)}</span> <span className="nw">· <b className="pc">{pctText(o.pct)}</b></span></span>
+                {spend && g.dueMonth && <span className="n3 num">ใช้เงิน {thaiMonth(g.dueMonth)}</span>}
               </span>
               <button className="gx-editic" aria-label={`แก้เป้า ${g.name}`} onClick={() => setEditing({ goal: g })}><Icon name="edit" size={18} stroke={2} /></button>
-              {spend
-                ? g.dueMonth && <span className="gx-pill num">{thaiMonth(g.dueMonth)}</span>
-                : <button className="gx-iconbtn" aria-label={`ดูเพิ่มเติม ${g.name}`} aria-expanded={expanded} onClick={() => setOpen({ ...open, [g.id]: !expanded })}><Icon name="chevDown" size={20} stroke={2} /></button>}
+              <button className="gx-iconbtn" aria-label={`ดูเพิ่มเติม ${g.name}`} aria-expanded={expanded} onClick={() => setOpen({ ...open, [g.id]: !expanded })}><Icon name="chevDown" size={20} stroke={2} /></button>
             </div>
             {expanded && (spend
               ? <SpendBody g={g} o={o} data={data} cur={cur} onAdjust={() => setAdjust(g)} />
