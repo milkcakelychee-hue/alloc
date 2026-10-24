@@ -1,9 +1,10 @@
-// เลือกกฎวันเงินเดือนเข้า + เลื่อนเมื่อตรงเสาร์อาทิตย์ + ตัวอย่างวันเงินเข้า 4 เดือนถัดไป (ต้นแบบ B ที่เจ้าของอนุมัติ)
-import { addMonths, thaiDate, type PayRule } from '../calc/dates';
+// เลือกกฎวันเงินเดือนเข้า + เลื่อนเมื่อตรงเสาร์อาทิตย์ + คาดการณ์วันเงินเข้า 4 เดือนข้างหน้า (ต้นแบบ B ที่เจ้าของอนุมัติ)
+import { addMonths, thaiDate, thaiMonth, type PayRule } from '../calc/dates';
 import { expectedPayDate, weekday, type WeekendShift } from '../calc/payday';
 import type { Month } from '../db/types';
 
 export const WD = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+const WD_FULL = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 export const dateWithDay = (d: string) => `${WD[weekday(d)]} ${thaiDate(d)}`;
 
 export function payRuleLabel(rule: PayRule, shift: WeekendShift) {
@@ -54,14 +55,16 @@ export function PayRuleFields({ rule, shift, from, onChange }: Props) {
           </div>
         </div>
       )}
-      <div className="card" style={{ padding: '12px 16px' }}>
-        <div className="muted" style={{ fontSize: 13, marginBottom: 4 }}>เงินเข้า 4 เดือนถัดไป</div>
+      <div className="card pay-fc">
+        <div className="h">คาดการณ์วันเงินเดือนเข้า 4 เดือนข้างหน้า</div>
         {months.map((m) => {
           const e = expectedPayDate(rule, shift, m);
+          const [y, mo, d] = e.date.split('-').map(Number);
           return (
             <div key={m} className="pay-row">
-              <span className="num">{dateWithDay(e.date)}</span>
-              {e.reason === 'weekend' && <span className="tag warn">เลื่อนจาก {WD[weekday(e.nominal)]} {Number(e.nominal.slice(8))}</span>}
+              <span className="mo">{thaiMonth(`${y}-${String(mo).padStart(2, '0')}`)}</span>
+              <span className="dd"><b className="num">{d}</b> <span>{WD_FULL[weekday(e.date)]}</span></span>
+              {e.reason === 'weekend' && <span className="tag warn">เลื่อนจาก{WD_FULL[weekday(e.nominal)]} {Number(e.nominal.slice(8))}</span>}
             </div>
           );
         })}

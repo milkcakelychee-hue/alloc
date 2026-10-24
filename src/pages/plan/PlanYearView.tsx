@@ -147,8 +147,8 @@ export function PlanYearView({ data, year, current, amountOf, onPickMonth }: {
                   aria-label={`${thaiMonth(x.month)} เหลือ ${neg ? '−' : ''}${money(Math.abs(x.t.leftover))}`}>
                   {lowMonths.includes(x.month) && <span className="low-mk" aria-hidden="true">▼</span>}
                   {x.t.income > 0 && <span className="inc" style={{ bottom: px(x.t.income) }} />}
-                  {x.t.leftover > 0 && <span className="ybar" style={{ height: px(x.t.leftover), background: C.left, borderRadius: '4px 4px 0 0' }} />}
-                  {x.saveInvest > 0 && <span className="ybar" style={{ height: px(x.saveInvest), background: C.sav, borderRadius: x.t.leftover > 0 ? 0 : '4px 4px 0 0', boxShadow: neg ? `0 0 0 1.5px ${C.exp}` : undefined }} />}
+                  {x.t.leftover > 0 && <span className="ybar" style={{ height: px(x.t.leftover), background: C.left }} />}
+                  {x.saveInvest > 0 && <span className="ybar" style={{ height: px(x.saveInvest), background: C.sav, boxShadow: neg ? `0 0 0 1.5px ${C.exp}` : undefined }} />}
                   {x.expense > 0 && <span className="ybar" style={{ height: px(x.expense), background: C.exp }} />}
                 </button>
               );

@@ -1,13 +1,14 @@
 // แท็บเป้าหมาย · ภาพรวม (บอร์ด Goals / GoalsDark): ก้อนรวม + หมวด 2×2 · โหมดแก้ไข ลากเรียงหมวด + ลบหมวด
-import { useRef, useState, type PointerEvent as RPointerEvent, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { GoalType } from '../db/types';
 import { db } from '../db/db';
-import { cycleOf, localToday } from '../calc/dates';
+import { appCycle, localToday } from '../calc/dates';
 import { goalBalance, goalOutlook, planOf } from '../calc/goals';
 import { Icon } from '../components/Icon';
 import { deleteGoalCategory, goalCats, reorderGoalCats } from '../db/goalActions';
 import { CAT, baht, barW, pctText, useGoalsData, type GoalsData } from './goals/goalUi';
+import { Grip, SortList } from '../components/SortList';
 
 // ก้อนหมวดแสดงเต็มบาท (ตามบอร์ด) · ยอดละเอียดดูในหน้าหมวด
 const whole = (s: number) => baht(Math.round(s / 100) * 100);
@@ -31,13 +32,10 @@ export default function Goals() {
   const nav = useNavigate();
   const [edit, setEdit] = useState(false);
   const [del, setDel] = useState<GoalType | null>(null);
-  const [dragOrder, setDragOrder] = useState<GoalType[] | null>(null);
-  const [dragging, setDragging] = useState<GoalType | null>(null);
-  const moved = useRef(false);
   if (!data?.settings) return null;
   const s = data.settings;
-  const cur = cycleOf(localToday(), s.pay);
-  const order = dragOrder ?? goalCats(s).order;
+  const cur = appCycle(localToday(), s.pay, s.startCycle);
+  const order = goalCats(s).order;
   const sum = Object.fromEntries((['saving', 'invest', 'goalSpend', 'pvd'] as GoalType[]).map((t) => [t, catSummary(data, t, cur)])) as Record<GoalType, ReturnType<typeof catSummary>>;
 
   // ก้อนรวม: เงินออม + ลงทุน (ไม่รวม PVD) · รายจ่ายตามเป้าแสดงแยก
@@ -49,31 +47,6 @@ export default function Goals() {
   const segI = target ? Math.min(sum.invest.balance / target, 1) * C : 0;
   const gap = segS > 0 && segI > 0 ? 2 : 0;
   const [int, dec] = baht(total).split('.');
-
-  // ลากเรียงหมวด (โหมดแก้ไข)
-  const onDown = (t: GoalType) => (e: RPointerEvent) => {
-    if (!edit || (e.target as HTMLElement).closest('.gx-del')) return;
-    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* ไม่มี pointer จริง */ }
-    moved.current = false;
-    setDragging(t);
-    setDragOrder(order);
-  };
-  const onMove = (e: RPointerEvent) => {
-    if (!dragging || !dragOrder) return;
-    const el = document.elementsFromPoint(e.clientX, e.clientY).map((x) => x.closest<HTMLElement>('[data-cat]')).find((x) => x && x.dataset.cat !== dragging);
-    const over = el?.dataset.cat as GoalType | undefined;
-    if (!over) return;
-    const next = dragOrder.filter((x) => x !== dragging);
-    next.splice(dragOrder.indexOf(over), 0, dragging);
-    moved.current = true;
-    setDragOrder(next);
-  };
-  const onUp = async () => {
-    if (!dragging) return;
-    if (dragOrder && moved.current) await reorderGoalCats(db, [...dragOrder, ...goalCats(s).hidden]);
-    setDragging(null);
-    setDragOrder(null);
-  };
 
   const list = (names: string[]) => names.map((n, i) => <span key={i}>{i ? ', ' : ''}<span className="nw">{n}</span></span>);
   const delInfo = (t: GoalType): ReactNode => {
@@ -122,18 +95,19 @@ export default function Goals() {
       {edit && (
         <div className="gx-hintbar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flex: 'none' }}><circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" /><circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" /><circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" /></svg>
-          <span style={{ flex: 1 }}>ลากก้อนเพื่อเรียงใหม่ · กด × เพื่อลบหมวด <span className="nw">(หมวดในแท็บวางแผนจะหายด้วย)</span></span>
+          <span style={{ flex: 1 }}>ลากจุด 6 จุดเพื่อเรียงใหม่ · กด × เพื่อลบหมวด <span className="nw">(หมวดในแท็บวางแผนจะหายด้วย)</span></span>
         </div>
       )}
 
-      <div className="gx-grid" onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-        {order.map((t) => {
+      <div className="gx-grid">
+        <SortList ids={order} onCommit={(ids) => reorderGoalCats(db, [...(ids as GoalType[]), ...goalCats(s).hidden])}>{(id, dragItem, dragHandle) => {
+          const t = id as GoalType;
           const c = sum[t];
           const empty = c.goals.length === 0;
           const to = empty ? `/goals/new?type=${t}` : `/goals/${CAT[t].path}`;
           const label = empty ? `${CAT[t].name} ยังไม่มีเป้า ตั้งเป้าใหม่` : `${CAT[t].name} ${baht(c.balance)} จาก ${baht(c.target)} ดูรายละเอียด`;
           return (
-            <div key={t} data-cat={t} className={`gx-cell${dragging === t ? ' drag' : ''}`} onPointerDown={onDown(t)}>
+            <div key={t} className="gx-cell" {...dragItem}>
               <Link to={to} aria-label={label} className={`gx-tile ${empty ? 't-empty' : TILE[t]}`} draggable={false}
                 onClick={(e) => { if (edit) e.preventDefault(); }}>
                 {empty ? (
@@ -159,7 +133,7 @@ export default function Goals() {
               {edit && (
                 <>
                   {!empty && <span className="gx-dash" aria-hidden="true" />}
-                  <span className="gx-handle" aria-hidden="true" />
+                  <span className="gx-grip"><Grip label={`ลากเพื่อย้ายหมวด${CAT[t].name}`} {...dragHandle} /></span>
                   <button className="gx-del" aria-label={`ลบหมวด${CAT[t].name}`} onClick={() => setDel(t)}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
                   </button>
@@ -167,7 +141,7 @@ export default function Goals() {
               )}
             </div>
           );
-        })}
+        }}</SortList>
       </div>
       {order.length < 4 && !edit && (
         <button className="gx-dashadd" onClick={() => nav('/goals/new')}><Icon name="plus" size={18} stroke={2.2} />เพิ่มหมวดที่ลบไป</button>

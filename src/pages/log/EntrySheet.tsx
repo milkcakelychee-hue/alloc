@@ -1,9 +1,9 @@
 // แผ่นรายการที่บันทึก (บอร์ด LogEdit): ยอด · วันที่ · ตัดงบ · โน้ต · แก้ไข / จดซ้ำวันนี้ / ลบ
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
+import { SheetFrame } from '../../components/SheetFrame';
 import { db } from '../../db/db';
 import type { LogEntry } from '../../db/types';
-import { cycleOf, localToday, thaiDate } from '../../calc/dates';
+import { appCycle, cycleOf, localToday, thaiDate } from '../../calc/dates';
 import { weekday } from '../../calc/payday';
 import { expensesIn } from '../../calc/log';
 import { entryBudget } from '../../calc/logView';
@@ -16,20 +16,7 @@ import { CatIcon, catStyle } from './catIcon';
 import { dayFull, type LogData } from './useLogData';
 
 export function LgSheet({ label, onClose, children }: { label: string; onClose: () => void; children: React.ReactNode }) {
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-  return createPortal(
-    <div className="scrim" onClick={onClose}>
-      <section className="sheet lg-sheet" role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>
-        <span className="grab" aria-hidden="true" />
-        {children}
-      </section>
-    </div>,
-    document.body
-  );
+  return <SheetFrame label={label} className="sheet lg-sheet" onClose={onClose}>{children}</SheetFrame>;
 }
 
 export function EntrySheet({ entry: e0, data, onClose, onEdit }: { entry: LogEntry; data: LogData; onClose: () => void; onEdit: () => void }) {
@@ -41,7 +28,7 @@ export function EntrySheet({ entry: e0, data, onClose, onEdit }: { entry: LogEnt
   const inc = e.type === 'income';
   const split = !inc && e.myShare !== e.amountPaid;
   const cycle = cycleOf(e.date, s.pay);
-  const cur = cycleOf(localToday(), s.pay);
+  const cur = appCycle(localToday(), s.pay, s.startCycle);
   const b = inc ? null : entryBudget(e, data.items, expensesIn(data.entries, cycle, s.pay), cycle, goalAwareAmountOf(data.goals, data.items, data.adjustments, cur));
   const plan = e.planItemId ? data.items.find((i) => i.id === e.planItemId) : null;
   const time = new Date(e.createdAt);

@@ -352,3 +352,12 @@
 .gx-grid { grid-auto-rows: 1fr; }
 .gx-tile { flex: 1; }
 .t-empty .ex { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gx-grip { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); z-index: 2; }
+.gx-grip .grip { width: 44px; min-height: 28px; transform: rotate(90deg); color: var(--gx-dash); }
+.gx-cell[data-dragging] { background: transparent; box-shadow: none; }
+.gx-cell[data-dragging] .gx-tile { box-shadow: 0 12px 30px rgba(13, 22, 17, .25); }
+.gx-edit .gx-tile { pointer-events: none; }
+.gx-grip { bottom: 4px; }
+.gx-grip .grip { width: 48px; min-height: 30px; border-radius: 10px; background: rgba(255, 255, 255, .7); color: var(--ink); transform: none; }
+.gx-grip .grip svg { transform: rotate(90deg); }
+:root[data-theme='dark'] .gx-grip .grip { background: rgba(0, 0, 0, .35); color: #F2F4EF; }

@@ -43,3 +43,13 @@ describe('เงินเป็นสตางค์', () => {
     expect(parseBaht('12.345')).toBeNull();
   });
 });
+
+describe('รอบที่เริ่มใช้แอป', () => {
+  it('ยังไม่ถึงรอบเริ่ม: ใช้รอบเริ่ม · เลยแล้ว: ใช้รอบของวันนี้', async () => {
+    const { appCycle } = await import('./dates');
+    expect(appCycle('2026-10-24', 27, '2026-11')).toBe('2026-11');
+    expect(appCycle('2026-10-28', 27, '2026-11')).toBe('2026-11');
+    expect(appCycle('2026-12-01', 27, '2026-11')).toBe('2026-12');
+    expect(appCycle('2026-10-24', 27, null)).toBe('2026-10');
+  });
+});

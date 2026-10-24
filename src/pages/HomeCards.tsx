@@ -1,5 +1,6 @@
 // การ์ดในหน้าหลัก (ต้องทำ): เงินเดือนเข้าแล้วหรือยัง · ก่อนเงินเข้า · จ่ายหรือยัง (ต้นแบบ B + docs/decisions.md)
 import { useState, type ReactNode } from 'react';
+import { MoneyInput } from '../components/MoneyInput';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { applyActualSalary, confirmPay, markDuePaid, salaryItemFor, snoozePay } from '../db/actions';
@@ -30,8 +31,12 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
   const amountOf = goalAwareAmountOf(goals, items, adjustments, current);
   const incomeIds = new Set(groups.filter((g) => g.kind === 'income').map((g) => g.id));
   const plannedIncome = (c: string) => planTotals(groups, items, c, amountOf).income;
-  const pp = payPrompts({ settings: s, receipts, today, plannedIncome, items });
-  const due = dueItems({ groups, items, checks, today, pay: s.pay, amountOf });
+  // รอบก่อนเริ่มใช้แอปไม่ถาม/ไม่เตือน
+  const okC = (c: string) => !s.startCycle || c >= s.startCycle;
+  const raw = payPrompts({ settings: s, receipts, today, plannedIncome, items });
+  const pp = { ...raw, confirm: raw.confirm && okC(raw.confirm.cycle) ? raw.confirm : null, upcoming: raw.upcoming && okC(raw.upcoming.cycle) ? raw.upcoming : null };
+  if (!pp.upcoming) pp.lateBills = [];
+  const due = dueItems({ groups, items, checks, today, pay: s.pay, amountOf }).filter((d) => okC(d.cycle));
   const kindOf = (gid: string) => groups.find((g) => g.id === gid)!.kind;
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3500); };
 
@@ -57,7 +62,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
         ) : (
           <div className="confirm-actions">
             <label className="field"><span className="label">ยอดที่เข้าจริง (บาท)</span>
-              <input className="num" inputMode="decimal" value={actualText} onChange={(e) => setActualText(e.target.value)} aria-invalid={actual === null} />
+              <MoneyInput className="num"  value={actualText} onChange={(e) => setActualText(e.target.value)} aria-invalid={actual === null} />
             </label>
             {actual !== null && diff !== 0 && (
               <div className="note warn"><span>{diff < 0 ? 'น้อยกว่า' : 'มากกว่า'}แผน <b className="num">{formatBaht(Math.abs(diff))}</b> · ถ้าใช้ยอดนี้ <span className="nw">เงินเหลือ {thaiMonth(c.cycle)}</span> จะเป็น <b className="num nw">{formatBaht(left + diff)}</b> จาก <span className="num nw">{formatBaht(left)}</span></span></div>

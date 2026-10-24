@@ -8,7 +8,8 @@ import { db } from '../db/db';
 import { exportBackup } from '../db/backup';
 import { useSettings } from '../db/hooks';
 import { backupStatus } from '../calc/reminders';
-import { localToday, thaiDate } from '../calc/dates';
+import { addMonths, cycleOf, cycleRange, localToday, thaiDate, thaiMonth } from '../calc/dates';
+import type { Settings as SettingsT } from '../db/types';
 import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
 import { PayRuleSheet } from '../components/PayRuleSheet';
 import { payRuleLabel } from '../components/PayRuleFields';
@@ -27,6 +28,7 @@ export default function Settings() {
   const picker = useRef<RestorePickerHandle>(null);
   const [toast, setToast] = useState('');
   const [payOpen, setPayOpen] = useState(false);
+  const [startOpen, setStartOpen] = useState(false);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
 
   const bs = backupStatus(settings?.lastBackupAt);
@@ -69,8 +71,18 @@ export default function Settings() {
           <span className="val num" style={{ fontWeight: 600, color: 'var(--ink)' }}>{settings ? payRuleLabel(settings.pay, settings.weekendShift).main : ''}</span>
           <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
         </button>
+        <button className="row" onClick={() => setStartOpen(true)} disabled={!settings}>
+          <span className="ic"><Icon name="flag" size={18} stroke={2} /></span>
+          <span className="tx">
+            <span className="t1">เริ่มใช้แอปตั้งแต่รอบ</span>
+            <span className="t2">แผนและบันทึกเริ่มที่รอบนี้</span>
+          </span>
+          <span className="val num" style={{ fontWeight: 600, color: 'var(--ink)' }}>{settings?.startCycle ? thaiMonth(settings.startCycle) : 'ไม่จำกัด'}</span>
+          <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
+        </button>
       </div>
       {payOpen && settings && <PayRuleSheet settings={settings} onClose={() => setPayOpen(false)} />}
+      {startOpen && settings && <StartCycleSheet settings={settings} onClose={() => setStartOpen(false)} />}
 
       <span className="sec">การแสดงผล</span>
       <div className="list">
@@ -129,5 +141,35 @@ export default function Settings() {
         </Sheet>
       )}
     </main>
+  );
+}
+
+/** เลือกรอบที่เริ่มใช้แอป: รอบก่อนหน้าไม่แสดงในแผนและบันทึก (ข้อมูลไม่หาย) */
+function StartCycleSheet({ settings, onClose }: { settings: SettingsT; onClose: () => void }) {
+  const cur = cycleOf(localToday(), settings.pay);
+  const opts = [addMonths(cur, -1), cur, addMonths(cur, 1)];
+  const [v, setV] = useState<string | null>(settings.startCycle ?? null);
+  return (
+    <Sheet title="เริ่มใช้แอปตั้งแต่รอบ" onClose={onClose}>
+      <div className="list" style={{ marginBottom: 12 }}>
+        {opts.map((m) => {
+          const r = cycleRange(m, settings.pay);
+          return (
+            <button key={m} className="row" role="radio" aria-checked={v === m} onClick={() => setV(m)}>
+              <span className={`radio-dot${v === m ? ' on' : ''}`} aria-hidden="true" />
+              <span className="tx"><span className="t1">{thaiMonth(m)}{m === cur ? ' · รอบนี้' : m > cur ? ' · รอบหน้า' : ''}</span>
+                <span className="t2 num">{thaiDate(r.start)} – {thaiDate(r.end)}</span></span>
+            </button>
+          );
+        })}
+        <button className="row" role="radio" aria-checked={v === null} onClick={() => setV(null)}>
+          <span className={`radio-dot${v === null ? ' on' : ''}`} aria-hidden="true" />
+          <span className="tx"><span className="t1">ไม่จำกัด</span><span className="t2">ดูรอบก่อนหน้าได้ทั้งหมด</span></span>
+        </button>
+      </div>
+      <div className="note" style={{ marginBottom: 12 }}><Icon name="info" size={16} stroke={2} />
+        <span>รอบก่อนหน้าจะไม่แสดงในแผนและบันทึก · <span className="nw">ข้อมูลไม่หาย</span> · <span className="nw">บันทึกรายการได้เมื่อถึงวันแรกของรอบ</span></span></div>
+      <button className="btn btn-pri" style={{ width: '100%' }} onClick={async () => { await db.settings.update('app', { startCycle: v, updatedAt: Date.now() }); onClose(); }}>บันทึก</button>
+    </Sheet>
   );
 }

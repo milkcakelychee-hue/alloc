@@ -60,3 +60,20 @@ export function salaryItemFor(items: PlanItem[], incomeGroupIds: Set<string>, cy
 export async function applyActualSalary(db: AllocDB, opts: { item: PlanItem; cycle: Month; actual: Satang; now?: number }) {
   await db.planItems.put({ ...applyAmountChange(opts.item, opts.cycle, opts.actual, 'month'), updatedAt: opts.now ?? Date.now() });
 }
+
+/**
+ * เรียงรายการในหมวดใหม่จากการลาก: visibleIds คือลำดับใหม่ของรายการที่แสดงอยู่
+ * รายการที่ซ่อน (ยอด 0) คงตำแหน่งเดิม · เขียน order ใหม่ทั้งหมวดเป็น 0..n
+ */
+export async function reorderPlanItems(db: AllocDB, groupId: string, visibleIds: string[], now = Date.now()) {
+  const all = (await db.planItems.where('groupId').equals(groupId).toArray()).sort((a, b) => a.order - b.order);
+  const vis = new Set(visibleIds);
+  const queue = [...visibleIds];
+  const next = all.map((it) => (vis.has(it.id) ? queue.shift()! : it.id));
+  await db.transaction('rw', db.planItems, async () => {
+    for (let i = 0; i < next.length; i++) {
+      const it = all.find((x) => x.id === next[i])!;
+      if (it.order !== i) await db.planItems.update(it.id, { order: i, updatedAt: now });
+    }
+  });
+}

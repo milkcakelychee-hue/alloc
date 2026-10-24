@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import type { GoalAdjustment } from '../../db/types';
-import { addMonths, cycleOf, localToday, monthDiff, thaiDate, thaiMonth } from '../../calc/dates';
+import { appCycle, addMonths, cycleOf, localToday, monthDiff, thaiDate, thaiMonth } from '../../calc/dates';
 import { balanceAt, goalBalance, nextDepositCycle, planOf, projectGoal } from '../../calc/goals';
 import { Icon } from '../../components/Icon';
 import type { IconName } from '../plan/planUi';
@@ -21,7 +21,7 @@ export default function GoalHistory() {
   const g = data.goals.find((x) => x.id === id);
   if (!g) return <Navigate to="/goals" replace />;
   const pay = data.settings.pay;
-  const cur = cycleOf(localToday(), pay);
+  const cur = appCycle(localToday(), pay, data.settings.startCycle);
   const cyc = (a: GoalAdjustment) => a.cycleMonth ?? cycleOf(a.date, pay);
   const mine = data.adjustments.filter((a) => a.goalId === g.id);
   const balance = goalBalance(g, data.adjustments);

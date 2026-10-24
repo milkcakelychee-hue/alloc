@@ -1,6 +1,6 @@
 // ปุ่มเข้า "วางแผนรายจ่าย" บนสุดของหน้าภาพรวม (แทนปุ่มสลับ สรุป/วางแผนรายจ่าย)
 import { Link } from 'react-router-dom';
-import { cycleOf, localToday, thaiMonth } from '../calc/dates';
+import { appCycle, localToday, thaiMonth } from '../calc/dates';
 import { formatBaht } from '../calc/money';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
@@ -11,7 +11,7 @@ export function PlanEntry() {
   const data = usePlanData();
   const s = data?.settings;
   if (!data || !s) return null;
-  const cur = cycleOf(localToday(), s.pay);
+  const cur = appCycle(localToday(), s.pay, s.startCycle);
   const t = planTotals(data.groups, data.items, cur, goalAwareAmountOf(data.goals, data.items, data.adjustments, cur));
   const hasPlan = t.income > 0;
   return (

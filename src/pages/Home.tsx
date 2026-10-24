@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { db } from '../db/db';
 import { exportBackup } from '../db/backup';
-import { cycleOf, localToday, thaiMonth } from '../calc/dates';
+import { appCycle, localToday, thaiMonth } from '../calc/dates';
 import { formatBaht } from '../calc/money';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
@@ -37,7 +37,7 @@ function Summary() {
   if (!data?.settings) return null;
   const { settings: s, groups, items, goals, adjustments } = data;
   const today = localToday();
-  const cur = cycleOf(today, s.pay);
+  const cur = appCycle(today, s.pay, s.startCycle);
   const amountOf = goalAwareAmountOf(goals, items, adjustments, cur);
   const a = assetsSummary(goals, adjustments);
   const sp = incomeSplit(planTotals(groups, items, cur, amountOf));

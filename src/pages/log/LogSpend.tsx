@@ -1,7 +1,7 @@
 // เงินไปไหน (บอร์ด LogSpend): สัดส่วนรายจ่ายตามหมวด · งบแต่ละหมวด · สิ่งที่น่าสังเกต (คิดจากตัวเลขเท่านั้น)
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { addMonths, cycleOf, cycleRange, localToday, thaiDate, thaiMonth } from '../../calc/dates';
+import { appCycle, addMonths, cycleRange, localToday, thaiDate, thaiMonth } from '../../calc/dates';
 import { weekday } from '../../calc/payday';
 import { categoryBudget, cycleDays, expensesIn, offBudgetTotal, pace, topDay, whereMoneyGoes } from '../../calc/log';
 import { cutPerDay, dailyBudgetParts, planLabelOf, typicalRange, weekdaySplit } from '../../calc/logView';
@@ -27,7 +27,7 @@ export default function LogSpend() {
   if (!data?.settings) return null;
   const s = data.settings;
   const today = localToday();
-  const cur = cycleOf(today, s.pay);
+  const cur = appCycle(today, s.pay, s.startCycle);
   const cycle = prev ? addMonths(cur, -1) : cur;
   const r = cycleRange(cycle, s.pay);
   const end = prev ? r.end : today;

@@ -1,9 +1,10 @@
 // สร้างเป้าหมายใหม่ (บอร์ด GoalCreate): ชื่อ หมวด ยอดเป้า · กำหนดจากวันครบ/ยอดต่อเดือน · เพิ่มลงแผนรายเดือน (ดูผลต่อเงินเหลือก่อนยืนยัน)
 import { useState } from 'react';
+import { MoneyInput } from '../../components/MoneyInput';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import type { GoalType, Month } from '../../db/types';
-import { addMonths, cycleOf, localToday, monthDiff, thaiMonth } from '../../calc/dates';
+import { appCycle, addMonths, localToday, monthDiff, thaiMonth } from '../../calc/dates';
 import { formatBaht, parseBaht } from '../../calc/money';
 import { goalAwareAmountOf, reachByMonthly, suggestMonthly } from '../../calc/goals';
 import { planTotals } from '../../calc/plan';
@@ -44,7 +45,7 @@ export default function GoalCreate() {
   const [busy, setBusy] = useState(false);
   if (!data?.settings) return null;
   const s = data.settings;
-  const cur = cycleOf(localToday(), s.pay);
+  const cur = appCycle(localToday(), s.pay, s.startCycle);
   const start = addMonths(cur, 1);
   const hasPvd = data.goals.some((g) => g.type === 'pvd');
   const t: GoalType = type ?? (qType && GOAL_TYPES.includes(qType) ? qType : 'saving');
@@ -110,8 +111,8 @@ export default function GoalCreate() {
           <Icon name="chevron" size={16} stroke={2} />
         </button>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-          <label><span className="lbl">ยอดเป้า (บาท)</span><input className="in amt num" inputMode="decimal" value={target} placeholder="0" onChange={(e) => setTarget(e.target.value)} /></label>
-          <label><span className="lbl">มีแล้ว (บาท)</span><input className="in amt num" inputMode="decimal" value={opening} onChange={(e) => setOpening(e.target.value)} aria-invalid={have === null} /></label>
+          <label><span className="lbl">ยอดเป้า (บาท)</span><MoneyInput className="in amt num"  value={target} placeholder="0" onChange={(e) => setTarget(e.target.value)} /></label>
+          <label><span className="lbl">มีแล้ว (บาท)</span><MoneyInput className="in amt num"  value={opening} onChange={(e) => setOpening(e.target.value)} aria-invalid={have === null} /></label>
         </div>
       </section>
 
@@ -132,7 +133,7 @@ export default function GoalCreate() {
             </div>
             {by === 'date'
               ? <MonthField label="วันครบ" value={dueM} min={start} onChange={(v) => v && setDue(v)} />
-              : <label className="gx-inrow"><span className="k">ยอดต่อเดือน</span><input inputMode="decimal" value={perText} placeholder="0" onChange={(e) => setPerText(e.target.value)} /></label>}
+              : <label className="gx-inrow"><span className="k">ยอดต่อเดือน</span><MoneyInput  value={perText} placeholder="0" onChange={(e) => setPerText(e.target.value)} /></label>}
             <div className="gx-result" aria-live="polite">
               <span className="a">
                 <span>{by === 'date' ? (t === 'goalSpend' ? 'ต้องกันเดือนละ' : 'ต้องออมเดือนละ') : 'จะครบเป้า'}</span>

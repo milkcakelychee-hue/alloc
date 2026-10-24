@@ -70,3 +70,9 @@ export function thaiMonth(m: Month) {
   const [y, mo] = m.split('-').map(Number);
   return `${TH_MONTHS[mo - 1]} ${beShort(y)}`;
 }
+
+/** รอบที่แอปใช้ตอนนี้: รอบของวันนี้ แต่ไม่ก่อนรอบที่เริ่มใช้แอป */
+export function appCycle(today: DateStr, p: Pay, startCycle?: Month | null): Month {
+  const c = cycleOf(today, p);
+  return startCycle && startCycle > c ? startCycle : c;
+}

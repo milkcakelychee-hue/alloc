@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import type { LogCategory, LogType } from '../../db/types';
-import { cycleOf, localToday } from '../../calc/dates';
+import { appCycle, cycleOf, localToday } from '../../calc/dates';
 import { planLabelOf } from '../../calc/logView';
-import { FALLBACK_CAT, addCategory, deleteCategory, moveCategory, setCategoryLinks, toggleCategoryHidden, updateCategory } from '../../db/logActions';
+import { FALLBACK_CAT, addCategory, deleteCategory, reorderCategories, setCategoryLinks, toggleCategoryHidden, updateCategory } from '../../db/logActions';
+import { Grip, SortList } from '../../components/SortList';
 import { Icon } from '../../components/Icon';
 import { baht } from '../goals/goalUi';
 import { CAT_ICONS, CatIcon, FG_OF, NEW_CAT_BGS, catStyle } from './catIcon';
@@ -24,7 +25,7 @@ export default function LogCats() {
   if (!data?.settings) return null;
   const s = data.settings;
   const E = type === 'expense';
-  const cur = cycleOf(localToday(), s.pay);
+  const cur = appCycle(localToday(), s.pay, s.startCycle);
   const list = data.categories.filter((c) => c.type === type);
   const count = (id: string) => data.entries.filter((e) => e.categoryId === id && cycleOf(e.date, s.pay) === cur).length;
   const nExp = data.categories.filter((c) => c.type === 'expense').length, nInc = data.categories.filter((c) => c.type === 'income').length;
@@ -43,12 +44,13 @@ export default function LogCats() {
         <button role="tab" className="i" aria-selected={!E} onClick={() => setType('income')} style={{ height: 40 }}>รายรับ <span className="num" style={{ fontWeight: 400, opacity: .8 }}>{nInc}</span></button>
       </div>
       <span style={{ fontSize: 12.5, color: 'var(--ink3)', padding: '0 2px', lineHeight: 1.5 }}>
-        {ed ? 'ลูกศรเลื่อนลำดับในตารางหน้าเพิ่มรายการ · ไอคอนตาซ่อนหมวดที่ไม่ได้ใช้ (รายการเก่ายังอยู่)'
+        {ed ? 'ลากจุด 6 จุดเพื่อเรียงลำดับในตารางหน้าเพิ่มรายการ · ไอคอนตาซ่อนหมวดที่ไม่ได้ใช้ (รายการเก่ายังอยู่)'
           : <>ลำดับนี้คือลำดับในตารางหน้าเพิ่มรายการ · ตัวเลขด้านขวาคือจำนวนครั้งที่จดในรอบนี้ · <span className="nw">แตะหมวดเพื่อแก้ชื่อ</span>{E ? <> <span className="nw">ผูกแผน</span></> : null} <span className="nw">หรือลบ</span></>}
       </span>
 
       <ul className="lgc-list" aria-label="รายการหมวด">
-        {list.map((c, i) => {
+        <SortList ids={list.map((c) => c.id)} onCommit={(ids) => reorderCategories(db, ids)}>{(id, dragItem, dragHandle) => {
+          const c = list.find((x) => x.id === id)!;
           const lk = E ? planLabelOf(c.id, data.items) : null;
           const n = count(c.id);
           const body = <>
@@ -57,12 +59,12 @@ export default function LogCats() {
               <span className={lk ? 'lk' : ''}>{lk ? `นับเข้างบ ${lk}` : E ? 'ยังไม่ผูกแผน · นับเป็นนอกงบ' : 'รายรับนอกแผน'}</span></span>
           </>;
           return (
-            <li key={c.id}>
+            <li key={c.id} {...dragItem}>
               {ed ? (
-                <div className={`lgc-row${c.hidden ? ' hid' : ''}`}>{body}
+                <div className={`lgc-row${c.hidden ? ' hid' : ''}`}>
+                  <Grip label={`ลากเพื่อย้าย ${c.name}`} {...dragHandle} />
+                  {body}
                   <span className="lgc-ed">
-                    <button aria-label="เลื่อนขึ้น" disabled={i === 0} onClick={() => moveCategory(db, c.id, -1)}><span style={{ display: 'flex', transform: 'rotate(180deg)' }}><Icon name="chevDown" size={16} stroke={2.2} /></span></button>
-                    <button aria-label="เลื่อนลง" disabled={i === list.length - 1} onClick={() => moveCategory(db, c.id, 1)}><Icon name="chevDown" size={16} stroke={2.2} /></button>
                     <button aria-label={c.hidden ? 'แสดงหมวด' : 'ซ่อนหมวด'} aria-pressed={c.hidden} onClick={() => toggleCategoryHidden(db, c.id)}><Icon name={c.hidden ? 'eyeOff' : 'eye'} size={16} stroke={2} /></button>
                   </span>
                 </div>
@@ -71,7 +73,7 @@ export default function LogCats() {
               )}
             </li>
           );
-        })}
+        }}</SortList>
       </ul>
 
       {form && <CatForm data={data} type={type} cat={form.cat} onClose={() => setForm(null)} />}

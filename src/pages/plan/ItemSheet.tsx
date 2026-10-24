@@ -1,17 +1,18 @@
 // แผ่นแก้/เพิ่มรายการในแผน (ต้นแบบ PlanSheet + PlanPeriod + LogCatPick)
 // ทุกการเปลี่ยนเงินในแผนต้องกดยืนยัน: แสดงผลกระทบต่อเงินเหลือก่อนกดบันทึก
 import { useState } from 'react';
+import { MoneyInput } from '../../components/MoneyInput';
 import { db } from '../../db/db';
 import { ICON_DEFAULT_CATEGORIES } from '../../db/defaults';
 import type { Month, PlanItem, PlanPeriod } from '../../db/types';
-import { addMonths, monthDiff, thaiMonth } from '../../calc/dates';
+import { addMonths, localToday, monthDiff, thaiMonth } from '../../calc/dates';
 import { formatBaht, parseBaht } from '../../calc/money';
 import { applyAmountChange, planTotals, rawAmount, stopFrom } from '../../calc/plan';
 import { goalAwareAmountOf } from '../../calc/goals';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
 import type { PlanData } from './usePlanData';
-import { ITEM_ICONS, QUICK_ICONS, TONE, catIconOf, iconOf, type IconName } from './planUi';
+import { ITEM_ICONS, QUICK_ICONS, TONE, catIconOf, iconOf, thaiMonthLong, type IconName } from './planUi';
 
 type View = 'main' | 'icons' | 'group' | 'cats' | 'account' | 'period' | 'due' | 'delete';
 type Props = { data: PlanData; month: Month; current: Month; item: PlanItem | null; groupId: string; onClose: () => void };
@@ -91,7 +92,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
     <button className="icon-btn" aria-label="กลับไปแก้รายการ" onClick={() => setView('main')}><Icon name="back" size={20} stroke={2} /></button>
   );
   const sub = (title: string, body: React.ReactNode) => (
-    <Sheet title={title} onClose={onClose}>
+    <Sheet title={title} tone={TONE[kind]} onClose={() => setView('main')}>
       <div className="sheet-sub">{back}<span className="muted">{name || 'รายการใหม่'}</span></div>
       {body}
     </Sheet>
@@ -205,18 +206,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
     ));
   }
 
-  if (view === 'due') return sub('ครบกำหนดวันที่', (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <p className="muted" style={{ margin: 0, fontSize: 13 }}>ใส่หรือไม่ใส่ก็ได้ · ถ้าใส่ เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span>ในหน้าหลัก ติ๊กแล้วแอป<span className="nw">บันทึกรายจ่ายให้เอง</span></p>
-      <div className="day-grid" role="radiogroup" aria-label="วันที่">
-        <button role="radio" aria-checked={dueDay === null} className={`wide${dueDay === null ? ' on' : ''}`} onClick={() => { setDueDay(null); setView('main'); }}>ไม่กำหนด</button>
-        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-          <button key={d} role="radio" aria-checked={dueDay === d} className={`num${dueDay === d ? ' on' : ''}`} onClick={() => { setDueDay(d); setView('main'); }}>{d}</button>
-        ))}
-      </div>
-      {dueDay && dueDay > 28 && <span className="hint muted" style={{ fontSize: 12.5 }}>เดือนที่มีไม่ถึง <span className="num">{dueDay}</span> วัน ใช้วันสุดท้ายของเดือน</span>}
-    </div>
-  ));
+  if (view === 'due') return sub('ครบกำหนดวันที่', <DuePicker month={month} value={dueDay} onPick={(d) => { setDueDay(d); setView('main'); }} />);
 
   if (view === 'delete' && item) return sub('ลบหรือหยุดรายการ', (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -235,7 +225,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
   const catChips = effCats.map((c) => categories.find((x) => x.id === c)).filter(Boolean);
   const diff = after - before;
   return (
-    <Sheet title={isNew ? 'เพิ่มรายการ' : 'แก้รายการ'} onClose={onClose}>
+    <Sheet title={isNew ? 'เพิ่มรายการ' : 'แก้รายการ'} tone={TONE[kind]} onClose={onClose}>
       <div className={`item-form tone-${TONE[kind]}`}>
         <div className="field"><label className="label" htmlFor="it-name">ชื่อและไอคอน</label>
           <span style={{ display: 'flex', gap: 8 }}>
@@ -251,7 +241,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
         </div>
 
         <label className="field"><span className="label">ยอดในแผน (บาท)</span>
-          <input className="num amt" inputMode="decimal" autoComplete="off" placeholder="0.00" value={amountText} aria-invalid={amountBad}
+          <MoneyInput className="num amt"  autoComplete="off" placeholder="0.00" value={amountText} aria-invalid={amountBad}
             onChange={(e) => setAmountText(e.target.value)} onBlur={() => amount !== null && setAmountText(formatBaht(amount))} />
           {amountBad && <span className="err">ใส่ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง</span>}
         </label>
@@ -305,7 +295,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
           {kind !== 'income' && (
             <HelpRow id="h-due" open={help === 'due'} onHelp={() => setHelp(help === 'due' ? null : 'due')} onOpen={() => setView('due')}
               label="ครบกำหนดวันที่" sub="ใส่หรือไม่ใส่ก็ได้"
-              value={<span className="val num">{dueDay ?? 'ไม่กำหนด'}</span>}
+              value={<span className="val num">{dueDay ? `ทุกวันที่ ${dueDay}` : 'ไม่กำหนด'}</span>}
               help={<>เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span> ในหน้าหลัก ติ๊กจ่ายแล้ว แอป<span className="nw">บันทึกรายจ่ายในเมนู บันทึก</span>ให้เอง ด้วยยอดในแผนและหมวดแรกที่ผูกไว้</>} />
           )}
         </div>
@@ -359,6 +349,45 @@ function MonthStrip({ item, before, month, amountOf }: { item: PlanItem; before:
         })}
       </div>
       <span className="ms-legend"><i className="lg cur" />เดือนที่แก้ <i className="lg special" />ยอดเฉพาะเดือน <i className="lg off" />นอกช่วง</span>
+    </div>
+  );
+}
+
+const WD_HEAD = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+
+/** เลือกวันครบกำหนด: พิมพ์ "ทุกวันที่" ได้ หรือแตะในปฏิทินของเดือนนั้น */
+function DuePicker({ month, value, onPick }: { month: Month; value: number | null; onPick: (d: number | null) => void }) {
+  const [text, setText] = useState(value ? String(value) : '');
+  const n = Number(text);
+  const day = /^\d{1,2}$/.test(text) && n >= 1 && n <= 31 ? n : null;
+  const [y, mo] = month.split('-').map(Number);
+  const first = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7; // จันทร์ = 0
+  const len = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const today = localToday();
+  return (
+    <div className="due-pick">
+      <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>ใส่หรือไม่ใส่ก็ได้ · ถ้าใส่ เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span>ในหน้าหลัก ติ๊กแล้วแอป<span className="nw">บันทึกรายจ่ายให้เอง</span></p>
+      <label className="due-in">
+        <span>ทุกวันที่</span>
+        <input className="num" inputMode="numeric" maxLength={2} value={text} placeholder="–" onChange={(e) => setText(e.target.value.replace(/\D/g, '').slice(0, 2))} aria-invalid={text !== '' && !day} />
+        <span>ของเดือน</span>
+      </label>
+      <div className="due-cal" aria-label={`ปฏิทิน ${thaiMonthLong(month)}`}>
+        <div className="h">{thaiMonthLong(month)}</div>
+        <div className="wd">{WD_HEAD.map((w) => <span key={w}>{w}</span>)}</div>
+        <div className="days" role="radiogroup" aria-label="วันที่">
+          {Array.from({ length: first }, (_, i) => <span key={`b${i}`} />)}
+          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => {
+            const date = `${month}-${String(d).padStart(2, '0')}`;
+            return (
+              <button key={d} role="radio" aria-checked={day === d} className={`num${d > len ? ' over' : ''}${date === today ? ' today' : ''}`} onClick={() => setText(String(d))}>{d}</button>
+            );
+          })}
+        </div>
+      </div>
+      {day && day > 28 && <span className="hint muted" style={{ fontSize: 12.5 }}>เดือนที่มีไม่ถึง <span className="num">{day}</span> วัน ใช้วันสุดท้ายของเดือน</span>}
+      <button className="btn btn-pri" disabled={!day} onClick={() => onPick(day)}>{day ? `ครบกำหนดทุกวันที่ ${day}` : 'เลือกวันที่'}</button>
+      <button className="btn btn-ghost" onClick={() => onPick(null)}>ไม่กำหนดวันครบกำหนด</button>
     </div>
   );
 }

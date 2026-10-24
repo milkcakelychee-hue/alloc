@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import type { GroupKind, Month, PlanGroup, PlanItem } from '../../db/types';
-import { addMonths, cycleOf, cycleRange, localToday, thaiDate, thaiMonth } from '../../calc/dates';
+import { appCycle, addMonths, cycleRange, localToday, thaiDate, thaiMonth } from '../../calc/dates';
 import { formatBaht, pct1 } from '../../calc/money';
 import { accountTransfers, planTotals } from '../../calc/plan';
 import { goalAwareAmountOf } from '../../calc/goals';
@@ -14,6 +14,8 @@ import { dateWithDay } from '../../components/PayRuleFields';
 import { usePlanData } from './usePlanData';
 import { TONE, groupAddLabel, iconOf, thaiMonthLong } from './planUi';
 import { ItemSheet } from './ItemSheet';
+import { Grip, SortList } from '../../components/SortList';
+import { reorderPlanItems } from '../../db/actions';
 import { PayDateSheet } from './PayDateSheet';
 import { PlanThree, TriLegend } from './PlanThree';
 import { payRuleLabel } from '../../components/PayRuleFields';
@@ -41,13 +43,16 @@ export function PlanMonth() {
   const setView = (v: View) => setSp(v === 'month' ? { tab: 'plan' } : { tab: 'plan', v }, { replace: true }); // ตัด ?m= ออก ใช้เดือนใน state แทน
 
   const s = data?.settings;
-  const current = s ? cycleOf(today, s.pay) : null;
+  const current = s ? appCycle(today, s.pay, s.startCycle) : null;
   const m = month ?? current;
   const checks = useLiveQuery(() => (m ? db.paidChecks.where('cycleMonth').equals(m).toArray() : []), [m]);
   if (!data || !s || !m || !current) return null;
 
   const { groups, items, accounts, goals, adjustments } = data;
-  const amountOf = goalAwareAmountOf(goals, items, adjustments, current);
+  const baseAmount = goalAwareAmountOf(goals, items, adjustments, current);
+  // เดือนก่อนรอบที่เริ่มใช้แอปไม่นับในแผน (มุมมอง 3 เดือน / ปีจะว่าง)
+  const st = s.startCycle;
+  const amountOf: typeof baseAmount = st ? (it, mm) => (mm < st ? 0 : baseAmount(it, mm)) : baseAmount;
   const t = planTotals(groups, items, m, amountOf);
   const range = cycleRange(m, s.pay);
   // หัวมุมมอง 3 เดือน: "ต.ค. – ธ.ค. 69" (ข้ามปี: "พ.ย. 69 – ม.ค. 70") · มุมมองปี: จำนวนเดือนที่มีแผน
@@ -103,11 +108,13 @@ export function PlanMonth() {
         {open && (
           <div className="gbody">
             {list.length === 0 && <div className="gempty">ยังไม่มีรายการ · กด <span className="nw">+ เพื่อเพิ่ม</span></div>}
-            {list.map((it) => {
+            <SortList ids={list.map((x) => x.id)} onCommit={(ids) => reorderPlanItems(db, g.id, ids)}>{(id, dragItem, dragHandle) => {
+              const it = list.find((x) => x.id === id)!;
               const on = checked.has(it.id);
               const canCheck = checkMode && g.kind !== 'income' && amountOf(it, m) > 0;
               return (
-                <div key={it.id} className="irow">
+                <div key={it.id} className="irow" {...dragItem}>
+                  {!checkMode && list.length > 1 && <Grip label={`ลากเพื่อย้าย ${it.name}`} {...dragHandle} />}
                   {canCheck && (
                     <button className="icheck" role="checkbox" aria-checked={on} aria-label={`จ่ายแล้ว ${it.name}`} onClick={() => toggleCheck(it)}>
                       <span className={on ? 'on' : ''}>{on && <Icon name="checkSq" size={14} stroke={3} />}</span>
@@ -121,7 +128,7 @@ export function PlanMonth() {
                   </button>
                 </div>
               );
-            })}
+            }}</SortList>
           </div>
         )}
       </section>
@@ -142,7 +149,7 @@ export function PlanMonth() {
               <span className="sub num">รอบ <span className="nw">{thaiDate(range.start)} – {thaiDate(range.end)}</span> (<span className="nw">{range.days} วัน</span>)</span></>
           )}
         </span>
-        <button className="icon-btn" aria-label={view === 'year' ? 'ปีก่อน' : 'เดือนก่อน'} onClick={() => setMonth(addMonths(m, view === 'year' ? -12 : -1))}><Icon name="back" size={20} stroke={2} /></button>
+        <button className="icon-btn" aria-label={view === 'year' ? 'ปีก่อน' : 'เดือนก่อน'} disabled={!!s.startCycle && (view === 'year' ? m.slice(0, 4) <= s.startCycle.slice(0, 4) : m <= s.startCycle)} onClick={() => setMonth(addMonths(m, view === 'year' ? -12 : -1))}><Icon name="back" size={20} stroke={2} /></button>
         <button className="icon-btn" aria-label={view === 'year' ? 'ปีถัดไป' : 'เดือนถัดไป'} onClick={() => setMonth(addMonths(m, view === 'year' ? 12 : 1))}><Icon name="chevron" size={20} stroke={2} /></button>
       </div>
       <div className="view-tabs" role="tablist" aria-label="มุมมองแผน">

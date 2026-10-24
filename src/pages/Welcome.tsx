@@ -1,6 +1,7 @@
 // เริ่มใช้งาน: เริ่มใหม่ (ตั้งเงินเดือน) / กู้จากไฟล์สำรอง → พร้อมใช้
 // ?preview=1 = ดูตัวอย่างจากตั้งค่า ไม่บันทึกอะไร (ชั่วคราว ช่วงสร้างแอป เอาออกเมื่อแอปจริงเสร็จ)
 import { useRef, useState } from 'react';
+import { MoneyInput } from '../components/MoneyInput';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../db/db';
 import { startFresh } from '../db/onboarding';
@@ -53,7 +54,7 @@ export default function Welcome() {
 
         <label className="field">
           <span className="label">เงินเดือนต่อเดือน (บาท)</span>
-          <input className="num" inputMode="decimal" autoComplete="off" placeholder="0.00" value={salaryText}
+          <MoneyInput className="num"  autoComplete="off" placeholder="0.00" value={salaryText}
             onChange={(e) => setSalaryText(e.target.value)} aria-invalid={invalid} />
           {invalid
             ? <span className="err">ใส่ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง</span>

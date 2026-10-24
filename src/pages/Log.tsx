@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { LogEntry, Month } from '../db/types';
-import { addMonths, cycleOf, cycleRange, daysBetween, localToday, thaiDate } from '../calc/dates';
+import { appCycle, addMonths, cycleOf, cycleRange, daysBetween, localToday, thaiDate } from '../calc/dates';
 import { expectedPayDate } from '../calc/payday';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
@@ -57,7 +57,7 @@ function LogCalendar() {
   const [det, setDet] = useState(false);
   if (!data?.settings) return null;
   const s = data.settings;
-  const cur = cycleOf(today, s.pay);
+  const cur = appCycle(today, s.pay, s.startCycle);
   const cycle = cycleSel ?? cur;
   const r = cycleRange(cycle, s.pay);
   const isCur = cycle === cur;
@@ -70,8 +70,9 @@ function LogCalendar() {
   const budget = parts.reduce((a, p) => a + p.budget, 0);
   const spentB = parts.reduce((a, p) => a + p.spent, 0);
   const remaining = budget - spentB;
-  const d = cycleDays(isCur ? today : r.end, s.pay);
-  const daysLeft = isCur ? d.daysLeft : 0;
+  const notStarted = isCur && today < r.start; // ตั้งรอบเริ่มใช้แอปไว้ล่วงหน้า ยังไม่ถึงวันแรก
+  const d = cycleDays(isCur && !notStarted ? today : r.end, s.pay);
+  const daysLeft = notStarted ? r.days : isCur ? d.daysLeft : 0;
   const perDay = Math.round(remaining / Math.max(daysLeft, 1));
 
   // เงินเดือนของรอบ (ไม่ได้จดเป็นรายการ)
@@ -89,7 +90,7 @@ function LogCalendar() {
 
   const cells = calendarCells(cycle, s.pay, today);
   const lastWithData = [...totals.keys()].sort().at(-1) ?? r.end;
-  const sel = daySel && daySel >= r.start && daySel <= r.end ? daySel : isCur ? today : lastWithData;
+  const sel = daySel && daySel >= r.start && daySel <= r.end ? daySel : isCur ? (today < r.start ? r.start : today) : lastWithData;
   const dayEntries = inCycle.filter((e) => e.date === sel);
   const dayT = totals.get(sel);
   const salToday = sal && sal.date === sel ? sal : null;
@@ -105,8 +106,8 @@ function LogCalendar() {
       <Tabs />
       <div className="lg-cyc">
         <div className="t"><b>{thaiMonthLong(cycle)}</b>
-          <span className="num"><span className="nw">รอบเงินเดือน {dm(r.start)} – {dm(r.end)}</span>{isCur && <> · <span className="nw">{daysLeft === 0 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></>}</span></div>
-        <button className="lg-sq" aria-label="รอบก่อน" onClick={() => { setCycle(addMonths(cycle, -1)); setDay(null); }}><Icon name="back" size={20} stroke={2} /></button>
+          <span className="num"><span className="nw">รอบเงินเดือน {dm(r.start)} – {dm(r.end)}</span>{isCur && <> · <span className="nw">{notStarted ? `เริ่ม ${dm(r.start)}` : daysLeft === 0 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></>}</span></div>
+        <button className="lg-sq" aria-label="รอบก่อน" disabled={!!s.startCycle && cycle <= s.startCycle} onClick={() => { setCycle(addMonths(cycle, -1)); setDay(null); }}><Icon name="back" size={20} stroke={2} /></button>
         <button className="lg-sq" aria-label="รอบถัดไป" disabled={!canNext} onClick={() => { setCycle(addMonths(cycle, 1)); setDay(null); }}><Icon name="chevron" size={20} stroke={2} /></button>
       </div>
 
@@ -122,7 +123,7 @@ function LogCalendar() {
             <div className="det">
               <span className="stack">{parts.map((p, i) => <span key={p.item.id} style={{ width: `${(Math.min(p.spent, p.budget) / budget) * 100}%`, background: STACK[i % STACK.length] }} />)}</span>
               <span className="lgd">{parts.map((p, i) => <span key={p.item.id}><i style={{ background: STACK[i % STACK.length] }} />{p.item.name} <b className="num">{baht(p.spent)}</b><span className="num">/{baht(p.budget)}</span></span>)}</span>
-              <span className="foot">งบนี้มาจากรายจ่ายผันแปรในแผน ({parts.map((p) => p.item.name).join(' · ')}){isCur && <> · อีก {daysLeft} วันหลังจากวันนี้</>}</span>
+              <span className="foot">งบนี้มาจากรายจ่ายผันแปรในแผน ({parts.map((p) => p.item.name).join(' · ')}){isCur && <> · {notStarted ? `${daysLeft} วันในรอบ` : `อีก ${daysLeft} วันหลังจากวันนี้`}</>}</span>
             </div>
           )}
         </> : (
@@ -185,7 +186,9 @@ function LogCalendar() {
         )}
       </section>
 
-      <Link to={`/log/add${sel !== today && daysBetween(sel, today) > 0 ? `?d=${sel}` : ''}`} className="lg-fab" aria-label="บันทึกรายการใหม่"><Icon name="plus" size={22} stroke={2.4} />บันทึก</Link>
+      {today < r.start && isCur
+        ? <span className="lg-fab off" role="status"><Icon name="calendar" size={20} stroke={2} />เริ่มบันทึกได้ {dm(r.start)}</span>
+        : <Link to={`/log/add${sel !== today && daysBetween(sel, today) > 0 ? `?d=${sel}` : ''}`} className="lg-fab" aria-label="บันทึกรายการใหม่"><Icon name="plus" size={22} stroke={2.4} />บันทึก</Link>}
       {open && <EntrySheet entry={open} data={data} onClose={() => setOpen(null)} onEdit={() => nav(`/log/add?id=${open.id}`)} />}
     </main>
   );

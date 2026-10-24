@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import type { LogType } from '../../db/types';
-import { addDays, cycleOf, localToday, thaiDate } from '../../calc/dates';
+import { addDays, appCycle, cycleOf, cycleRange, localToday, thaiDate } from '../../calc/dates';
 import { weekday } from '../../calc/payday';
 import { formatBaht } from '../../calc/money';
 import { expensesIn, categoryBudget } from '../../calc/log';
@@ -52,8 +52,11 @@ export default function LogAdd() {
   const catId = cat[type] || (cats.find((c) => c.id === (E ? 'c-food' : 'i-salary')) ?? cats[0])?.id || '';
   const amount = evalAmount(expr) ?? 0;
   const hasOp = /[+−×]/.test(expr);
+  // บันทึกได้ตั้งแต่วันแรกของรอบที่เริ่มใช้แอป
+  const minDate = s.startCycle ? cycleRange(s.startCycle, s.pay).start : '0000-00-00';
+  if (date < minDate && minDate <= today) setDate(minDate);
   const cycle = cycleOf(date, s.pay);
-  const cur = cycleOf(today, s.pay);
+  const cur = appCycle(today, s.pay, s.startCycle);
   const amountOf = goalAwareAmountOf(data.goals, data.items, data.adjustments, cur);
 
   // ผลต่องบของหมวด (ไม่นับรายการที่กำลังแก้)
@@ -112,7 +115,7 @@ export default function LogAdd() {
         </button>
         <div className="lga-row2">
           <span className="lga-date">
-            <button aria-label="วันก่อน" onClick={() => setDate(addDays(date, -1))}><Icon name="back" size={18} stroke={2} /></button>
+            <button aria-label="วันก่อน" disabled={date <= minDate} onClick={() => setDate(addDays(date, -1))}><Icon name="back" size={18} stroke={2} /></button>
             <button className="dl num" onClick={() => setPick(true)}>{dateLabel()}</button>
             <button aria-label="วันถัดไป" disabled={date >= today} onClick={() => setDate(addDays(date, 1))}><Icon name="chevron" size={18} stroke={2} /></button>
           </span>
@@ -159,7 +162,7 @@ export default function LogAdd() {
         </div>
       </>}
 
-      {pick && <DatePick date={date} today={today} kind={E ? 'exp' : 'inc'} pay={s.pay} days={new Set(data.entries.map((e) => e.date))} onPick={(d) => { setDate(d); setPick(false); }} onClose={() => setPick(false)} />}
+      {pick && <DatePick date={date} today={today} minDate={minDate} kind={E ? 'exp' : 'inc'} pay={s.pay} days={new Set(data.entries.map((e) => e.date))} onPick={(d) => { setDate(d); setPick(false); }} onClose={() => setPick(false)} />}
 
       {askLink && (
         <LgSheet label="ใช้หมวดนี้กับรายการในแผน" onClose={() => nav('/log', { replace: true })}>
@@ -175,8 +178,8 @@ export default function LogAdd() {
   );
 }
 
-function DatePick({ date, today, kind, pay, days, onPick, onClose }: {
-  date: string; today: string; kind: 'exp' | 'inc'; pay: number | import('../../calc/dates').PayRule; days: Set<string>;
+function DatePick({ date, today, minDate, kind, pay, days, onPick, onClose }: {
+  date: string; today: string; minDate: string; kind: 'exp' | 'inc'; pay: number | import('../../calc/dates').PayRule; days: Set<string>;
   onPick: (d: string) => void; onClose: () => void;
 }) {
   const [sel, setSel] = useState(date);
@@ -193,7 +196,7 @@ function DatePick({ date, today, kind, pay, days, onPick, onClose }: {
         <div className="lg-dp-grid">
           {cells.map((c) => {
             const day = Number(c.date.slice(8));
-            if (c.future) return <span key={c.date} aria-disabled="true" className={`fut${c.inCycle ? ' in' : ''}`}><span className="num">{day}</span></span>;
+            if (c.future || c.date < minDate) return <span key={c.date} aria-disabled="true" className={`fut${c.inCycle ? ' in' : ''}`}><span className="num">{day}</span></span>;
             return (
               <button key={c.date} aria-label={dm(c.date)} aria-pressed={c.date === sel} className={`${c.inCycle ? 'in' : 'prev'}${c.today ? ' today' : ''}`} onClick={() => setSel(c.date)}>
                 <span className="n num">{day}</span>{days.has(c.date) && <span className="dot" aria-hidden="true" />}

@@ -1,6 +1,7 @@
 // แผ่นเด้งของแท็บเป้าหมาย: ปรับยอด (บอร์ด GoalAdjust) · แก้เป้า · เลือกสี/ไอคอน (ดีไซน์ใหม่) · เงินสมทบ PVD
-import { useEffect, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, type ReactNode } from 'react';
+import { MoneyInput } from '../../components/MoneyInput';
+import { SheetFrame } from '../../components/SheetFrame';
 import { db } from '../../db/db';
 import type { Goal, GoalType, Month, Satang } from '../../db/types';
 import { formatBaht, parseBaht } from '../../calc/money';
@@ -13,20 +14,7 @@ import { GOAL_COLORS, GOAL_ICONS, baht, barW, pctText } from './goalUi';
 import { MonthField, gstyle } from './parts';
 
 export function GSheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-  return createPortal(
-    <div className="scrim" onClick={onClose}>
-      <section className="sheet gx-sheet" role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>
-        <span className="grab" aria-hidden="true" />
-        {children}
-      </section>
-    </div>,
-    document.body
-  );
+  return <SheetFrame label={label} className="sheet gx-sheet" onClose={onClose}>{children}</SheetFrame>;
 }
 
 const CloseBtn = ({ onClose }: { onClose: () => void }) => (
@@ -76,7 +64,7 @@ export function AdjustSheet({ goal, balance, onClose }: { goal: Goal; balance: S
         <span className="gx-adj-lbl">{m.field}</span>
         <span className="gx-amt">
           {mode !== 'set' && <span className={`sg num ${mode === 'add' ? 'plus' : 'minus'}`}>{mode === 'add' ? '+' : '−'}</span>}
-          <input className="num" inputMode="decimal" value={text} placeholder="0.00" onChange={(e) => setText(e.target.value)} aria-invalid={text !== '' && !valid} />
+          <MoneyInput className="num"  value={text} placeholder="0.00" onChange={(e) => setText(e.target.value)} aria-invalid={text !== '' && !valid} />
           <span className="u">บาท</span>
         </span>
       </label>
@@ -161,7 +149,7 @@ export function EditGoalSheet({ goal, onClose, onDelete }: { goal: Goal; onClose
           </button>
           <label style={{ flex: 1 }}><span className="lbl">ชื่อเป้า</span><input className="in" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} /></label>
         </div>
-        <label><span className="lbl">ยอดเป้า (บาท)</span><input className="in amt num" inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} aria-invalid={!ok} /></label>
+        <label><span className="lbl">ยอดเป้า (บาท)</span><MoneyInput className="in amt num"  value={target} onChange={(e) => setTarget(e.target.value)} aria-invalid={!ok} /></label>
         {goal.type !== 'pvd' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <MonthField label={<>กำหนดเวลา <small style={{ color: 'var(--ink3)' }}>(ไม่ใส่ก็ได้)</small></>} value={due} placeholder="ไม่กำหนด" onChange={(v) => setDue(v)} />
@@ -202,7 +190,7 @@ export function PvdFields({ gross, mine, employer, from, onChange }: {
   return (
     <>
       <label><span className="lbl">เงินเดือนก่อนหัก (บาท)</span>
-        <input className="in amt num" inputMode="decimal" value={gross} onChange={(x) => onChange({ gross: x.target.value })} aria-invalid={g === null} />
+        <MoneyInput className="in amt num"  value={gross} onChange={(x) => onChange({ gross: x.target.value })} aria-invalid={g === null} />
       </label>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
         <label><span className="lbl">ส่วนของคุณ (%)</span><input className="in amt num" inputMode="decimal" value={mine} onChange={(x) => onChange({ mine: x.target.value })} aria-invalid={a === null} /></label>

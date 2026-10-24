@@ -1,7 +1,7 @@
 // หน้า PVD (บอร์ด GoalPVD): ยอด · เงินสมทบต่อเดือน · คาดการณ์ 4 จุด · แยกจากงบ
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { cycleOf, localToday, monthDiff, thaiMonth } from '../../calc/dates';
+import { appCycle, localToday, monthDiff, thaiMonth } from '../../calc/dates';
 import { goalBalance, goalOutlook, nextDepositCycle, projectGoal, pvdContribution, pvdMonthly } from '../../calc/goals';
 import { Icon } from '../../components/Icon';
 import { baht, barW, pctText, useGoalsData } from './goalUi';
@@ -14,7 +14,7 @@ export default function GoalPvd() {
   if (!data?.settings) return null;
   const g = data.goals.find((x) => x.type === 'pvd');
   if (!g) return <Navigate to="/goals/new?type=pvd" replace />;
-  const cur = cycleOf(localToday(), data.settings.pay);
+  const cur = appCycle(localToday(), data.settings.pay, data.settings.startCycle);
   const balance = goalBalance(g, data.adjustments);
   const o = goalOutlook(g, data.items, data.adjustments, cur);
   const c = pvdContribution(g, cur);

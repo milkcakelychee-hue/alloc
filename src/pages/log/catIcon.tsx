@@ -19,6 +19,17 @@ const P: Record<string, ReactNode> = {
   refund: <><path d="M9 8.5 5 12.5l4 4" /><path d="M5 12.5h9a5 5 0 0 0 0-10h-2" /></>,
   dividend: <><path d="M3.5 17 9.5 11l4 4 7-7.5" /><path d="M15 7.5h5.5V13" /></>,
   gift: <><rect x="4" y="9" width="16" height="11" rx="1.5" /><path d="M3.5 9h17M12 9v11M12 9c-1.5-3-5-3.5-5-1.5S10 9 12 9zm0 0c1.5-3 5-3.5 5-1.5S14 9 12 9z" /></>,
+  // ไอคอนเพิ่มเติม (เจ้าของขอ): ขนม น้ำหวาน กล้าม เสื้อผ้า บัตร บ้าน ลิป เกม โทรศัพท์ รถยนต์
+  snack: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="2.8" /><path d="M8.2 8.6l.9.5M14.9 7.6l.4.9M16.3 14.6l-.9.4M9.4 16.2l-.5-.9" /></>,
+  sweet: <><path d="M6.5 9h11l-1.3 10.2a1.5 1.5 0 0 1-1.5 1.3H9.3a1.5 1.5 0 0 1-1.5-1.3z" /><path d="M5.5 9h13M12.5 9l2-5.5 2.5.6" /><circle cx="10" cy="17" r=".9" /><circle cx="13.5" cy="16" r=".9" /></>,
+  gym: <path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11" />,
+  shirt: <path d="M8.5 4 4 6.5l1.5 4 2-1V20h9V9.5l2 1 1.5-4L15.5 4a3.5 3.5 0 0 1-7 0z" />,
+  card: <><rect x="3.5" y="6" width="17" height="12" rx="2" /><path d="M3.5 10h17M7 14.5h4" /></>,
+  house: <><path d="M4 10.5 12 4l8 6.5V20H4z" /><path d="M10 20v-5h4v5" /></>,
+  lipstick: <><path d="M9 21h6v-8H9z" /><path d="M10 13V8.5L14 5v8" /></>,
+  game: <><path d="M7 9h10a4 4 0 0 1 3.9 4.9l-.8 3.3a2 2 0 0 1-3.4.9L14.5 16h-5l-2.2 2.1a2 2 0 0 1-3.4-.9l-.8-3.3A4 4 0 0 1 7 9z" /><path d="M8 11.5v3M6.5 13h3M15.5 12h.01M17 14h.01" /></>,
+  phone: <><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 17.5h2" /></>,
+  car: <><path d="M5 16v-4l2-5h10l2 5v4z" /><path d="M5 16v2.5M19 16v2.5M8 13h.01M16 13h.01" /></>,
   // ไอคอนหมวดที่ผู้ใช้เพิ่มเอง (บอร์ด LogCats)
   'n-clock': <><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></>,
   'n-heart': <path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z" />,
@@ -36,7 +47,7 @@ export const FG_OF: Record<string, string> = {
 };
 /** ไอคอนที่เลือกได้ตอนเพิ่ม/แก้หมวด */
 export const CAT_ICONS = {
-  expense: ['food', 'drink', 'travel', 'household', 'shopping', 'health', 'fun', 'bill', 'edu', 'pet', 'other', 'n-clock', 'n-heart', 'n-basket', 'n-house', 'n-bike'],
+  expense: ['food', 'drink', 'snack', 'sweet', 'travel', 'car', 'household', 'house', 'shopping', 'shirt', 'lipstick', 'health', 'gym', 'fun', 'game', 'bill', 'card', 'phone', 'edu', 'pet', 'gift', 'other', 'n-clock', 'n-heart', 'n-basket', 'n-bike'],
   income: ['salary', 'side', 'refund', 'dividend', 'gift', 'other', 'n-clock', 'n-heart', 'n-up', 'n-house']
 };
 

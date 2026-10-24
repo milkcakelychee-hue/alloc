@@ -105,3 +105,10 @@ export async function deleteCategory(db: AllocDB, id: string, now = Date.now()) 
     return moved;
   });
 }
+
+/** เรียงหมวดใหม่จากการลาก (ประเภทเดียวกัน) */
+export async function reorderCategories(db: AllocDB, ids: string[], now = Date.now()) {
+  await db.transaction('rw', db.logCategories, async () => {
+    for (let i = 0; i < ids.length; i++) await db.logCategories.update(ids[i], { order: i, updatedAt: now });
+  });
+}

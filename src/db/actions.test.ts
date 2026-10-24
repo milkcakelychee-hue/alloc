@@ -62,3 +62,15 @@ describe('การ์ด เงินเดือนเข้าแล้วห
     expect([rawAmount(after, '2026-12'), rawAmount(after, '2027-01'), rawAmount(after, '2027-02')]).toEqual([B(31000), B(30450), B(31000)]);
   });
 });
+
+describe('ลากเรียงรายการในแผน', () => {
+  it('เรียงเฉพาะที่แสดง รายการที่ซ่อนคงตำแหน่ง', async () => {
+    const { reorderPlanItems } = await import('./actions');
+    const d = await fresh();
+    const [a, b, c, z] = ['ค่ากิน', 'เดินทาง', 'ของใช้', 'ค่าเรียน'].map((n, i) => item('variable', n, 100, { order: i }));
+    await d.planItems.bulkPut([a, b, c, z]);
+    await reorderPlanItems(d, a.groupId, [c.id, a.id, b.id]); // z ซ่อนอยู่ท้าย
+    const got = (await d.planItems.where('groupId').equals(a.groupId).toArray()).sort((x, y) => x.order - y.order).map((x) => x.name);
+    expect(got).toEqual(['ของใช้', 'ค่ากิน', 'เดินทาง', 'ค่าเรียน']);
+  });
+});

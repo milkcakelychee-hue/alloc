@@ -292,3 +292,5 @@
 .lgc-field { display: flex; flex-direction: column; gap: 6px; }
 .lgc-field > span { font-size: 13px; font-weight: 600; color: var(--ink2); }
 .lgc-field input { height: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink); }
+.lg-fab.off { background: var(--card2); color: var(--ink2); box-shadow: none; font-size: 16px; font-weight: 600; }
+.lgc-list li[data-dragging] { border-radius: 14px; background: var(--card); }  .lgc-row .grip { margin-left: -6px; }

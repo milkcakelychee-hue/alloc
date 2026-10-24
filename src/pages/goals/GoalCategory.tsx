@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { db } from '../../db/db';
 import type { Goal, GoalType, PlanItem } from '../../db/types';
-import { addMonths, cycleOf, localToday, monthDiff, thaiMonth } from '../../calc/dates';
+import { appCycle, addMonths, localToday, monthDiff, thaiMonth } from '../../calc/dates';
 import { goalBalance, goalOutlook, nextDepositCycle, planOf, suggestMonthly } from '../../calc/goals';
 import { Icon } from '../../components/Icon';
 import { deleteGoal, spendGoal } from '../../db/goalActions';
@@ -26,14 +26,14 @@ export default function GoalCategory() {
   if (!type) return <Navigate to="/goals" replace />;
   if (type === 'pvd') return <GoalPvd />;
   if (!data?.settings) return null;
-  const cur = cycleOf(localToday(), data.settings.pay);
+  const cur = appCycle(localToday(), data.settings.pay, data.settings.startCycle);
   const goals = data.goals.filter((g) => g.type === type && !g.closed);
   const balance = goals.reduce((s, g) => s + goalBalance(g, data.adjustments), 0);
   const target = goals.reduce((s, g) => s + g.target, 0);
   const plan = goals.reduce((s, g) => s + planOf(g, data.items)(cur), 0);
   const pct = target ? balance / target : 0;
   const spend = type === 'goalSpend';
-  const isOpen = (g: Goal, i: number) => spend || (open[g.id] ?? i === 0);
+  const isOpen = (g: Goal) => spend || !!open[g.id]; // ปิดไว้ก่อน แตะเพื่อดูรายละเอียด
 
   const delBody = (g: Goal) => {
     const items = data.items.filter((i) => i.goalId === g.id);
@@ -67,7 +67,7 @@ export default function GoalCategory() {
 
       {goals.map((g, i) => {
         const o = goalOutlook(g, data.items, data.adjustments, cur);
-        const expanded = isOpen(g, i);
+        const expanded = isOpen(g);
         return (
           <article key={g.id} className="gx-card gcol" style={gstyle(g.color)} aria-label={`เป้า${g.name}`}>
             <div className="hd">

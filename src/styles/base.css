@@ -624,3 +624,42 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .todo-card .tx { flex: 1; display: flex; flex-direction: column; gap: 1px; line-height: 1.45; min-width: 0; }
 .todo-card .t1 { font-size: 15px; font-weight: 600; } .todo-card .t2 { font-size: 13px; color: var(--ink2); }
 .todo-card > svg { color: var(--ink3); flex: none; }
+.sheet { overscroll-behavior: contain; }
+.sheet .grab { touch-action: none; cursor: grab; padding: 8px 0; background-clip: content-box; height: 5px; box-sizing: content-box; margin-top: -8px; margin-bottom: 4px; }
+/* คาดการณ์วันเงินเดือนเข้า: เดือนอยู่หน้าสุดเป็นป้ายเด่น กวาดตาอ่านง่าย */
+.pay-fc { padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.pay-fc .h { font-size: 13px; color: var(--ink3); margin-bottom: 6px; line-height: 1.45; }
+.pay-fc .pay-row { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0; border-top: 1px solid var(--line); }
+.pay-fc .pay-row:first-of-type { border-top: 0; }
+.pay-fc .mo { min-width: 76px; padding: 6px 10px; border-radius: 10px; background: var(--g-income-head); color: var(--ink); font-size: 15px; font-weight: 700; text-align: center; flex: none; }
+.pay-fc .dd { flex: 1; font-size: 14px; color: var(--ink2); } .pay-fc .dd b { font-size: 18px; color: var(--ink); font-weight: 700; margin-right: 2px; }
+.pay-fc .h + .pay-row { border-top: 0; }
+/* แท่งกราฟทุกจุดขอบเหลี่ยม (เจ้าของขอ) */
+.yr-col .ybar, .y-stack, .y-stack > span, .gx-chart .cols .b { border-radius: 0 !important; }
+/* ปุ่มเพิ่มรายการและแผ่นแก้รายการใช้สีของหมวดหลัก (ไม่ฟิกสีเขียว) */
+.gbtn.add { color: var(--gf); }
+.sheet.toned { --pri: var(--gf); --sel: var(--gf); --link: var(--gf); }
+:root[data-theme='dark'] .sheet.toned.tone-expense { --pri: #A63D27; }
+:root[data-theme='dark'] .sheet.toned.tone-goal { --pri: #8A4B14; }
+:root[data-theme='dark'] .sheet.toned.tone-save { --pri: #2A5F8F; }
+:root[data-theme='dark'] .sheet.toned.tone-income { --pri: #2F6B47; }
+/* จุด 6 จุดสำหรับลากเรียง */
+.grip { width: 28px; min-height: 44px; display: flex; align-items: center; justify-content: center; color: var(--ink3); flex: none; touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; }
+.grip:active { cursor: grabbing; color: var(--ink); }
+[data-dragging] { position: relative; z-index: 5; box-shadow: 0 10px 28px rgba(13, 22, 17, .22); background: var(--card); border-radius: 14px; }
+.irow[data-dragging] { background: var(--gc); }
+.irow .grip { margin-left: -8px; width: 26px; }
+/* เลือกวันครบกำหนดแบบปฏิทิน */
+.due-pick { display: flex; flex-direction: column; gap: 12px; }
+.due-in { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--sel); font-size: 15px; color: var(--ink2); }
+.due-in input { width: 64px; height: 44px; border: 0; border-radius: 12px; background: var(--card2); text-align: center; font-size: 22px; font-weight: 700; color: var(--ink); font-family: var(--font-num); }
+.due-in input:focus { outline: 2px solid var(--sel); }
+.due-cal { background: var(--card); border-radius: 18px; padding: 12px 10px; box-shadow: var(--cardline); }
+.due-cal .h { font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 8px; }
+.due-cal .wd, .due-cal .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.due-cal .wd { text-align: center; font-size: 11.5px; color: var(--ink3); padding-bottom: 6px; }
+.due-cal .days button { height: 40px; border-radius: 12px; background: var(--card2); color: var(--ink); font-size: 15px; font-weight: 500; }
+.due-cal .days button.over { opacity: .45; }
+.due-cal .days button.today { box-shadow: inset 0 0 0 1.5px var(--ink3); }
+.due-cal .days button[aria-checked='true'] { background: var(--sel); color: var(--onsel); box-shadow: none; font-weight: 700; }
+.sheet .grab { background-clip: content-box !important; }
