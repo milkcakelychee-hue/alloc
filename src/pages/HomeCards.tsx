@@ -23,6 +23,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
   const [diffMode, setDiffMode] = useState(false);
   const [actualText, setActualText] = useState('');
   const [toast, setToast] = useState('');
+  const [earlyOpen, setEarlyOpen] = useState(false);
   if (!data?.settings || !checks || !receipts) return null;
 
   const { settings: s, groups, items, goals, adjustments } = data;
@@ -41,8 +42,12 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3500); };
 
   const actual = parseBaht(actualText);
-  const confirmCard = pp.confirm && (() => {
-    const c = pp.confirm!;
+  // เงินเข้าก่อนกำหนด: แตะ "เงินเดือนเข้าแล้ว" บนการ์ดคาดว่าเงินเข้า → ใช้การ์ดยืนยันเดียวกัน
+  const early = earlyOpen && raw.upcoming && okC(raw.upcoming.cycle)
+    ? { cycle: raw.upcoming.cycle, expected: raw.upcoming.expected, nominal: raw.upcoming.nominal, planned: plannedIncome(raw.upcoming.cycle) } : null;
+  const toConfirm = pp.confirm ?? early;
+  const confirmCard = toConfirm && (() => {
+    const c = toConfirm;
     const left = planTotals(groups, items, c.cycle, amountOf).leftover;
     const diff = actual !== null ? actual - c.planned : 0;
     const salary = salaryItemFor(items, incomeIds, c.cycle);
@@ -57,7 +62,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
           <div className="confirm-actions">
             <button className="btn btn-pri" onClick={async () => { await confirmPay(db, { cycle: c.cycle, date: today, amount: c.planned }); flash('บันทึกเงินเดือนเข้าแล้ว'); }}>เข้าแล้ว ยอดเท่าเดิม</button>
             <button className="btn btn-ghost" onClick={() => { setDiffMode(true); setActualText(formatBaht(c.planned)); }}>เข้าแล้ว ยอดไม่เท่าเดิม</button>
-            <button className="btn btn-ghost" onClick={async () => { await snoozePay(db, { cycle: c.cycle, today }); flash('จะถามอีกครั้งพรุ่งนี้'); }}>ยังไม่เข้า เตือนพรุ่งนี้</button>
+            <button className="btn btn-ghost" onClick={async () => { await snoozePay(db, { cycle: c.cycle, today }); setEarlyOpen(false); flash('จะถามอีกครั้งพรุ่งนี้'); }}>ยังไม่เข้า เตือนพรุ่งนี้</button>
           </div>
         ) : (
           <div className="confirm-actions">
@@ -86,7 +91,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
     );
   })();
 
-  const up = pp.upcoming;
+  const up = early ? null : pp.upcoming;
   const count = (pp.confirm ? 1 : 0) + due.length + (up ? 1 : 0) + extra.length;
   if (count === 0) return toast ? <div className="toast" role="status">{toast}</div> : null;
 
@@ -101,6 +106,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
             <span className="t2">{up.reason === 'weekend' ? <>ปกติวันที่ <span className="num">{Number(up.nominal.slice(8))}</span> แต่<span className="nw">ตรงวัน{WD[weekday(up.nominal)] === 'ส.' ? 'เสาร์' : 'อาทิตย์'}</span></>
               : up.reason === 'override' ? <span className="nw">แก้วันเฉพาะเดือนนี้</span> : <span className="nw">ตามกำหนด</span>}
               {up.daysLeft > 0 && <> · <span className="nw">อีก <span className="num">{up.daysLeft}</span> วัน</span></>}</span></span>
+          <button className="pill-btn" onClick={() => setEarlyOpen(true)}>เข้าแล้ว</button>
         </div>
       )}
       {pp.lateBills.map((b) => (

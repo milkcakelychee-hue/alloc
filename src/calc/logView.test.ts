@@ -74,3 +74,19 @@ describe('เงินเดือนในหน้าบันทึก', () =
     expect(salaryEvent({ ...base, expected: '2026-10-15', received: null })).toBeNull();
   });
 });
+
+describe('เงินเดือนเข้าก่อนกำหนด', () => {
+  it('กดเงินเดือนเข้าแล้ว 25 ต.ค. (กำหนด 27) → รอบ พ.ย. เริ่ม 25 ต.ค. · รายการตั้งแต่วันนั้นนับเข้า พ.ย.', async () => {
+    const { effectiveStart, cycleForDate } = await import('./logView');
+    const { entryCycle, expensesIn } = await import('./log');
+    const rec = [{ id: '2026-11', status: 'received', date: '2026-10-25' }];
+    expect(effectiveStart('2026-11', 27, rec)).toBe('2026-10-25');
+    expect(effectiveStart('2026-11', 27, [])).toBe('2026-10-27');
+    expect(cycleForDate('2026-10-25', 27, rec)).toBe('2026-11');
+    expect(cycleForDate('2026-10-24', 27, rec)).toBe('2026-10');
+    expect(cycleForDate('2026-10-25', 27, [])).toBe('2026-10');
+    const e = entry('2026-10-25', 'c-food', 60, 60, { cycleMonth: '2026-11' });
+    expect(entryCycle(e, 27)).toBe('2026-11');
+    expect(expensesIn([e], '2026-11', 27)).toHaveLength(1);
+  });
+});

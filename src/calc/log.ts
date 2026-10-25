@@ -3,8 +3,11 @@ import type { DateStr, LogEntry, Month, PlanGroup, PlanItem, Satang } from '../d
 import { cycleOf, cycleRange, daysBetween, type Pay } from './dates';
 import { rawAmount, type AmountOf } from './plan';
 
+/** รอบของรายการ: รอบที่บันทึกไว้ (เช่น จดหลังเงินเดือนเข้าก่อนกำหนด) ไม่งั้นรอบของวันที่ */
+export const entryCycle = (e: Pick<LogEntry, 'date' | 'cycleMonth'>, payday: Pay): Month => e.cycleMonth ?? cycleOf(e.date, payday);
+
 export const expensesIn = (entries: LogEntry[], cycle: Month, payday: Pay) =>
-  entries.filter((e) => e.type === 'expense' && cycleOf(e.date, payday) === cycle);
+  entries.filter((e) => e.type === 'expense' && entryCycle(e, payday) === cycle);
 
 export function spentByCategory(entries: LogEntry[]) {
   const m = new Map<string, Satang>();

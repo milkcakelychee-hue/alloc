@@ -4,11 +4,11 @@ import type { DateStr, LogCategory, LogEntry, LogType, Month, Satang } from './t
 
 const stamp = (now: number) => ({ id: crypto.randomUUID(), createdAt: now, updatedAt: now });
 
-export interface EntryInput { type: LogType; amount: Satang; categoryId: string; date: DateStr; note: string }
+export interface EntryInput { type: LogType; amount: Satang; categoryId: string; date: DateStr; note: string; cycleMonth?: Month | null }
 
 /** เพิ่มรายการ · ไม่ได้หาร: ส่วนของฉัน = จ่ายจริง */
 export async function addEntry(db: AllocDB, e: EntryInput, now = Date.now()) {
-  const entry: LogEntry = { ...stamp(now), date: e.date, type: e.type, amountPaid: e.amount, myShare: e.amount, categoryId: e.categoryId, note: e.note.trim(), billItemId: null };
+  const entry: LogEntry = { ...stamp(now), date: e.date, type: e.type, amountPaid: e.amount, myShare: e.amount, categoryId: e.categoryId, note: e.note.trim(), billItemId: null, ...(e.cycleMonth ? { cycleMonth: e.cycleMonth } : {}) };
   await db.logEntries.add(entry);
   return entry;
 }
@@ -18,7 +18,7 @@ export async function updateEntry(db: AllocDB, id: string, e: EntryInput, now = 
   const old = await db.logEntries.get(id);
   if (!old) return;
   const myShare = old.amountPaid && old.myShare !== old.amountPaid ? Math.round((e.amount * old.myShare) / old.amountPaid) : e.amount;
-  await db.logEntries.update(id, { type: e.type, amountPaid: e.amount, myShare, categoryId: e.categoryId, date: e.date, note: e.note.trim(), updatedAt: now });
+  await db.logEntries.update(id, { type: e.type, amountPaid: e.amount, myShare, categoryId: e.categoryId, date: e.date, note: e.note.trim(), cycleMonth: e.cycleMonth ?? null, updatedAt: now });
 }
 
 /** จดซ้ำวันนี้: ยอด หมวด โน้ตเดิม วันที่วันนี้ (ไม่ผูกบิล/การ์ดจ่ายแล้ว) */

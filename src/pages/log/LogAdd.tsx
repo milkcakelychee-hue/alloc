@@ -7,7 +7,7 @@ import { addDays, appCycle, cycleOf, cycleRange, localToday, thaiDate } from '..
 import { weekday } from '../../calc/payday';
 import { formatBaht } from '../../calc/money';
 import { expensesIn, categoryBudget } from '../../calc/log';
-import { datePickNote, evalAmount, pickerCells, planLabelOf } from '../../calc/logView';
+import { cycleForDate, datePickNote, effectiveStart, evalAmount, pickerCells, planLabelOf } from '../../calc/logView';
 import { goalAwareAmountOf } from '../../calc/goals';
 import { addEntry, linkCategoryFirst, updateEntry } from '../../db/logActions';
 import { Icon } from '../../components/Icon';
@@ -53,9 +53,10 @@ export default function LogAdd() {
   const amount = evalAmount(expr) ?? 0;
   const hasOp = /[+−×]/.test(expr);
   // บันทึกได้ตั้งแต่วันแรกของรอบที่เริ่มใช้แอป
-  const minDate = s.startCycle ? cycleRange(s.startCycle, s.pay).start : '0000-00-00';
+  const minDate = s.startCycle ? effectiveStart(s.startCycle, s.pay, data.receipts) : '0000-00-00'; // เงินเดือนเข้าก่อนกำหนด → จดได้ตั้งแต่วันนั้น
   if (date < minDate && minDate <= today) setDate(minDate);
-  const cycle = cycleOf(date, s.pay);
+  const cycleFor = (d: string) => cycleForDate(d, s.pay, data.receipts);
+  const cycle = cycleFor(date);
   const cur = appCycle(today, s.pay, s.startCycle);
   const amountOf = goalAwareAmountOf(data.goals, data.items, data.adjustments, cur);
 
@@ -84,7 +85,7 @@ export default function LogAdd() {
 
   const save = async () => {
     if (amount <= 0 || !catId) return;
-    const input = { type, amount, categoryId: catId, date, note };
+    const input = { type, amount, categoryId: catId, date, note, cycleMonth: cycle !== cycleOf(date, s.pay) ? cycle : null };
     if (editing) {
       await updateEntry(db, editing.id, input);
       const item = editing.planItemId ? data.items.find((i) => i.id === editing.planItemId) : null;
@@ -162,7 +163,7 @@ export default function LogAdd() {
         </div>
       </>}
 
-      {pick && <DatePick date={date} today={today} minDate={minDate} kind={E ? 'exp' : 'inc'} pay={s.pay} days={new Set(data.entries.map((e) => e.date))} onPick={(d) => { setDate(d); setPick(false); }} onClose={() => setPick(false)} />}
+      {pick && <DatePick date={date} today={today} minDate={minDate} cycleFor={cycleFor} kind={E ? 'exp' : 'inc'} pay={s.pay} days={new Set(data.entries.map((e) => e.date))} onPick={(d) => { setDate(d); setPick(false); }} onClose={() => setPick(false)} />}
 
       {askLink && (
         <LgSheet label="ใช้หมวดนี้กับรายการในแผน" onClose={() => nav('/log', { replace: true })}>
@@ -178,15 +179,16 @@ export default function LogAdd() {
   );
 }
 
-function DatePick({ date, today, minDate, kind, pay, days, onPick, onClose }: {
-  date: string; today: string; minDate: string; kind: 'exp' | 'inc'; pay: number | import('../../calc/dates').PayRule; days: Set<string>;
+function DatePick({ date, today, minDate, cycleFor, kind, pay, days, onPick, onClose }: {
+  date: string; today: string; minDate: string; cycleFor: (d: string) => string; kind: 'exp' | 'inc'; pay: number | import('../../calc/dates').PayRule; days: Set<string>;
   onPick: (d: string) => void; onClose: () => void;
 }) {
   const [sel, setSel] = useState(date);
   const cells = pickerCells(today, pay);
-  const n = datePickNote(sel, today, pay);
+  const n0 = datePickNote(sel, today, pay);
+  const n = { ...n0, cycle: cycleFor(sel), sameCycle: cycleFor(sel) === cycleFor(today) };
   const lab = `${n.ago === 0 ? 'วันนี้ · ' : n.ago === 1 ? 'เมื่อวาน · ' : ''}${dayFull(weekday(sel))} ${dm(sel)}`;
-  const curName = thaiMonthLong(cycleOf(today, pay)).split(' ')[0];
+  const curName = thaiMonthLong(cycleFor(today)).split(' ')[0];
   return (
     <LgSheet label="เลือกวันที่" onClose={onClose}>
       <div className="lg-sh-h"><span className="t"><h2 style={{ fontSize: 17 }} className="num">{lab}</h2></span>

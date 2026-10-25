@@ -5,6 +5,7 @@ import { db } from '../../db/db';
 import type { LogCategory, LogType } from '../../db/types';
 import { appCycle, cycleOf, localToday } from '../../calc/dates';
 import { planLabelOf } from '../../calc/logView';
+import { entryCycle } from '../../calc/log';
 import { FALLBACK_CAT, addCategory, deleteCategory, reorderCategories, setCategoryLinks, toggleCategoryHidden, updateCategory } from '../../db/logActions';
 import { Grip, SortList } from '../../components/SortList';
 import { Icon } from '../../components/Icon';
@@ -27,7 +28,7 @@ export default function LogCats() {
   const E = type === 'expense';
   const cur = appCycle(localToday(), s.pay, s.startCycle);
   const list = data.categories.filter((c) => c.type === type);
-  const count = (id: string) => data.entries.filter((e) => e.categoryId === id && cycleOf(e.date, s.pay) === cur).length;
+  const count = (id: string) => data.entries.filter((e) => e.categoryId === id && entryCycle(e, s.pay) === cur).length;
   const nExp = data.categories.filter((c) => c.type === 'expense').length, nInc = data.categories.filter((c) => c.type === 'income').length;
 
   return (

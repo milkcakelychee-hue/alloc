@@ -5,7 +5,7 @@ import { db } from '../../db/db';
 import type { LogEntry } from '../../db/types';
 import { appCycle, cycleOf, localToday, thaiDate } from '../../calc/dates';
 import { weekday } from '../../calc/payday';
-import { expensesIn } from '../../calc/log';
+import { entryCycle, expensesIn } from '../../calc/log';
 import { entryBudget } from '../../calc/logView';
 import { goalAwareAmountOf } from '../../calc/goals';
 import { deleteLogEntry } from '../../db/actions';
@@ -27,7 +27,7 @@ export function EntrySheet({ entry: e0, data, onClose, onEdit }: { entry: LogEnt
   const cat = data.categories.find((c) => c.id === e.categoryId);
   const inc = e.type === 'income';
   const split = !inc && e.myShare !== e.amountPaid;
-  const cycle = cycleOf(e.date, s.pay);
+  const cycle = entryCycle(e, s.pay);
   const cur = appCycle(localToday(), s.pay, s.startCycle);
   const b = inc ? null : entryBudget(e, data.items, expensesIn(data.entries, cycle, s.pay), cycle, goalAwareAmountOf(data.goals, data.items, data.adjustments, cur));
   const plan = e.planItemId ? data.items.find((i) => i.id === e.planItemId) : null;

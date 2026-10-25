@@ -6,8 +6,8 @@ import { appCycle, addMonths, cycleOf, cycleRange, daysBetween, localToday, thai
 import { expectedPayDate } from '../calc/payday';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
-import { cycleDays, expensesIn, offBudgetTotal } from '../calc/log';
-import { calendarCells, dailyBudgetParts, dayTotals, planLabelOf, salaryEvent } from '../calc/logView';
+import { entryCycle, expensesIn, offBudgetTotal } from '../calc/log';
+import { calendarCells, dailyBudgetParts, dayTotals, effectiveStart, planLabelOf, salaryEvent } from '../calc/logView';
 import { Icon } from '../components/Icon';
 import { Empty } from '../components/Empty';
 import { baht } from './goals/goalUi';
@@ -59,20 +59,20 @@ function LogCalendar() {
   const s = data.settings;
   const cur = appCycle(today, s.pay, s.startCycle);
   const cycle = cycleSel ?? cur;
-  const r = cycleRange(cycle, s.pay);
+  // เงินเดือนเข้าก่อนกำหนด (กดยืนยันแล้ว) → รอบเริ่มวันที่เงินเข้า
+  const r = { ...cycleRange(cycle, s.pay), start: effectiveStart(cycle, s.pay, data.receipts) };
   const isCur = cycle === cur;
   const amountOf = goalAwareAmountOf(data.goals, data.items, data.adjustments, cur);
   const catOf = (id: string) => data.categories.find((c) => c.id === id);
 
-  const inCycle = data.entries.filter((e) => cycleOf(e.date, s.pay) === cycle);
+  const inCycle = data.entries.filter((e) => entryCycle(e, s.pay) === cycle);
   const exp = expensesIn(data.entries, cycle, s.pay);
   const parts = dailyBudgetParts(data.groups, data.items, exp, cycle, amountOf);
   const budget = parts.reduce((a, p) => a + p.budget, 0);
   const spentB = parts.reduce((a, p) => a + p.spent, 0);
   const remaining = budget - spentB;
   const notStarted = isCur && today < r.start; // ตั้งรอบเริ่มใช้แอปไว้ล่วงหน้า ยังไม่ถึงวันแรก
-  const d = cycleDays(isCur && !notStarted ? today : r.end, s.pay);
-  const daysLeft = notStarted ? r.days : isCur ? d.daysLeft : 0;
+  const daysLeft = notStarted ? daysBetween(r.start, r.end) + 1 : isCur ? daysBetween(today, r.end) : 0;
   const perDay = Math.round(remaining / Math.max(daysLeft, 1));
 
   // เงินเดือนของรอบ (ไม่ได้จดเป็นรายการ)
@@ -80,7 +80,7 @@ function LogCalendar() {
   const sal = salaryEvent({
     cycle, pay: s.pay, today, received: rec ? { date: rec.date, amount: rec.amount } : null,
     expected: expectedPayDate(s.pay, s.weekendShift, addMonths(cycle, -1), s.payOverrides).date,
-    planned: planTotals(data.groups, data.items, cycle, amountOf).income
+    planned: planTotals(data.groups, data.items, cycle, amountOf).income, startAt: r.start
   });
   const totals = dayTotals(inCycle);
   if (sal) { const t = totals.get(sal.date) ?? { income: 0, expense: 0 }; totals.set(sal.date, { ...t, income: t.income + sal.amount }); }
@@ -88,7 +88,7 @@ function LogCalendar() {
   const spentAll = exp.reduce((a, e) => a + e.myShare, 0);
   const off = offBudgetTotal(exp, data.items);
 
-  const cells = calendarCells(cycle, s.pay, today);
+  const cells = calendarCells(cycle, s.pay, today, r.start);
   const lastWithData = [...totals.keys()].sort().at(-1) ?? r.end;
   const sel = daySel && daySel >= r.start && daySel <= r.end ? daySel : isCur ? (today < r.start ? r.start : today) : lastWithData;
   const dayEntries = inCycle.filter((e) => e.date === sel);

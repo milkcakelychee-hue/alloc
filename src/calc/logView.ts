@@ -1,6 +1,6 @@
 // หน้าบันทึก (ขั้นที่ 7 · SPEC 6.4): แป้นคิดเลข ปฏิทินรอบ ยอดรายวัน งบแยกรายการ อินไซต์
 import type { DateStr, LogEntry, Month, PlanGroup, PlanItem, Satang } from '../db/types';
-import { addDays, cycleOf, cycleRange, daysBetween, type Pay } from './dates';
+import { addDays, addMonths, cycleOf, cycleRange, daysBetween, type Pay } from './dates';
 import { weekday } from './payday';
 import { parseBaht } from './money';
 import { rawAmount, type AmountOf } from './plan';
@@ -34,8 +34,9 @@ export function evalAmount(expr: string): Satang | null {
 export interface CalCell { date: DateStr; inCycle: boolean; future: boolean; today: boolean }
 
 /** ช่องปฏิทินของรอบ: เริ่มวันจันทร์ จบวันอาทิตย์ · วันนอกรอบแสดงแบบลายทาง */
-export function calendarCells(cycle: Month, pay: Pay, today: DateStr): CalCell[] {
-  const r = cycleRange(cycle, pay);
+export function calendarCells(cycle: Month, pay: Pay, today: DateStr, startAt?: DateStr): CalCell[] {
+  const r0 = cycleRange(cycle, pay);
+  const r = { ...r0, start: startAt && startAt < r0.start ? startAt : r0.start };
   const mon = (d: DateStr) => addDays(d, -((weekday(d) + 6) % 7));
   const start = mon(r.start);
   const end = addDays(mon(r.end), 6);
@@ -147,9 +148,10 @@ export function cutPerDay(spent: Satang, budget: Satang, projected: Satang, days
  */
 export function salaryEvent(o: {
   cycle: Month; pay: Pay; expected: DateStr; received: { date: DateStr | null; amount: Satang | null } | null;
-  planned: Satang; today: DateStr;
+  planned: Satang; today: DateStr; startAt?: DateStr;
 }): { date: DateStr; amount: Satang } | null {
-  const r = cycleRange(o.cycle, o.pay);
+  const r0 = cycleRange(o.cycle, o.pay);
+  const r = { ...r0, start: o.startAt && o.startAt < r0.start ? o.startAt : r0.start };
   let date: DateStr, amount: Satang;
   if (o.received?.date && o.received.amount !== null) { date = o.received.date; amount = o.received.amount; }
   else if (addDays(o.expected, 7) <= o.today && o.planned > 0) { date = o.expected; amount = o.planned; }
@@ -157,4 +159,20 @@ export function salaryEvent(o: {
   if (date < r.start) date = r.start;
   if (date > r.end) return null;
   return { date, amount };
+}
+
+type Rec = { id: Month; status: string; date: DateStr | null };
+
+/** วันเริ่มรอบที่ใช้ในบันทึก: เงินเดือนของรอบนั้นเข้าก่อนวันที่ตั้งไว้ (กดยืนยันแล้ว) → เริ่มวันที่เงินเข้า */
+export function effectiveStart(cycle: Month, pay: Pay, receipts: Rec[]): DateStr {
+  const r = cycleRange(cycle, pay);
+  const rec = receipts.find((x) => x.id === cycle && x.status === 'received' && x.date);
+  return rec && rec.date! < r.start && rec.date! > addDays(r.start, -28) ? rec.date! : r.start;
+}
+
+/** รายการวันที่ d นับเข้ารอบไหน: เงินเดือนรอบถัดไปเข้าแล้ว (ก่อนกำหนด) และ d ตั้งแต่วันนั้น → รอบถัดไป */
+export function cycleForDate(d: DateStr, pay: Pay, receipts: Rec[]): Month {
+  const c = cycleOf(d, pay);
+  const next = addMonths(c, 1);
+  return d >= effectiveStart(next, pay, receipts) ? next : c;
 }
