@@ -5,8 +5,8 @@ import { db } from '../../db/db';
 import type { LogCategory, LogType } from '../../db/types';
 import { appCycle, cycleOf, localToday } from '../../calc/dates';
 import { planLabelOf } from '../../calc/logView';
-import { budgetItemByCat, entryCycle } from '../../calc/log';
-import { FALLBACK_CAT, addCategory, deleteCategory, reorderCategories, setCategoryBudget, toggleCategoryHidden, updateCategory } from '../../db/logActions';
+import { entryCycle } from '../../calc/log';
+import { FALLBACK_CAT, addCategory, deleteCategory, reorderCategories, setCategoryBudgets, toggleCategoryHidden, updateCategory } from '../../db/logActions';
 import { Grip, SortList } from '../../components/SortList';
 import { Icon } from '../../components/Icon';
 import { baht } from '../goals/goalUi';
@@ -82,20 +82,20 @@ export default function LogCats() {
   );
 }
 
-/** รายการในแผนที่หมวดรายจ่ายเลือกเป็นงบได้: เฉพาะรายจ่ายผันแปร (บันทึกนับงบเฉพาะผันแปร · เจ้าของตกลง) */
+/** รายการในแผนที่หมวดรายจ่ายเลือกเป็นงบได้ (หลายงบได้): เฉพาะรายจ่ายผันแปร (บันทึกนับงบเฉพาะผันแปร · เจ้าของตกลง) */
 const budgetChoices = (data: LogData) => {
   const variable = new Set(data.groups.filter((g) => g.enabled && g.kind === 'variable').map((g) => g.id));
   return data.items.filter((i) => variable.has(i.groupId)).sort((a, b) => a.order - b.order);
 };
 
-/** เพิ่ม/แก้หมวด (ป๊อปอัป) · ชื่อ ไอคอน สี · รายจ่าย: ใช้งบจากรายการไหนในแผน (เลือกได้รายการเดียว) · แก้: ลบหมวด */
+/** เพิ่ม/แก้หมวด (ป๊อปอัป) · ชื่อ ไอคอน สี · รายจ่าย: ใช้งบจากรายการไหนในแผน (เลือกได้หลายรายการ) · แก้: ลบหมวด */
 export function CatForm({ data, type, cat, onClose, onAdded }: { data: LogData; type: LogType; cat: LogCategory | null; onClose: () => void; onAdded?: (c: LogCategory) => void }) {
   const E = type === 'expense';
   const icons = CAT_ICONS[type];
   const [name, setName] = useState(cat?.name ?? '');
   const [icon, setIcon] = useState(cat?.icon ?? icons[icons.length - 4]);
   const [bg, setBg] = useState(cat?.bg ?? NEW_CAT_BGS[0]);
-  const [budgetId, setBudgetId] = useState<string | null>(cat ? budgetItemByCat(data.items).get(cat.id)?.id ?? null : null);
+  const [budgetIds, setBudgetIds] = useState<string[]>(cat ? data.items.filter((i) => i.logCategoryIds.includes(cat.id)).sort((a, b) => a.order - b.order).map((i) => i.id) : []);
   const [picking, setPicking] = useState(false);
   const [ask, setAsk] = useState(false);
   const iconList = icons.includes(icon) ? icons : [icon, ...icons];
@@ -103,8 +103,9 @@ export function CatForm({ data, type, cat, onClose, onAdded }: { data: LogData; 
   const fg = FG_OF[bg] ?? cat?.fg ?? '#16231C';
   const dup = data.categories.some((c) => c.type === type && c.id !== cat?.id && c.name === name.trim());
   const ok = name.trim() !== '' && !dup;
-  const budgetItem = budgetId ? data.items.find((i) => i.id === budgetId) : undefined;
+  const chosen = budgetIds.map((id) => data.items.find((i) => i.id === id)).filter((i): i is NonNullable<typeof i> => !!i);
   const cur = cycleOf(localToday(), data.settings!.pay);
+  const chosenAmt = chosen.reduce((a, i) => a + (i.monthOverrides[cur] ?? i.defaultAmount), 0);
   const fallback = cat?.id === FALLBACK_CAT[type];
   const used = cat ? data.entries.filter((e) => e.categoryId === cat.id).length : 0;
   const tName = E ? 'รายจ่าย' : 'รายรับ';
@@ -113,16 +114,16 @@ export function CatForm({ data, type, cat, onClose, onAdded }: { data: LogData; 
     if (!ok) return;
     if (cat) {
       await updateCategory(db, cat.id, { name, icon, bg, fg });
-      if (E) await setCategoryBudget(db, cat.id, budgetId);
+      if (E) await setCategoryBudgets(db, cat.id, budgetIds);
     } else {
       const c = await addCategory(db, { type, name, icon, bg, fg });
-      if (E && budgetId) await setCategoryBudget(db, c.id, budgetId);
+      if (E && budgetIds.length) await setCategoryBudgets(db, c.id, budgetIds);
       onAdded?.(c);
     }
     onClose();
   };
 
-  if (picking) return <BudgetSheet data={data} cat={cat} name={name.trim() || 'หมวดใหม่'} initial={budgetId} onSave={(id) => { setBudgetId(id); setPicking(false); }} onClose={() => setPicking(false)} />;
+  if (picking) return <BudgetSheet data={data} cat={cat} name={name.trim() || 'หมวดใหม่'} initial={budgetIds} onSave={(ids) => { setBudgetIds(ids); setPicking(false); }} onClose={() => setPicking(false)} />;
   return (
     <LgSheet label={cat ? `แก้หมวด${cat.name}` : `เพิ่มหมวด${tName}`} onClose={onClose}>
       <div className="lg-sh-h">
@@ -136,9 +137,9 @@ export function CatForm({ data, type, cat, onClose, onAdded }: { data: LogData; 
       </label>
       {E && (
         <div className="lgc-field"><span>ใช้งบจาก</span>
-          <button className={`lgc-bud${budgetItem ? '' : ' off'}`} onClick={() => setPicking(true)} aria-label={`ใช้งบจาก ${budgetItem?.name ?? 'นอกงบ'} แตะเพื่อเปลี่ยน`}>
-            <span className="t"><b>{budgetItem ? `งบ${budgetItem.name}` : 'นอกงบ'}</b>
-              <span className="num">{budgetItem ? <>รายจ่ายผันแปร · <span className="nw">{baht(budgetItem.monthOverrides[cur] ?? budgetItem.defaultAmount)} ต่อเดือน</span></> : 'จดหมวดนี้แล้วไม่หักงบไหน'}</span></span>
+          <button className={`lgc-bud${chosen.length ? '' : ' off'}`} onClick={() => setPicking(true)} aria-label={`ใช้งบจาก ${chosen.length ? chosen.map((i) => i.name).join(', ') : 'นอกงบ'} แตะเพื่อเปลี่ยน`}>
+            <span className="t"><b>{chosen.length ? chosen.map((i) => `งบ${i.name}`).join(' + ') : 'นอกงบ'}</b>
+              <span className="num">{chosen.length ? <>{chosen.length > 1 ? `รวม ${chosen.length} งบ · ` : 'รายจ่ายผันแปร · '}<span className="nw">{baht(chosenAmt)} ต่อเดือน</span></> : 'จดหมวดนี้แล้วไม่หักงบไหน'}</span></span>
             <span className="go">เปลี่ยน<Icon name="chevron" size={14} stroke={2.2} /></span>
           </button>
         </div>
@@ -163,40 +164,35 @@ export function CatForm({ data, type, cat, onClose, onAdded }: { data: LogData; 
   );
 }
 
-/** เลือกงบของหมวด: รายจ่ายผันแปรในแผน เลือกได้รายการเดียว หรือนอกงบ */
+/** เลือกงบของหมวด: รายจ่ายผันแปรในแผน เลือกได้หลายรายการ · ไม่เลือกเลย = นอกงบ */
 function BudgetSheet({ data, cat, name, initial, onSave, onClose }: {
-  data: LogData; cat: LogCategory | null; name: string; initial: string | null; onSave: (id: string | null) => void; onClose: () => void;
+  data: LogData; cat: LogCategory | null; name: string; initial: string[]; onSave: (ids: string[]) => void; onClose: () => void;
 }) {
-  const [on, setOn] = useState<string | null>(initial);
+  const [on, setOn] = useState<string[]>(initial);
   const items = budgetChoices(data);
-  const by = budgetItemByCat(data.items);
   const cur = cycleOf(localToday(), data.settings!.pay);
-  const othersOf = (id: string) => [...by].filter(([c, i]) => i.id === id && c !== cat?.id).map(([c]) => data.categories.find((x) => x.id === c)?.name).filter(Boolean);
+  const othersOf = (id: string) => data.items.find((i) => i.id === id)!.logCategoryIds.filter((c) => c !== cat?.id).map((c) => data.categories.find((x) => x.id === c)?.name).filter(Boolean);
   return (
     <LgSheet label={`เลือกงบของหมวด${name}`} onClose={onClose}>
       <div className="lg-sh-h">
         <span className="t"><span>หมวดบันทึก · {name}</span><h2>ใช้งบจากรายการไหน</h2></span>
         <button className="lg-x" aria-label="กลับ" onClick={onClose}><Icon name="close" size={18} stroke={2.2} /></button>
       </div>
-      <div className="gx-info"><Icon name="info" size={16} stroke={2} /><span>จดรายจ่ายหมวดนี้แล้ว<span className="nw">หักจากงบที่เลือก</span> · <span className="nw">เลือกได้งบเดียว</span> · <span className="nw">แสดงเฉพาะรายจ่ายผันแปร</span></span></div>
-      <div className="lgc-items" role="radiogroup" aria-label="งบรายจ่ายผันแปร">
+      <div className="gx-info"><Icon name="info" size={16} stroke={2} /><span>จดรายจ่ายหมวดนี้แล้ว<span className="nw">หักจากงบที่ติ๊ก</span> · <span className="nw">ติ๊กหลายงบ = รวมเป็นงบก้อนเดียว</span> · <span className="nw">ไม่ติ๊กเลย = นอกงบ</span> · <span className="nw">แสดงเฉพาะรายจ่ายผันแปร</span></span></div>
+      <div className="lgc-items" role="group" aria-label="งบรายจ่ายผันแปร">
         {items.map((i) => {
-          const y = on === i.id;
+          const y = on.includes(i.id);
           const others = othersOf(i.id);
           return (
-            <button key={i.id} role="radio" aria-checked={y} onClick={() => setOn(i.id)}>
+            <button key={i.id} role="checkbox" aria-checked={y} onClick={() => setOn(y ? on.filter((x) => x !== i.id) : [...on, i.id])}>
               <span className="t"><b>งบ{i.name}</b><span className="num">{baht(i.monthOverrides[cur] ?? i.defaultAmount)}{others.length ? ` · ใช้ร่วมกับ ${others.join(', ')}` : ''}</span></span>
-              <span className="bx rd">{y && <Icon name="check" size={14} stroke={3} />}</span>
+              <span className="bx">{y && <Icon name="check" size={14} stroke={3} />}</span>
             </button>
           );
         })}
         {items.length === 0 && <span className="lg-empty">ยังไม่มีรายจ่ายผันแปรในแผน</span>}
-        <button role="radio" aria-checked={on === null} className="offb" onClick={() => setOn(null)}>
-          <span className="t"><b>นอกงบ</b><span>ไม่หักงบไหน · นับในยอดใช้นอกงบ</span></span>
-          <span className="bx rd">{on === null && <Icon name="check" size={14} stroke={3} />}</span>
-        </button>
       </div>
-      <button className="lgc-add" onClick={() => onSave(on)}>{on ? `ใช้งบ${items.find((i) => i.id === on)?.name ?? ''}` : 'ใช้เป็นนอกงบ'}</button>
+      <button className="lgc-add" onClick={() => onSave(items.filter((i) => on.includes(i.id)).map((i) => i.id))}>{on.length ? `ใช้ ${on.length} งบนี้` : 'ใช้เป็นนอกงบ'}</button>
     </LgSheet>
   );
 }

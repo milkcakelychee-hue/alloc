@@ -56,13 +56,14 @@ export async function toggleCategoryHidden(db: AllocDB, id: string, now = Date.n
   if (cat) await db.logCategories.update(id, { hidden: !cat.hidden, updatedAt: now });
 }
 
-/** เลือกงบของหมวด: หมวดหนึ่งใช้งบได้รายการเดียว · null = นอกงบ */
-export async function setCategoryBudget(db: AllocDB, categoryId: string, planItemId: string | null, now = Date.now()) {
+/** เลือกงบของหมวด (เลือกได้หลายงบ · ว่าง = นอกงบ): ใส่/เอาหมวดออกจาก logCategoryIds ของแต่ละรายการ */
+export async function setCategoryBudgets(db: AllocDB, categoryId: string, planItemIds: string[], now = Date.now()) {
+  const want = new Set(planItemIds);
   await db.transaction('rw', db.planItems, async () => {
     for (const it of await db.planItems.toArray()) {
       const has = it.logCategoryIds.includes(categoryId);
-      if (it.id === planItemId && !has) await db.planItems.update(it.id, { logCategoryIds: [...it.logCategoryIds, categoryId], updatedAt: now });
-      if (it.id !== planItemId && has) await db.planItems.update(it.id, { logCategoryIds: it.logCategoryIds.filter((c) => c !== categoryId), updatedAt: now });
+      if (want.has(it.id) && !has) await db.planItems.update(it.id, { logCategoryIds: [...it.logCategoryIds, categoryId], updatedAt: now });
+      if (!want.has(it.id) && has) await db.planItems.update(it.id, { logCategoryIds: it.logCategoryIds.filter((c) => c !== categoryId), updatedAt: now });
     }
   });
 }

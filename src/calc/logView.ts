@@ -4,7 +4,7 @@ import { addDays, addMonths, cycleOf, cycleRange, daysBetween, type Pay } from '
 import { weekday } from './payday';
 import { parseBaht } from './money';
 import { rawAmount, type AmountOf } from './plan';
-import { budgetItemByCat, categoryBudget, cycleDays } from './log';
+import { budgetPools, categoryBudget, cycleDays, poolName } from './log';
 
 // ---------- แป้นตัวเลข ----------
 
@@ -80,23 +80,25 @@ export function dayTotals(entries: LogEntry[]) {
 
 // ---------- งบรายวัน แยกรายการในแผน ----------
 
-/** งบใช้จ่ายรายวันแยกตามรายการผันแปรที่มีหมวดเลือกใช้: ยอดแผน หมวดที่ใช้งบนี้ และที่ใช้ไป (รายการละครั้ง) */
+/** งบใช้จ่ายรายวันแยกตามกองงบรายจ่ายผันแปร: ยอดแผนรวม หมวดในกอง และที่ใช้ไป (รายการละครั้ง) */
 export function dailyBudgetParts(groups: PlanGroup[], items: PlanItem[], cycleExpenses: LogEntry[], cycle: Month, amountOf: AmountOf = rawAmount) {
   const variable = new Set(groups.filter((g) => g.enabled && g.kind === 'variable').map((g) => g.id));
-  const by = budgetItemByCat(items);
-  return items
-    .filter((i) => variable.has(i.groupId))
-    .map((i) => {
-      const cats = [...by].filter(([, x]) => x.id === i.id).map(([c]) => c);
-      const set = new Set(cats);
-      return { item: i, cats, budget: amountOf(i, cycle), spent: cycleExpenses.filter((e) => set.has(e.categoryId)).reduce((s, e) => s + e.myShare, 0) };
+  return budgetPools(items.filter((i) => variable.has(i.groupId)))
+    .map((p) => {
+      const set = new Set(p.cats);
+      return {
+        item: p.items[0], items: p.items, name: poolName(p.items), cats: p.cats,
+        budget: p.items.reduce((a, i) => a + amountOf(i, cycle), 0),
+        spent: cycleExpenses.filter((e) => set.has(e.categoryId)).reduce((s, e) => s + e.myShare, 0)
+      };
     })
-    .filter((p) => p.cats.length > 0 && p.budget > 0);
+    .filter((p) => p.budget > 0);
 }
 
-/** ชื่อรายการในแผนที่หมวดนั้นใช้งบ · null = นอกงบ */
+/** ชื่องบที่หมวดนั้นใช้ (หลายงบ = ชื่อรวม) · null = นอกงบ */
 export function planLabelOf(categoryId: string, items: PlanItem[]) {
-  return budgetItemByCat(items).get(categoryId)?.name ?? null;
+  const mine = items.filter((i) => i.logCategoryIds.includes(categoryId)).sort((a, b) => a.order - b.order);
+  return mine.length ? poolName(mine) : null;
 }
 
 /** งบที่รายการนี้ตัด (ตอนแก้/ดูรายการ): ชื่อแผน · เหลือ / งบ */

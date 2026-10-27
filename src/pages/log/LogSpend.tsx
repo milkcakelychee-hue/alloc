@@ -156,7 +156,7 @@ export default function LogSpend() {
           <article className="lgs-ins">
             <span className="ic" style={{ background: 'var(--gx-ok-bg)', color: 'var(--gx-ok)' }}><Icon name="trend" size={18} stroke={2} /></span>
             <span className="t"><span className="itag" style={{ color: 'var(--gx-ok)' }}>ตามงบ</span>
-              <span className="ti">{prev ? (main.spent <= main.budget ? `${main.item.name}จบรอบในงบ` : `${main.item.name}เกินงบ`) : pc.projected <= main.budget * 0.95 ? `${main.item.name}อยู่ในงบ` : pc.projected <= main.budget ? `${main.item.name}พอดีงบแบบเฉียดฉิว` : `${main.item.name}มีแนวโน้มเกินงบ`}</span>
+              <span className="ti">{prev ? (main.spent <= main.budget ? `${main.name}จบรอบในงบ` : `${main.name}เกินงบ`) : pc.projected <= main.budget * 0.95 ? `${main.name}อยู่ในงบ` : pc.projected <= main.budget ? `${main.name}พอดีงบแบบเฉียดฉิว` : `${main.name}มีแนวโน้มเกินงบ`}</span>
               <span className="bd">ใช้ไป {pctI(pc.usedRatio)} ของงบ{prev ? <> · <span className="num">{baht(main.spent)}</span> จากงบ <span className="num">{baht(main.budget)}</span></>
                 : <> ในขณะที่รอบผ่านไป {pctI(pc.elapsedRatio)} (<span className="num">{cycleDays(today, s.pay).elapsed}/{r.days}</span> วัน) ถ้าจ่ายแบบนี้ต่อจะจบรอบที่ราว <b className="num">{baht(Math.round(pc.projected / 100) * 100)}</b> จากงบ <span className="num">{baht(main.budget)}</span>{cut ? <> · ลดวันละ <span className="num">{baht(cut)}</span> บาทจะพอดีงบ</> : null}</>}</span></span>
           </article>

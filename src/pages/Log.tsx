@@ -61,7 +61,7 @@ function LogCalendar() {
   const exp = expensesIn(data.entries, cycle, s.pay);
   const parts = dailyBudgetParts(data.groups, data.items, exp, cycle, amountOf);
   const budget = parts.reduce((a, p) => a + p.budget, 0);
-  // รวมยอดรายการละครั้ง (หมวดหนึ่งใช้งบได้งบเดียว)
+  // รวมยอดรายการละครั้ง (กองงบไม่ซ้อนกัน)
   const budCats = new Set(parts.flatMap((p) => p.cats));
   const spentB = exp.filter((e) => budCats.has(e.categoryId)).reduce((a, e) => a + e.myShare, 0);
   const remaining = budget - spentB;
@@ -138,7 +138,7 @@ function LogCalendar() {
             const left = p.budget - p.spent;
             return (
               <div key={p.item.id} className="bd">
-                <div className="r1"><span className="n">{p.item.name}</span>
+                <div className="r1"><span className="n">{p.name}</span>
                   <span className={`num v${left < 0 ? ' over' : ''}`}>{left < 0 ? `เกิน ${baht(-left)}` : `เหลือ ${baht(left)}`}</span></div>
                 <span className="bar" aria-hidden="true"><span className={left < 0 ? 'over' : ''} style={{ width: `${Math.min(100, p.budget ? (p.spent / p.budget) * 100 : 0)}%` }} /></span>
                 <div className="r2"><span className="cats">{p.cats.map((id) => catOf(id)).filter(Boolean).map((c) => <span key={c!.id} className="chip" style={catStyle(c)}>{c!.name}</span>)}</span>

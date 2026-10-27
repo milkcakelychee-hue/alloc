@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AllocDB } from './db';
 import { ensureDefaults } from './defaults';
-import { addCategory, addEntry, moveCategory, repeatEntry, setCategoryBudget, toggleCategoryHidden, updateEntry } from './logActions';
+import { addCategory, addEntry, moveCategory, repeatEntry, setCategoryBudgets, toggleCategoryHidden, updateEntry } from './logActions';
 import { B, item } from '../calc/testkit';
 
 let n = 0;
@@ -43,12 +43,12 @@ describe('บันทึก', () => {
     expect(list.slice(-2).map((x) => x.name)).toEqual(['ค่าหมอ', 'สัตว์เลี้ยง']);
     await toggleCategoryHidden(d, c.id);
     expect((await d.logCategories.get(c.id))!.hidden).toBe(true);
-    // หมวดหนึ่งใช้งบได้รายการเดียว: เลือกงบใหม่ = ย้ายออกจากงบเดิม · null = นอกงบ
-    const a = item('variable', 'ยา', 300), b = item('variable', 'ยิม', 900, { logCategoryIds: [c.id, 'c-fun'] });
-    await d.planItems.bulkPut([a, b]);
-    await setCategoryBudget(d, c.id, a.id);
-    expect([(await d.planItems.get(a.id))!.logCategoryIds, (await d.planItems.get(b.id))!.logCategoryIds]).toEqual([[c.id], ['c-fun']]);
-    await setCategoryBudget(d, c.id, null);
+    // หมวดเลือกได้หลายงบ · ไม่เลือกเลย = นอกงบ
+    const a = item('variable', 'ยา', 300), b = item('variable', 'ยิม', 900, { logCategoryIds: [c.id, 'c-fun'] }), x = item('variable', 'นวด', 500);
+    await d.planItems.bulkPut([a, b, x]);
+    await setCategoryBudgets(d, c.id, [a.id, x.id]);
+    expect(await Promise.all([a, b, x].map(async (i) => (await d.planItems.get(i.id))!.logCategoryIds))).toEqual([[c.id], ['c-fun'], [c.id]]);
+    await setCategoryBudgets(d, c.id, []);
     expect((await d.planItems.get(a.id))!.logCategoryIds).toEqual([]);
   });
 });

@@ -16,32 +16,37 @@ export function spentByCategory(entries: LogEntry[]) {
 }
 
 /**
- * หมวดหนึ่งใช้งบได้รายการเดียว (เลือกที่หน้าจัดการหมวด · เจ้าของตกลง 27 ต.ค. 69)
- * ข้อมูลเก่าที่หมวดเดียวผูกหลายรายการ: นับเข้ารายการแรกตามลำดับในแผน ยอดจึงไม่ถูกนับซ้ำ
+ * กองงบ: รายการในแผนที่มีหมวดใช้ร่วมกัน (ตรงหรือต่อกันเป็นทอด) รวมเป็นกองเดียว
+ * หมวดหนึ่งเลือกได้หลายงบ (เลือกที่หน้าจัดการหมวด · เจ้าของตกลง 27 ต.ค. 69) · ยอดที่จดนับเข้ากองครั้งเดียว ไม่นับซ้ำทุกงบ
  */
-export function budgetItemByCat(items: PlanItem[]) {
-  const m = new Map<string, PlanItem>();
-  for (const i of [...items].sort((a, b) => a.order - b.order)) for (const c of i.logCategoryIds) if (!m.has(c)) m.set(c, i);
-  return m;
+export function budgetPools(items: PlanItem[]) {
+  const linked = [...items].filter((i) => i.logCategoryIds.length > 0).sort((a, b) => a.order - b.order);
+  const pools: { items: PlanItem[]; cats: string[] }[] = [];
+  for (const it of linked) {
+    const hit = pools.filter((p) => it.logCategoryIds.some((c) => p.cats.includes(c)));
+    const merged = { items: [...hit.flatMap((p) => p.items), it], cats: [...new Set([...hit.flatMap((p) => p.cats), ...it.logCategoryIds])] };
+    for (const h of hit) pools.splice(pools.indexOf(h), 1);
+    pools.push(merged);
+  }
+  for (const p of pools) p.items.sort((a, b) => a.order - b.order);
+  return pools;
 }
 
-/** หมวดทั้งหมดที่ใช้งบของรายการนี้ */
-export function catsOfBudget(item: PlanItem, items: PlanItem[]) {
-  return [...budgetItemByCat(items)].filter(([, i]) => i.id === item.id).map(([c]) => c);
-}
+/** ชื่อกองงบ: "ค่ากิน" หรือ "SpayLater + ค่าโทร" */
+export const poolName = (items: PlanItem[]) => items.map((i) => i.name).join(' + ');
 
 /**
- * งบของหมวด = ยอดในแผนของรายการที่หมวดนี้ใช้งบ − ที่ใช้ไปในรอบของทุกหมวดที่ใช้งบเดียวกัน (หมวดพี่น้อง)
+ * งบของหมวด = ยอดในแผนของทุกรายการในกองงบ − ที่ใช้ไปในรอบของทุกหมวดในกอง (หมวดพี่น้อง)
  * หมวดที่ไม่เลือกงบ = นอกงบ (budget null)
  */
 export function categoryBudget(categoryId: string, items: PlanItem[], cycleExpenses: LogEntry[], m: Month, amountOf: AmountOf = rawAmount) {
-  const item = budgetItemByCat(items).get(categoryId);
+  const pool = budgetPools(items).find((p) => p.cats.includes(categoryId));
   const spent = spentByCategory(cycleExpenses);
   const spentSelf = spent.get(categoryId) ?? 0;
-  if (!item) return { budget: null, spentSelf, spentSiblings: 0, remaining: null as Satang | null };
-  const budget = amountOf(item, m);
+  if (!pool) return { budget: null, spentSelf, spentSiblings: 0, remaining: null as Satang | null };
+  const budget = pool.items.reduce((a, i) => a + amountOf(i, m), 0);
   let spentSiblings = 0;
-  for (const c of catsOfBudget(item, items)) if (c !== categoryId) spentSiblings += spent.get(c) ?? 0;
+  for (const c of pool.cats) if (c !== categoryId) spentSiblings += spent.get(c) ?? 0;
   return { budget, spentSelf, spentSiblings, remaining: budget - spentSelf - spentSiblings };
 }
 

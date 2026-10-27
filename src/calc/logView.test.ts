@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calendarCells, cutPerDay, dailyBudgetParts, datePickNote, dayTotals, evalAmount, pickerCells, planLabelOf, typicalRange, weekdaySplit } from './logView';
-import { expensesIn } from './log';
+import { categoryBudget, expensesIn } from './log';
 import { B, entry, groups, item } from './testkit';
 
 // TEST_CASES.md 6.4 (18 ต.ค. 69 · เงินเดือนเข้าวันที่ 27)
@@ -57,16 +57,18 @@ describe('ขั้นที่ 7 บันทึก', () => {
     expect(planLabelOf('c-fun', items)).toBeNull();
   });
 
-  it('ข้อมูลเก่าที่หมวดเดียวผูกหลายงบ: นับเข้างบแรกตามลำดับ ไม่นับซ้ำทุกงบ', () => {
+  it('หมวดเดียวเลือกหลายงบ: รวมเป็นกองเดียว ยอดนับครั้งเดียว ไม่เกินงบทุกงบ', () => {
     const shared = [
       item('variable', 'ผ่อน ก', 1532, { logCategoryIds: ['c-bill'] }),
       item('variable', 'ผ่อน ข', 665, { logCategoryIds: ['c-bill'] }),
-      item('variable', 'ค่าโทร', 321, { logCategoryIds: ['c-bill'] })
+      item('variable', 'ค่าโทร', 321, { logCategoryIds: ['c-bill', 'c-phone'] }),
+      item('variable', 'ค่ากิน', 4800, { logCategoryIds: ['c-food'] })
     ];
-    const e = [entry('2026-10-05', 'c-bill', 1532), entry('2026-10-06', 'c-bill', 321)];
+    const e = [entry('2026-10-05', 'c-bill', 1532), entry('2026-10-06', 'c-phone', 321)];
     const p = dailyBudgetParts(groups, shared, e, '2026-10');
-    expect(p.map((x) => [x.item.name, x.spent, x.budget])).toEqual([['ผ่อน ก', B(1853), B(1532)]]);
-    expect(planLabelOf('c-bill', shared)).toBe('ผ่อน ก');
+    expect(p.map((x) => [x.name, x.spent, x.budget])).toEqual([['ผ่อน ก + ผ่อน ข + ค่าโทร', B(1853), B(2518)], ['ค่ากิน', 0, B(4800)]]);
+    expect(planLabelOf('c-bill', shared)).toBe('ผ่อน ก + ผ่อน ข + ค่าโทร');
+    expect(categoryBudget('c-phone', shared, e, '2026-10').remaining).toBe(B(665));
   });
 
   it('อินไซต์: เฉลี่ยวันธรรมดา 86.67 · เสาร์อาทิตย์ 443.61 · ลดวันละ 75 ให้พอดีงบ', () => {
