@@ -1,8 +1,7 @@
 // เริ่มใช้งาน: เริ่มใหม่ (ตั้งเงินเดือน) / กู้จากไฟล์สำรอง → พร้อมใช้
-// ?preview=1 = ดูตัวอย่างจากตั้งค่า ไม่บันทึกอะไร (ชั่วคราว ช่วงสร้างแอป เอาออกเมื่อแอปจริงเสร็จ)
 import { useRef, useState } from 'react';
 import { MoneyInput } from '../components/MoneyInput';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../db/db';
 import { startFresh } from '../db/onboarding';
 import { cycleOf, cycleRange, localToday, thaiDate, thaiMonth, type PayRule } from '../calc/dates';
@@ -18,8 +17,7 @@ type Step = 'start' | 'salary' | 'done';
 
 export default function Welcome() {
   const nav = useNavigate();
-  const preview = useSearchParams()[0].get('preview') === '1';
-  const exit = () => nav(preview ? '/settings' : '/', { replace: true });
+  const exit = () => nav('/', { replace: true });
   const [step, setStep] = useState<Step>('start');
   const [restored, setRestored] = useState(false);
   const [salaryText, setSalaryText] = useState('');
@@ -37,7 +35,7 @@ export default function Welcome() {
   const save = async (withSalary: boolean) => {
     setBusy(true);
     try {
-      if (!preview) await startFresh(db, { salary: withSalary ? salary : null, pay, weekendShift: shift, today });
+      await startFresh(db, { salary: withSalary ? salary : null, pay, weekendShift: shift, today });
       setStep('done');
     }
     finally { setBusy(false); }
@@ -46,7 +44,6 @@ export default function Welcome() {
   if (step === 'salary') {
     return (
       <main className="page welcome">
-        {preview && <PreviewBar onClose={exit} />}
         <div className="step-head">
           <button className="icon-btn" aria-label="ย้อนกลับ" onClick={() => setStep('start')}><Icon name="back" size={20} stroke={2} /></button>
           <h1>ตั้งเงินเดือน</h1>
@@ -82,7 +79,6 @@ export default function Welcome() {
   if (step === 'done') {
     return (
       <main className="page welcome done">
-        {preview && <PreviewBar onClose={exit} />}
         <div className="done-head">
           <span className="done-mark"><Icon name="check" size={30} stroke={2.4} /></span>
           <h1>{restored ? 'กู้คืนเรียบร้อย' : 'พร้อมใช้แล้ว'}</h1>
@@ -100,7 +96,6 @@ export default function Welcome() {
 
   return (
     <main className="page welcome">
-      {preview && <PreviewBar onClose={exit} />}
       <div className="hello">
         <AppMark size={76} />
         <h1>Alloc</h1>
@@ -112,7 +107,7 @@ export default function Welcome() {
         <span className="tx"><span className="t1">เริ่มใหม่</span><span className="t2">ตั้งเงินเดือนก่อน แล้วค่อยวางแผน<span className="nw">ทีละหมวด</span></span></span>
         <Icon name="chevron" size={18} stroke={2} />
       </button>
-      <button className="option" onClick={() => (preview ? (setRestored(true), setStep('done')) : picker.current?.pick())}>
+      <button className="option" onClick={() => picker.current?.pick()}>
         <span className="ic"><Icon name="restore" /></span>
         <span className="tx"><span className="t1">กู้จากไฟล์สำรอง</span><span className="t2">ไฟล์ .alloc ที่สำรองไว้<span className="nw">จากเครื่องเดิม</span></span></span>
         <Icon name="chevron" size={18} stroke={2} />
@@ -123,14 +118,5 @@ export default function Welcome() {
       </div>
       <RestorePicker ref={picker} onRestored={() => { setRestored(true); setStep('done'); }} />
     </main>
-  );
-}
-
-function PreviewBar({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="note warn" role="status" style={{ alignItems: 'center', width: '100%', textAlign: 'left' }}>
-      <span style={{ flex: 1 }}>ดูตัวอย่าง<span className="nw">หน้าเริ่มใช้งาน</span> · <span className="nw">ไม่บันทึกข้อมูล</span></span>
-      <button className="pill-btn" onClick={onClose}>ปิด</button>
-    </div>
   );
 }

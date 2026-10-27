@@ -690,3 +690,24 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .pl-link .auto svg { flex: none; margin-top: 2px; color: var(--lg-inc, #2F7A4D); }
 :root { --pl-goal-bg: #E3EFE6; --pl-goal: #2F6B47; }
 :root[data-theme='dark'] { --pl-goal-bg: #233D29; --pl-goal: #8FCCA3; }
+
+/* ตั้งค่า (บอร์ด Settings): พื้นไอคอนสี · แถวคำอธิบายรอบ · สวิตช์ · ปุ่มล้างข้อมูล */
+.row .ic.tg { background: var(--g-income-ic); color: var(--link); }
+.row .ic.tb { background: var(--inv-bg); color: var(--inv); }
+.row .ic.to { background: var(--peach-bg); color: var(--peach); }
+.row.st-info { align-items: flex-start; padding-top: 10px; padding-bottom: 12px; }
+.row.st-info .t2 { font-size: 12.5px; line-height: 1.5; color: var(--ink2); }
+.st-sw .sw { width: 50px; height: 30px; border-radius: 999px; background: var(--exp); position: relative; flex: none; transition: background .15s; }
+.st-sw .sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 999px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(22, 35, 28, .25); transition: left .15s; }
+.st-sw[aria-checked='true'] .sw { background: var(--pri); }
+:root[data-theme='dark'] .st-sw[aria-checked='true'] .sw { background: #3E7D5A; }
+.st-sw[aria-checked='true'] .sw::after { left: 23px; }
+.row.st-danger { justify-content: center; font-size: 15px; font-weight: 600; color: var(--danger); }
+.st-acc { list-style: none; margin: 0; padding: 0; }
+.st-acc .row { padding-left: 8px; gap: 4px; }
+.st-acc-b { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 52px; text-align: left; color: inherit; }
+.btn.st-del { color: var(--danger); }
+.btn.st-del-solid { background: var(--danger); color: #FFFFFF; }
+:root[data-theme='dark'] .btn.st-del-solid { color: #0D1611; }
+.st-news ul { margin: 0; padding-left: 18px; color: var(--ink2); font-size: 14px; line-height: 1.55; }
+.st-news li + li { margin-top: 4px; }

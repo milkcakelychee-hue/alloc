@@ -12,6 +12,7 @@ import './styles/bill.css';
 import { applyTheme, syncThemeFromDb } from './lib/theme';
 import { db } from './db/db';
 import { ensureDefaults } from './db/defaults';
+import { applyHideOnOpen } from './db/settingsActions';
 import { applyUpdate, hasPendingUpdate, onPendingUpdate } from './lib/update';
 import { TabBar } from './components/TabBar';
 import Home from './pages/Home';
@@ -77,7 +78,7 @@ function Shell() {
 }
 
 applyTheme();
-ensureDefaults(db).then(syncThemeFromDb);
+ensureDefaults(db).then(() => Promise.all([syncThemeFromDb(), applyHideOnOpen(db)]));
 // ขอให้เบราว์เซอร์ไม่ลบข้อมูลเอง (iOS ไม่รับประกัน จึงยังต้องสำรองไฟล์)
 navigator.storage?.persist?.().catch(() => {});
 

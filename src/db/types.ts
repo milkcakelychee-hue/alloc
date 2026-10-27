@@ -20,6 +20,7 @@ export interface Settings extends Base {
   payOverrides: Record<Month, DateStr>; // แก้วันเงินเข้าเฉพาะเดือน (ไม่เปลี่ยนรอบงบ)
   theme: ThemePref;
   hideNumbers: boolean;
+  hideOnOpen?: boolean; // ซ่อนตัวเลขทุกครั้งที่เปิดแอป
   lastBackupAt: number | null;
   schemaVersion: number;
   receiveInfo: string; // ข้อความช่องทางรับเงินในใบสรุปบิล ห้ามเก็บเลขบัตร/รหัส
