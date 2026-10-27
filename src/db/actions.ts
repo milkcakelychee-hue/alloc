@@ -8,12 +8,12 @@ import { syncDeposits } from './goalActions';
 /**
  * ติ๊ก "จ่ายแล้ว" บนการ์ด: ติ๊กในแผน (จ่าย/โอนแล้ว) + บันทึกรายจ่ายในบันทึกให้อัตโนมัติ
  * ยอด = ยอดในแผน · หมวด = หมวดแรกที่ผูกไว้ ถ้าไม่ผูก = "อื่น ๆ" (นอกงบ)
- * รายการออม/ลงทุน/รายจ่ายตามเป้าหมาย (กันเงินเข้าเป้า) ไม่ใช่รายจ่าย: ติ๊กอย่างเดียว ไม่บันทึก
+ * บันทึกเฉพาะรายจ่ายผันแปร (บันทึกนับงบเฉพาะผันแปร · เจ้าของตกลง) · คงที่ ออม ลงทุน กันเงินเข้าเป้า: ติ๊กอย่างเดียว
  * ใช้ทั้งการ์ดในหน้าหลักและ "เช็กว่าจ่าย / โอนแล้ว" ในหน้าแผน
  */
 export async function markDuePaid(db: AllocDB, opts: { item: PlanItem; kind: GroupKind; cycle: Month; amount: Satang; today: DateStr; now?: number }) {
   const now = opts.now ?? Date.now();
-  const logs = opts.kind === 'fixed' || opts.kind === 'variable';
+  const logs = opts.kind === 'variable';
   return db.transaction('rw', db.paidChecks, db.logEntries, async () => {
     let logEntryId: string | null = null;
     if (logs) {

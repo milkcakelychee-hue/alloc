@@ -2,11 +2,11 @@
 // ยอดที่เปลี่ยนจากเดือนก่อนตัวหนา + ▲▼ · ออม + ลงทุนรวมเป็นกลุ่มเดียว · แตะตัวเลขเพื่อแก้ยอดเดือนนั้น
 import type { GroupKind, Month, PlanItem } from '../../db/types';
 import { addMonths, thaiMonth } from '../../calc/dates';
-import { formatBaht } from '../../calc/money';
+import { formatBaht, formatWhole } from '../../calc/money';
 import { planTotals, type AmountOf } from '../../calc/plan';
 import type { PlanData } from './usePlanData';
 
-const money = (s: number) => (s === 0 ? '–' : s % 100 === 0 ? formatBaht(s, { decimals: false }) : formatBaht(s));
+const money = (s: number) => (s === 0 ? '–' : formatWhole(s)); // ช่องแคบ: บาทเต็ม
 const signed = (s: number) => (s === 0 ? '0' : `${s > 0 ? '+' : '−'}${money(Math.abs(s))}`);
 
 type Row = { key: string; name: string; kinds: GroupKind[]; tone: string; up: string; down: string };

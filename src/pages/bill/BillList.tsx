@@ -5,6 +5,7 @@ import { ME_ID, type Bill, type Month } from '../../db/types';
 import { addMonths, appCycle, localToday, thaiMonth } from '../../calc/dates';
 import { billTotal, monthBars, personLines, shareOf, billSummary } from '../../calc/bills';
 import { Icon } from '../../components/Icon';
+import { formatWhole } from '../../calc/money';
 import { baht } from '../goals/goalUi';
 import { Avatar, Barcode, Dots, Receipt, StatusPill, itemsOf, paymentsOf, useBillData, type BillData } from './billUi';
 import { usePlanData } from '../plan/usePlanData';
@@ -113,7 +114,7 @@ export function BillList({ tabs }: { tabs: React.ReactNode }) {
             const H = 70, P = Math.round((b.paid / mx) * H), O = Math.round((b.open / mx) * H);
             const on = period === b.month;
             const [mm, yy] = thaiMonth(b.month).split(' ');
-            const lab: [string, string?] = b.future ? (b.open ? ['รอเก็บ', baht(b.open)] : ['ยังไม่มีบิล']) : b.open > 0 ? ['ค้าง', baht(b.open)] : b.paid ? ['ครบแล้ว'] : ['ไม่มีบิล'];
+            const lab: [string, string?] = b.future ? (b.open ? ['รอเก็บ', formatWhole(b.open)] : ['ยังไม่มีบิล']) : b.open > 0 ? ['ค้าง', formatWhole(b.open)] : b.paid ? ['ครบแล้ว'] : ['ไม่มีบิล'];
             const tone = b.future ? (b.open ? 'fut' : 'none') : b.open > 0 ? 'open' : b.paid ? 'done' : 'none';
             return (
               <button key={b.month} aria-label={`ดูบิล ${thaiMonth(b.month)}`} aria-pressed={on} className={on ? 'on' : ''} onClick={() => setPer(b.month)}>

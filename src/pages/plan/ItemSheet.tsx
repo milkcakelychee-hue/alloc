@@ -8,7 +8,7 @@ import { db } from '../../db/db';
 import { ICON_DEFAULT_CATEGORIES } from '../../db/defaults';
 import type { Month, PlanItem, PlanPeriod } from '../../db/types';
 import { addMonths, localToday, monthDiff, thaiMonth } from '../../calc/dates';
-import { formatBaht, parseBaht } from '../../calc/money';
+import { formatBaht, parseBaht, formatWhole } from '../../calc/money';
 import { applyAmountChange, planTotals, rawAmount, stopFrom } from '../../calc/plan';
 import { goalAwareAmountOf } from '../../calc/goals';
 import { Icon } from '../../components/Icon';
@@ -128,7 +128,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
     const usedBy = (cid: string) => items.filter((i) => i.id !== item?.id && i.logCategoryIds.includes(cid)).map((i) => i.name);
     return sub('งบนี้นับจากหมวดไหน', (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>ติ๊กหมวดที่ใช้จ่ายจากงบ <b style={{ color: 'var(--ink)' }}>"{name || 'รายการนี้'}"</b> · จดรายจ่ายใน<span className="nw">เมนู บันทึก</span>ด้วยหมวดเหล่านี้ <span className="nw">ยอดจะหักจากงบนี้</span> · <span className="nw">หมวดที่ไม่ได้ผูกกับงบไหน = นอกงบ</span>{kind === 'fixed' && <> · <span className="nw">หมวดแรกที่ติ๊ก</span>ใช้ตอนติ๊กจ่ายแล้ว<span className="nw">บันทึกให้อัตโนมัติ</span></>}</p>
+        <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>ติ๊กหมวดที่ใช้จ่ายจากงบ <b style={{ color: 'var(--ink)' }}>"{name || 'รายการนี้'}"</b> · จดรายจ่ายใน<span className="nw">เมนู บันทึก</span>ด้วยหมวดเหล่านี้ <span className="nw">ยอดจะหักจากงบนี้</span> · <span className="nw">หมวดที่ไม่ได้ผูกกับงบไหน = นอกงบ</span>{kind === 'variable' && <> · <span className="nw">หมวดแรกที่ติ๊ก</span>ใช้ตอนติ๊กจ่ายแล้ว<span className="nw">บันทึกให้อัตโนมัติ</span></>}</p>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="muted num" style={{ fontSize: 13 }}>เลือกแล้ว {effCats.length} หมวด</span>
           <button className="link-btn" onClick={() => { setCats(ICON_DEFAULT_CATEGORIES[icon] ?? []); setCatsTouched(true); }}>ใช้ค่าเริ่มต้นตามไอคอน</button>
@@ -310,7 +310,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
               <span className="bar" aria-hidden="true"><span className={use.left < 0 ? 'over' : ''} style={{ width: `${Math.min(100, use.budget ? (use.spent / use.budget) * 100 : 0)}%` }} /></span>
               <span className="d num">{shortM(month)} ใช้ไป {bahtShort(use.spent)} · {use.left < 0 ? `เกิน ${bahtShort(-use.left)}` : `เหลือ ${bahtShort(use.left)}`}</span>
             </>}
-            {kind === 'fixed' && <span className="auto"><Icon name="checkSq" size={14} stroke={2.4} /><span>ติ๊กจ่ายแล้ว บันทึกรายจ่ายให้ในหมวด <b>{catChips[0]?.name ?? 'อื่น ๆ'}</b></span></span>}
+            {kind === 'variable' && <span className="auto"><Icon name="checkSq" size={14} stroke={2.4} /><span>ติ๊กจ่ายแล้ว บันทึกรายจ่ายให้ในหมวด <b>{catChips[0]?.name ?? 'อื่น ๆ'}</b></span></span>}
           </button>
         )}
 
@@ -326,7 +326,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
             <HelpRow id="h-due" open={help === 'due'} onHelp={() => setHelp(help === 'due' ? null : 'due')} onOpen={() => setView('due')}
               label="ครบกำหนดวันที่" sub="ใส่หรือไม่ใส่ก็ได้"
               value={<span className="val num">{dueDay ? `ทุกวันที่ ${dueDay}` : 'ไม่กำหนด'}</span>}
-              help={<>เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span> ในหน้าหลัก ติ๊กจ่ายแล้ว แอป<span className="nw">บันทึกรายจ่ายในเมนู บันทึก</span>ให้เอง ด้วยยอดในแผนและหมวดแรกที่ผูกไว้</>} />
+              help={<>เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span> ในหน้าหลัก ติ๊กจ่ายแล้ว <span className="nw">รายจ่ายผันแปร</span>แอป<span className="nw">บันทึกในเมนู บันทึก</span>ให้เอง ด้วยยอดในแผนและหมวดแรกที่ผูกไว้ · <span className="nw">รายจ่ายคงที่ติ๊กอย่างเดียว</span></>} />
           )}
         </div>
 
@@ -356,7 +356,7 @@ function HelpRow({ id, label, sub, value, help, open, onHelp, onOpen }: {
 /** ยอดของรายการ 6 เดือน (ก่อน 2 เดือน ถึงหลัง 3 เดือน) หลังบันทึก ให้เห็นว่ายอดกับช่วงเวลาทำงานร่วมกันยังไง */
 function MonthStrip({ item, before, month, amountOf }: { item: PlanItem; before: PlanItem | null; month: Month; amountOf: (i: PlanItem, m: Month) => number }) {
   const months = Array.from({ length: 6 }, (_, i) => addMonths(month, i - 2));
-  const short = (s: number) => (s % 100 === 0 ? formatBaht(s, { decimals: false }) : formatBaht(s));
+  const short = formatWhole; // ช่องแคบ 6 เดือน: บาทเต็ม
   return (
     <div className="mstrip" aria-label="ยอดแต่ละเดือนหลังบันทึก">
       <span className="label">ยอดแต่ละเดือนหลังบันทึก</span>
@@ -391,7 +391,7 @@ function DuePicker({ month, value, onPick }: { month: Month; value: number | nul
   const today = localToday();
   return (
     <div className="due-pick">
-      <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>ใส่หรือไม่ใส่ก็ได้ · ถ้าใส่ เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span>ในหน้าหลัก ติ๊กแล้วแอป<span className="nw">บันทึกรายจ่ายให้เอง</span></p>
+      <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>ใส่หรือไม่ใส่ก็ได้ · ถ้าใส่ เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span>ในหน้าหลัก ให้ติ๊กว่าจ่ายแล้ว</p>
       <label className="due-in">
         <span>ทุกวันที่</span>
         <input className="num" inputMode="numeric" maxLength={2} value={text} placeholder="–" onChange={(e) => setText(e.target.value.replace(/\D/g, '').slice(0, 2))} aria-invalid={text !== '' && !day} />

@@ -14,26 +14,29 @@ const fresh = async () => { cur = new AllocDB(`act-${n++}`); await ensureDefault
 describe('การ์ด จ่ายหรือยัง', () => {
   it('ติ๊กจ่ายแล้ว: ติ๊กในแผน + บันทึกรายจ่ายยอดตามแผน หมวดแรกที่ผูก', async () => {
     const d = await fresh();
-    const it1 = item('fixed', 'ค่าเน็ต', 599, { logCategoryIds: ['c-bill', 'c-other'] });
-    const id = await markDuePaid(d, { item: it1, kind: 'fixed', cycle: '2026-10', amount: B(599), today: '2026-10-18' });
+    const it1 = item('variable', 'ค่าเน็ต', 599, { logCategoryIds: ['c-bill', 'c-other'] });
+    const id = await markDuePaid(d, { item: it1, kind: 'variable', cycle: '2026-10', amount: B(599), today: '2026-10-18' });
     expect(await d.logEntries.get(id!)).toMatchObject({ amountPaid: B(599), myShare: B(599), categoryId: 'c-bill', date: '2026-10-18', planItemId: it1.id, type: 'expense' });
     expect(await d.paidChecks.get(`2026-10|${it1.id}`)).toMatchObject({ checked: true, logEntryId: id });
   });
 
   it('ไม่ได้ผูกหมวด: บันทึกเป็น อื่น ๆ (นอกงบ)', async () => {
     const d = await fresh();
-    const id = await markDuePaid(d, { item: item('fixed', 'ค่าธรรมเนียม', 30), kind: 'fixed', cycle: '2026-10', amount: B(30), today: '2026-10-18' });
+    const id = await markDuePaid(d, { item: item('variable', 'ค่าธรรมเนียม', 30), kind: 'variable', cycle: '2026-10', amount: B(30), today: '2026-10-18' });
     expect((await d.logEntries.get(id!))?.categoryId).toBe('c-other');
   });
 
   it('ติ๊กในหน้าแผนแล้วยกเลิก: รายจ่ายที่บันทึกให้หายด้วย · กันเงินเข้าเป้าไม่บันทึก', async () => {
     const d = await fresh();
-    const it1 = item('fixed', 'ค่าเน็ต', 599, { logCategoryIds: ['c-bill'] });
-    await markDuePaid(d, { item: it1, kind: 'fixed', cycle: '2026-11', amount: B(599), today: '2026-10-27' });
+    const it1 = item('variable', 'ค่าน้ำ', 599, { logCategoryIds: ['c-bill'] });
+    await markDuePaid(d, { item: it1, kind: 'variable', cycle: '2026-11', amount: B(599), today: '2026-10-27' });
     expect(await d.logEntries.get((await d.paidChecks.get(`2026-11|${it1.id}`))!.logEntryId!)).toMatchObject({ cycleMonth: '2026-11', categoryId: 'c-bill' });
     await unmarkPaid(d, '2026-11', it1.id);
     expect([await d.logEntries.count(), await d.paidChecks.count()]).toEqual([0, 0]);
     expect(await markDuePaid(d, { item: item('goalSpend', 'ทริป', 1200), kind: 'goalSpend', cycle: '2026-11', amount: B(1200), today: '2026-10-27' })).toBeNull();
+    // รายจ่ายคงที่: ติ๊กอย่างเดียว (บันทึกนับงบเฉพาะผันแปร)
+    expect(await markDuePaid(d, { item: item('fixed', 'ค่าบ้าน', 9000), kind: 'fixed', cycle: '2026-11', amount: B(9000), today: '2026-10-27' })).toBeNull();
+    expect(await d.logEntries.count()).toBe(0);
   });
 
   it('รายการออม: ติ๊กอย่างเดียว ไม่บันทึกเป็นรายจ่าย', async () => {
@@ -46,8 +49,8 @@ describe('การ์ด จ่ายหรือยัง', () => {
 
   it('ลบรายการในหน้าบันทึก = ยกเลิกติ๊กจ่ายแล้วด้วย', async () => {
     const d = await fresh();
-    const it1 = item('fixed', 'ค่าเน็ต', 599);
-    const id = await markDuePaid(d, { item: it1, kind: 'fixed', cycle: '2026-10', amount: B(599), today: '2026-10-18' });
+    const it1 = item('variable', 'ค่าเน็ต', 599);
+    const id = await markDuePaid(d, { item: it1, kind: 'variable', cycle: '2026-10', amount: B(599), today: '2026-10-18' });
     await deleteLogEntry(d, id!);
     expect(await d.logEntries.count()).toBe(0);
     expect(await d.paidChecks.count()).toBe(0);

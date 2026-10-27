@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { db } from '../../db/db';
 import type { GroupKind, Month, PlanItem } from '../../db/types';
 import { thaiMonth } from '../../calc/dates';
-import { formatBaht, pct1 } from '../../calc/money';
+import { formatBaht, pct1, formatWhole } from '../../calc/money';
 import { planTotals, type AmountOf } from '../../calc/plan';
 import { copyYearToNext, itemChanges, yearMonths, yearSummary } from '../../calc/planYear';
 import { Icon } from '../../components/Icon';
@@ -12,7 +12,7 @@ import { Sheet } from '../../components/Sheet';
 import type { PlanData } from './usePlanData';
 import { thaiMonthLong, type IconName } from './planUi';
 
-const money = (s: number) => (s % 100 === 0 ? formatBaht(s, { decimals: false }) : formatBaht(s));
+const money = (s: number) => formatWhole(s); // ช่องแคบ: บาทเต็ม
 const mon = (m: Month) => thaiMonth(m).split(' ')[0];
 const tick = (m: Month) => mon(m).replace(/\./g, '');
 const pctS = (a: number, b: number) => `${pct1(a, b)}%`;

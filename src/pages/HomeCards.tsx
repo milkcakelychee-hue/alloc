@@ -127,7 +127,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
               <span className="t2">ครบกำหนด <span className="num nw">{dateWithDay(d.dueDate).replace(/ \d\d$/, '')}</span>{late > 0 && <> · <span className="nw">เลยมา <span className="num">{late}</span> วัน</span></>} · <span className="num nw">{formatBaht(d.amount)}</span></span></span>
             <button className="pill-btn" onClick={async () => {
               await markDuePaid(db, { item: d.item, kind, cycle: d.cycle, amount: d.amount, today });
-              flash(kind === 'saving' || kind === 'invest' ? `ติ๊ก ${d.item.name} โอนแล้ว` : `บันทึกรายจ่าย ${d.item.name} แล้ว · ถ้าจะแก้ ไปแก้ที่หน้าบันทึก`);
+              flash(kind === 'variable' ? `บันทึกรายจ่าย ${d.item.name} แล้ว · ถ้าจะแก้ ไปแก้ที่หน้าบันทึก` : `ติ๊ก ${d.item.name} จ่ายแล้ว`);
             }}>จ่ายแล้ว</button>
           </div>
         );

@@ -27,3 +27,6 @@ export function parseBaht(text: string): Satang | null {
   const v = Number(m[2]) * 100 + Number((m[3] ?? '').padEnd(2, '0'));
   return m[1] ? -v : v;
 }
+
+/** ช่องแคบ (ปฏิทิน ตาราง แท่งกราฟ): ปัดเป็นบาทเต็ม ไม่แสดงสตางค์ · ยอดจริงยังเก็บเป็นสตางค์ */
+export const formatWhole = (s: Satang) => formatBaht(Math.round(s / 100) * 100, { decimals: false });

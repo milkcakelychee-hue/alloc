@@ -1,4 +1,5 @@
 // แท็บบันทึก · รายรับ-รายจ่าย (บอร์ด LogCalendar / LogCalendarDark): งบรายวัน · สรุปรอบ · ปฏิทินรอบ · รายการของวัน
+import { formatWhole } from '../calc/money';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { LogEntry, Month } from '../db/types';
@@ -43,6 +44,7 @@ function LogCalendar() {
   const [daySel, setDay] = useState<string | null>(null);
   const [open, setOpen] = useState<LogEntry | null>(null);
   const [tip, setTip] = useState(false);
+  const [budOpen, setBudOpen] = useState(false);
   if (!data?.settings) return null;
   const s = data.settings;
   const cur = appCycle(today, s.pay, s.startCycle);
@@ -75,6 +77,7 @@ function LogCalendar() {
   const incomeAll = [...totals.values()].reduce((a, t) => a + t.income, 0);
   const spentAll = exp.reduce((a, e) => a + e.myShare, 0);
   const off = offBudgetTotal(exp, data.items);
+  const overN = parts.filter((p) => p.spent > p.budget).length;
   const linkedAll = new Set(data.items.flatMap((i) => i.logCategoryIds));
   const offCats = [...new Set(exp.filter((e) => !linkedAll.has(e.categoryId)).map((e) => e.categoryId))].map(catOf).filter((c): c is NonNullable<typeof c> => !!c);
 
@@ -85,7 +88,7 @@ function LogCalendar() {
   const dayT = totals.get(sel);
   const salToday = sal && sal.date === sel ? sal : null;
   const canNext = !isCur;
-  const fmtCell = (v: number) => baht(v);
+  const fmtCell = formatWhole; // ช่องปฏิทินแคบ: บาทเต็ม
 
   return (
     <main className="page lgp">
@@ -117,7 +120,13 @@ function LogCalendar() {
 
       {(parts.length > 0 || offCats.length > 0) && (
         <section className="lg-budgets" aria-labelledby="lg-bud-h">
-          <div className="h"><h2 id="lg-bud-h">งบแต่ละรายการ</h2><span>จดในหมวดที่ผูก <span className="nw">ยอดหักจากงบนั้น</span></span></div>
+          <button className="h" aria-expanded={budOpen} aria-controls="lg-bud-list" onClick={() => setBudOpen(!budOpen)}>
+            <h2 id="lg-bud-h">งบแต่ละรายการ</h2>
+            <span className="sum num">{parts.length} งบ{overN > 0 ? <> · <b className="over">เกิน {overN}</b></> : null}{off > 0 ? <> · นอกงบ {formatWhole(off)}</> : null}</span>
+            <span className="cv" style={{ transform: budOpen ? 'rotate(180deg)' : undefined }}><Icon name="chevDown" size={18} stroke={2} /></span>
+          </button>
+          {budOpen && <div id="lg-bud-list" className="list-in">
+          <span className="hint">จดในหมวดที่ผูก <span className="nw">ยอดหักจากงบนั้น</span></span>
           {parts.map((p) => {
             const left = p.budget - p.spent;
             return (
@@ -137,6 +146,7 @@ function LogCalendar() {
                 <span className="s">ยังไม่ผูกกับงบไหน</span></div>
             </div>
           )}
+          </div>}
         </section>
       )}
 
