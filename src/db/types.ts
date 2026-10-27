@@ -99,11 +99,16 @@ export interface LogEntry extends Base {
   billItemId: string | null;
   planItemId?: string | null; // บันทึกอัตโนมัติจากการ์ด "จ่ายหรือยัง" (ลบรายการนี้ = ยกเลิกติ๊กจ่ายแล้ว)
   cycleMonth?: Month | null;
+  billId?: string | null; // ส่วนของฉันในบิลแชร์ (1 บิล = 1 รายการ) แก้/ลบที่หน้าบิล
 }
 
 export interface Person extends Base { name: string; icon: string; colorIndex: number; note: string }
 
-export interface Bill extends Base { title: string; cycleMonth: Month; dateLabel: string; note: string; peopleIds: string[] }
+export interface Bill extends Base {
+  title: string; cycleMonth: Month; dateLabel: string; note: string; peopleIds: string[];
+  date?: DateStr; endDate?: DateStr | null; // วันที่บิล (ใช้ลงบันทึกและแบ่งรอบ) · วันสิ้นสุดไม่บังคับ
+  categoryId?: string; logEntryId?: string | null; // ส่วนของฉันลงบันทึกเป็น 1 รายการในหมวดนี้
+}
 export interface BillItem extends Base { billId: string; name: string; price: Satang; order: number; peopleIds: string[]; logEntryId: string | null }
 export interface Payment extends Base { billId: string; personId: string; amount: Satang; date: DateStr; channel: 'transfer' | 'cash' }
 

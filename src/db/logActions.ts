@@ -96,8 +96,9 @@ export async function deleteCategory(db: AllocDB, id: string, now = Date.now()) 
   const cat = await db.logCategories.get(id);
   if (!cat || id === FALLBACK_CAT[cat.type]) return 0;
   const to = FALLBACK_CAT[cat.type];
-  return db.transaction('rw', [db.logCategories, db.logEntries, db.planItems], async () => {
+  return db.transaction('rw', [db.logCategories, db.logEntries, db.planItems, db.bills], async () => {
     const moved = await db.logEntries.where('categoryId').equals(id).modify({ categoryId: to, updatedAt: now });
+    await db.bills.filter((b) => b.categoryId === id).modify({ categoryId: to, updatedAt: now }); // บิลที่ลงบันทึกหมวดนี้
     for (const it of await db.planItems.toArray()) {
       if (it.logCategoryIds.includes(id)) await db.planItems.update(it.id, { logCategoryIds: it.logCategoryIds.filter((c) => c !== id), updatedAt: now });
     }

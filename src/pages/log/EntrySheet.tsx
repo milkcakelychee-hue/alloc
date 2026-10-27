@@ -1,5 +1,6 @@
 // แผ่นรายการที่บันทึก (บอร์ด LogEdit): ยอด · วันที่ · ตัดงบ · โน้ต · แก้ไข / จดซ้ำวันนี้ / ลบ
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { SheetFrame } from '../../components/SheetFrame';
 import { db } from '../../db/db';
 import type { LogEntry } from '../../db/types';
@@ -55,6 +56,8 @@ export function EntrySheet({ entry: e0, data, onClose, onEdit }: { entry: LogEnt
         <div><span className="k"><Icon name="edit" size={16} stroke={2} />โน้ต</span><span className="v">{e.note || '–'}</span></div>
       </div>
       {plan && <div className="lg-info"><Icon name="info" size={15} stroke={2} /><span>บันทึกให้อัตโนมัติจากการ์ด "จ่ายหรือยัง" · ลบรายการนี้แล้ว "{plan.name}" จะกลับเป็นยังไม่จ่าย</span></div>}
+      {e.billId && <div className="lg-info"><BillMark /><span>ส่วนของฉันจากบิลแชร์ · จ่ายจริงทั้งบิล <span className="nw num">{baht(e.amountPaid)}</span> · <span className="nw">แก้ยอดหรือลบได้ที่หน้าบิล</span></span></div>}
+      {e.billId ? <Link to={`/log/bill/${e.billId}`} className="lg-billbtn"><BillMark />เปิดบิล "{e.note}"</Link> : <>
       {done && <div className="lg-info" role="status" style={{ color: 'var(--gx-ok)' }}><Icon name="check" size={15} stroke={2.4} /><span>{done}</span></div>}
       <div className="lg-2">
         <button className="pri" onClick={onEdit}><Icon name="edit" size={18} stroke={2} />แก้ไข</button>
@@ -68,6 +71,13 @@ export function EntrySheet({ entry: e0, data, onClose, onEdit }: { entry: LogEnt
             <button className="yes" onClick={async () => { await deleteLogEntry(db, e.id); onClose(); }}>ลบ</button></div>
         </div>
       )}
+      </>}
     </LgSheet>
   );
 }
+
+const BillMark = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: 'none' }}>
+    <path d="M7 3.5h10v17l-2.5-1.6L12 20.5l-2.5-1.6L7 20.5z" /><path d="M9.5 8h5M9.5 11.5h5" />
+  </svg>
+);

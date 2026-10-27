@@ -29,6 +29,7 @@ export default function Settings() {
   const [toast, setToast] = useState('');
   const [payOpen, setPayOpen] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
+  const [recvOpen, setRecvOpen] = useState(false);
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
 
   const bs = backupStatus(settings?.lastBackupAt);
@@ -83,6 +84,19 @@ export default function Settings() {
       </div>
       {payOpen && settings && <PayRuleSheet settings={settings} onClose={() => setPayOpen(false)} />}
       {startOpen && settings && <StartCycleSheet settings={settings} onClose={() => setStartOpen(false)} />}
+
+      <span className="sec">บิลแชร์</span>
+      <div className="list">
+        <button className="row" onClick={() => setRecvOpen(true)} disabled={!settings}>
+          <span className="ic"><Icon name="wallet" size={18} stroke={2} /></span>
+          <span className="tx">
+            <span className="t1">ช่องทางรับเงิน</span>
+            <span className="t2">{settings?.receiveInfo.trim() || 'แสดงท้ายใบสรุปบิล ยังไม่ได้ตั้ง'}</span>
+          </span>
+          <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>
+        </button>
+      </div>
+      {recvOpen && settings && <ReceiveSheet settings={settings} onClose={() => setRecvOpen(false)} />}
 
       <span className="sec">การแสดงผล</span>
       <div className="list">
@@ -170,6 +184,20 @@ function StartCycleSheet({ settings, onClose }: { settings: SettingsT; onClose: 
       <div className="note" style={{ marginBottom: 12 }}><Icon name="info" size={16} stroke={2} />
         <span>รอบก่อนหน้าจะไม่แสดงในแผนและบันทึก · <span className="nw">ข้อมูลไม่หาย</span> · <span className="nw">บันทึกรายการได้เมื่อถึงวันแรกของรอบ</span></span></div>
       <button className="btn btn-pri" style={{ width: '100%' }} onClick={async () => { await db.settings.update('app', { startCycle: v, updatedAt: Date.now() }); onClose(); }}>บันทึก</button>
+    </Sheet>
+  );
+}
+
+function ReceiveSheet({ settings, onClose }: { settings: SettingsT; onClose: () => void }) {
+  const [v, setV] = useState(settings.receiveInfo);
+  return (
+    <Sheet title="ช่องทางรับเงิน" onClose={onClose}>
+      <label className="field" style={{ marginBottom: 12 }}><span className="label">ข้อความท้ายใบสรุปบิล</span>
+        <textarea rows={2} value={v} maxLength={80} onChange={(e) => setV(e.target.value)} placeholder="เช่น พร้อมเพย์ของฉัน · ชื่อบัญชี ฉัน"
+          style={{ resize: 'none', border: 0, borderRadius: 12, background: 'var(--card2)', padding: '10px 12px', font: 'inherit', fontSize: 16, color: 'var(--ink)' }} /></label>
+      <div className="note" style={{ marginBottom: 12 }}><Icon name="alert" size={16} stroke={2} />
+        <span>ข้อความนี้จะอยู่ในรูปและข้อความที่แชร์ · <span className="nw">ห้ามใส่เลขบัตร</span> <span className="nw">หรือรหัสใด ๆ</span></span></div>
+      <button className="btn btn-pri" style={{ width: '100%' }} onClick={async () => { await db.settings.update('app', { receiveInfo: v.trim(), updatedAt: Date.now() }); onClose(); }}>บันทึก</button>
     </Sheet>
   );
 }

@@ -1,3 +1,6 @@
+import { BillDetail } from './pages/bill/BillDetail';
+import { People } from './pages/bill/People';
+import { BillSummary } from './pages/bill/BillSummary';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter, Route, Routes, Navigate, useLocation } from 'react-router-dom';
@@ -5,6 +8,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/goals.css';
 import './styles/log.css';
+import './styles/bill.css';
 import { applyTheme, syncThemeFromDb } from './lib/theme';
 import { db } from './db/db';
 import { ensureDefaults } from './db/defaults';
@@ -60,6 +64,9 @@ function Shell() {
         <Route path="/log/add" element={<LogAdd />} />
         <Route path="/log/cats" element={<LogCats />} />
         <Route path="/log/spend" element={<LogSpend />} />
+        <Route path="/log/bill/:id" element={<BillDetail />} />
+        <Route path="/log/people" element={<People />} />
+        <Route path="/log/bill-summary" element={<BillSummary />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

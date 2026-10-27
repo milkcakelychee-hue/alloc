@@ -9,7 +9,7 @@ import { goalAwareAmountOf } from '../calc/goals';
 import { entryCycle, expensesIn, offBudgetTotal } from '../calc/log';
 import { calendarCells, dailyBudgetParts, dayTotals, effectiveStart, planLabelOf, salaryEvent } from '../calc/logView';
 import { Icon } from '../components/Icon';
-import { Empty } from '../components/Empty';
+import { BillList } from './bill/BillList';
 import { baht } from './goals/goalUi';
 import { thaiMonthLong } from './plan/planUi';
 import { CatIcon, catStyle } from './log/catIcon';
@@ -23,7 +23,7 @@ const WD = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
 
 export default function Log() {
   const [sp] = useSearchParams();
-  if (sp.get('tab') === 'bill') return <BillsSoon />;
+  if (sp.get('tab') === 'bill') return <BillList tabs={<Tabs bill />} />;
   return <LogCalendar />;
 }
 
@@ -33,16 +33,6 @@ function Tabs({ bill }: { bill?: boolean }) {
       <Link to="/log" role="tab" aria-selected={!bill} replace>รายรับ-รายจ่าย</Link>
       <Link to="/log?tab=bill" role="tab" aria-selected={!!bill} replace>บิลแชร์</Link>
     </div>
-  );
-}
-
-function BillsSoon() {
-  return (
-    <main className="page lgp">
-      <div className="lg-head"><h1>บันทึก</h1></div>
-      <Tabs bill />
-      <Empty icon="bill" title="บิลแชร์" text={<>หารบิลกับเพื่อน <span className="nw">และติดตามเงินที่ค้างรับ</span> <span className="nw">จะมาในขั้นถัดไป</span></>} />
-    </main>
   );
 }
 
