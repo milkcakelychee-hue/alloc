@@ -59,7 +59,7 @@ export function BillSummary() {
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(''), 2500); };
   const copy = async () => {
     if (!r) return;
-    try { await navigator.clipboard.writeText(receiptText(name, issued, r, s.receiveInfo)); flash('คัดลอกข้อความแล้ว'); } catch { flash('คัดลอกไม่ได้ ลองใหม่อีกครั้ง'); }
+    try { await navigator.clipboard.writeText(receiptText(name, issued, r)); flash('คัดลอกข้อความแล้ว'); } catch { flash('คัดลอกไม่ได้ ลองใหม่อีกครั้ง'); }
   };
   const toPng = async (pid: string) => {
     const { toBlob } = await import('html-to-image');
@@ -145,8 +145,7 @@ export function BillSummary() {
                 </div>
               ))}
               <div className="bl-rc-tot due"><span>ยอดที่ต้องโอน</span><b className="num">{baht(r.grand)}<small>บาท</small></b></div>
-              <div className="bl-rc-foot"><Barcode h={20} />
-                <span className="n r">{s.receiveInfo.trim() ? <>โอนเข้า: {s.receiveInfo.trim()}</> : <>โอนเข้า: บัญชีของฉัน<br />ตั้งช่องทางรับเงินได้ในตั้งค่า</>}</span></div>
+              <div className="bl-rc-foot"><Barcode h={20} /></div>
             </Receipt>
           </div>
         ) : <div className="bl-empty">เลือกบิลที่มีคนหารด้วย <span className="nw">เพื่อดูตัวอย่างใบสรุป</span></div>}

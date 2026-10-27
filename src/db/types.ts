@@ -23,7 +23,7 @@ export interface Settings extends Base {
   hideOnOpen?: boolean; // ซ่อนตัวเลขทุกครั้งที่เปิดแอป
   lastBackupAt: number | null;
   schemaVersion: number;
-  receiveInfo: string; // ข้อความช่องทางรับเงินในใบสรุปบิล ห้ามเก็บเลขบัตร/รหัส
+  receiveInfo: string; // เลิกใช้ (1.0): ใบสรุปบิลไม่แสดงช่องทางรับเงินแล้ว · คงไว้ให้ไฟล์สำรองเดิมอ่านได้
   onboardedAt?: number | null; // ผ่านหน้า Welcome แล้ว (ไม่มี = ยังไม่ผ่าน)
   goalCats?: { order: GoalType[]; hidden: GoalType[] };
   startCycle?: Month | null; // เริ่มใช้แอปตั้งแต่รอบนี้ (แผน/บันทึกไม่แสดงรอบก่อนหน้า) // ลำดับหมวดเป้าหมาย + หมวดที่ลบ (เพิ่มกลับได้จากหน้าสร้างเป้า)

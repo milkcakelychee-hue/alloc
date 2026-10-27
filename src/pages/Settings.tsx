@@ -33,7 +33,6 @@ export default function Settings() {
   const [toast, setToast] = useState('');
   const [payOpen, setPayOpen] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
-  const [recvOpen, setRecvOpen] = useState(false);
   const [accOpen, setAccOpen] = useState(false);
   const [wipeOpen, setWipeOpen] = useState(false);
   const accounts = useLiveQuery(() => db.accounts.orderBy('order').toArray(), []) ?? [];
@@ -114,19 +113,6 @@ export default function Settings() {
         </Link>
       </div>
       {accOpen && <AccountsSheet onClose={() => setAccOpen(false)} />}
-
-      <span className="sec">บิลแชร์</span>
-      <div className="list">
-        <button className="row" onClick={() => setRecvOpen(true)} disabled={!settings}>
-          <span className="ic"><Icon name="wallet" size={18} stroke={2} /></span>
-          <span className="tx">
-            <span className="t1">ช่องทางรับเงิน</span>
-            <span className="t2">{settings?.receiveInfo.trim() || 'แสดงท้ายใบสรุปบิล ยังไม่ได้ตั้ง'}</span>
-          </span>
-          {chev}
-        </button>
-      </div>
-      {recvOpen && settings && <ReceiveSheet settings={settings} onClose={() => setRecvOpen(false)} />}
 
       <span className="sec">การแสดงผล</span>
       <div className="list">
@@ -307,7 +293,7 @@ function WipeSheet({ onBackup, onClose, onDone }: { onBackup: () => Promise<void
 /** เลือกรอบที่เริ่มใช้แอป: รอบก่อนหน้าไม่แสดงในแผนและบันทึก (ข้อมูลไม่หาย) */
 function StartCycleSheet({ settings, onClose }: { settings: SettingsT; onClose: () => void }) {
   const cur = cycleOf(localToday(), settings.pay);
-  const opts = [addMonths(cur, -1), cur, addMonths(cur, 1)];
+  const opts = [cur, addMonths(cur, 1)];
   const [v, setV] = useState<string | null>(settings.startCycle ?? null);
   return (
     <Sheet title="เริ่มใช้แอปตั้งแต่รอบ" onClose={onClose}>
@@ -317,7 +303,7 @@ function StartCycleSheet({ settings, onClose }: { settings: SettingsT; onClose: 
           return (
             <button key={m} className="row" role="radio" aria-checked={v === m} onClick={() => setV(m)}>
               <span className={`radio-dot${v === m ? ' on' : ''}`} aria-hidden="true" />
-              <span className="tx"><span className="t1">{thaiMonth(m)}{m === cur ? ' · รอบนี้' : m > cur ? ' · รอบหน้า' : ''}</span>
+              <span className="tx"><span className="t1">{thaiMonth(m)}{m === cur ? ' · รอบนี้' : ' · รอบหน้า'}</span>
                 <span className="t2 num">{thaiDate(r.start)} – {thaiDate(r.end)}</span></span>
             </button>
           );
@@ -330,20 +316,6 @@ function StartCycleSheet({ settings, onClose }: { settings: SettingsT; onClose: 
       <div className="note" style={{ marginBottom: 12 }}><Icon name="info" size={16} stroke={2} />
         <span>รอบก่อนหน้าจะไม่แสดงในแผนและบันทึก · <span className="nw">ข้อมูลไม่หาย</span> · <span className="nw">บันทึกรายการได้เมื่อถึงวันแรกของรอบ</span></span></div>
       <button className="btn btn-pri" style={{ width: '100%' }} onClick={async () => { await db.settings.update('app', { startCycle: v, updatedAt: Date.now() }); onClose(); }}>บันทึก</button>
-    </Sheet>
-  );
-}
-
-function ReceiveSheet({ settings, onClose }: { settings: SettingsT; onClose: () => void }) {
-  const [v, setV] = useState(settings.receiveInfo);
-  return (
-    <Sheet title="ช่องทางรับเงิน" onClose={onClose}>
-      <label className="field" style={{ marginBottom: 12 }}><span className="label">ข้อความท้ายใบสรุปบิล</span>
-        <textarea rows={2} value={v} maxLength={80} onChange={(e) => setV(e.target.value)} placeholder="เช่น พร้อมเพย์ของฉัน · ชื่อบัญชี ฉัน"
-          style={{ resize: 'none', border: 0, borderRadius: 12, background: 'var(--card2)', padding: '10px 12px', font: 'inherit', fontSize: 16, color: 'var(--ink)' }} /></label>
-      <div className="note" style={{ marginBottom: 12 }}><Icon name="alert" size={16} stroke={2} />
-        <span>ข้อความนี้จะอยู่ในรูปและข้อความที่แชร์ · <span className="nw">ห้ามใส่เลขบัตร</span> <span className="nw">หรือรหัสใด ๆ</span></span></div>
-      <button className="btn btn-pri" style={{ width: '100%' }} onClick={async () => { await db.settings.update('app', { receiveInfo: v.trim(), updatedAt: Date.now() }); onClose(); }}>บันทึก</button>
     </Sheet>
   );
 }

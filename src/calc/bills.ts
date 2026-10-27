@@ -135,7 +135,7 @@ const bt = (s: Satang) => {
 };
 
 /** ใบแจ้งยอดเป็นข้อความ (คัดลอก / แชร์) */
-export function receiptText(name: string, issued: string, r: ReturnType<typeof receiptFor>, receiveInfo: string) {
+export function receiptText(name: string, issued: string, r: ReturnType<typeof receiptFor>) {
   const out = [`ใบแจ้งยอด ถึง ${name}`, `ออกเมื่อ ${issued} · ${r.blocks.length} บิล`, ''];
   for (const b of r.blocks) {
     out.push(`${b.bill.title} (${b.bill.dateLabel})`);
@@ -146,6 +146,5 @@ export function receiptText(name: string, issued: string, r: ReturnType<typeof r
     out.push('');
   }
   out.push(`ยอดที่ต้องโอน ${bt(r.grand)} บาท`);
-  if (receiveInfo.trim()) out.push(`โอนเข้า: ${receiveInfo.trim()}`);
   return out.join('\n');
 }
