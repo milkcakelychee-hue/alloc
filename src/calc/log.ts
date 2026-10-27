@@ -16,19 +16,32 @@ export function spentByCategory(entries: LogEntry[]) {
 }
 
 /**
- * งบของหมวด = ผลรวมยอดในแผนของรายการที่ผูกหมวดนั้น − ที่ใช้ไปในรอบของทุกหมวดที่ใช้งบเดียวกัน (หมวดพี่น้อง)
- * หมวดที่ไม่ผูก = นอกงบ (budget null)
+ * หมวดหนึ่งใช้งบได้รายการเดียว (เลือกที่หน้าจัดการหมวด · เจ้าของตกลง 27 ต.ค. 69)
+ * ข้อมูลเก่าที่หมวดเดียวผูกหลายรายการ: นับเข้ารายการแรกตามลำดับในแผน ยอดจึงไม่ถูกนับซ้ำ
+ */
+export function budgetItemByCat(items: PlanItem[]) {
+  const m = new Map<string, PlanItem>();
+  for (const i of [...items].sort((a, b) => a.order - b.order)) for (const c of i.logCategoryIds) if (!m.has(c)) m.set(c, i);
+  return m;
+}
+
+/** หมวดทั้งหมดที่ใช้งบของรายการนี้ */
+export function catsOfBudget(item: PlanItem, items: PlanItem[]) {
+  return [...budgetItemByCat(items)].filter(([, i]) => i.id === item.id).map(([c]) => c);
+}
+
+/**
+ * งบของหมวด = ยอดในแผนของรายการที่หมวดนี้ใช้งบ − ที่ใช้ไปในรอบของทุกหมวดที่ใช้งบเดียวกัน (หมวดพี่น้อง)
+ * หมวดที่ไม่เลือกงบ = นอกงบ (budget null)
  */
 export function categoryBudget(categoryId: string, items: PlanItem[], cycleExpenses: LogEntry[], m: Month, amountOf: AmountOf = rawAmount) {
-  const linked = items.filter((i) => i.logCategoryIds.includes(categoryId));
+  const item = budgetItemByCat(items).get(categoryId);
   const spent = spentByCategory(cycleExpenses);
   const spentSelf = spent.get(categoryId) ?? 0;
-  if (linked.length === 0) return { budget: null, spentSelf, spentSiblings: 0, remaining: null as Satang | null };
-  const budget = linked.reduce((s, i) => s + amountOf(i, m), 0);
-  const siblings = new Set(linked.flatMap((i) => i.logCategoryIds));
-  siblings.delete(categoryId);
+  if (!item) return { budget: null, spentSelf, spentSiblings: 0, remaining: null as Satang | null };
+  const budget = amountOf(item, m);
   let spentSiblings = 0;
-  for (const c of siblings) spentSiblings += spent.get(c) ?? 0;
+  for (const c of catsOfBudget(item, items)) if (c !== categoryId) spentSiblings += spent.get(c) ?? 0;
   return { budget, spentSelf, spentSiblings, remaining: budget - spentSelf - spentSiblings };
 }
 

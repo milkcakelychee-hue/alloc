@@ -6,32 +6,16 @@ import { applyAmountChange, rawAmount } from '../calc/plan';
 import { syncDeposits } from './goalActions';
 
 /**
- * ติ๊ก "จ่ายแล้ว" บนการ์ด: ติ๊กในแผน (จ่าย/โอนแล้ว) + บันทึกรายจ่ายในบันทึกให้อัตโนมัติ
- * ยอด = ยอดในแผน · หมวด = หมวดแรกที่ผูกไว้ ถ้าไม่ผูก = "อื่น ๆ" (นอกงบ)
- * บันทึกเฉพาะรายจ่ายผันแปร (บันทึกนับงบเฉพาะผันแปร · เจ้าของตกลง) · คงที่ ออม ลงทุน กันเงินเข้าเป้า: ติ๊กอย่างเดียว
- * ใช้ทั้งการ์ดในหน้าหลักและ "เช็กว่าจ่าย / โอนแล้ว" ในหน้าแผน
+ * ติ๊ก "จ่ายแล้ว" บนการ์ดและในหน้าแผน: ติ๊กอย่างเดียว ไม่บันทึกรายจ่าย
+ * (ติ๊ก = แบ่งเงินก้อนนี้แล้ว · ยอดในบันทึกมาจากที่จดเองเท่านั้น · เจ้าของตกลง 27 ต.ค. 69)
  */
-export async function markDuePaid(db: AllocDB, opts: { item: PlanItem; kind: GroupKind; cycle: Month; amount: Satang; today: DateStr; now?: number }) {
+export async function markDuePaid(db: AllocDB, opts: { item: PlanItem; cycle: Month; now?: number }) {
   const now = opts.now ?? Date.now();
-  const logs = opts.kind === 'variable';
-  return db.transaction('rw', db.paidChecks, db.logEntries, async () => {
-    let logEntryId: string | null = null;
-    if (logs) {
-      const entry: LogEntry = {
-        id: crypto.randomUUID(), createdAt: now, updatedAt: now, date: opts.today, type: 'expense',
-        amountPaid: opts.amount, myShare: opts.amount, categoryId: opts.item.logCategoryIds[0] ?? 'c-other',
-        note: opts.item.name, billItemId: null, planItemId: opts.item.id, cycleMonth: opts.cycle
-      };
-      await db.logEntries.add(entry);
-      logEntryId = entry.id;
-    }
-    await db.paidChecks.put({ id: `${opts.cycle}|${opts.item.id}`, cycleMonth: opts.cycle, planItemId: opts.item.id, checked: true, logEntryId, createdAt: now, updatedAt: now });
-    return logEntryId;
-  });
+  await db.paidChecks.put({ id: `${opts.cycle}|${opts.item.id}`, cycleMonth: opts.cycle, planItemId: opts.item.id, checked: true, logEntryId: null, createdAt: now, updatedAt: now });
 }
 
 /** ลบรายการในบันทึก · ถ้าบันทึกมาจากการ์ด "จ่ายหรือยัง" ยกเลิกติ๊กจ่ายแล้วด้วย (การ์ดกลับมาถ้ายังอยู่ในช่วงครบกำหนด) */
-/** ยกเลิกติ๊กจ่ายแล้ว: เอาติ๊กออก + ลบรายจ่ายที่บันทึกให้อัตโนมัติ */
+/** ยกเลิกติ๊กจ่ายแล้ว: เอาติ๊กออก + ลบรายจ่ายที่เวอร์ชันก่อนบันทึกให้ตอนติ๊ก (ถ้ามี) */
 export async function unmarkPaid(db: AllocDB, cycle: Month, planItemId: string) {
   await db.transaction('rw', db.paidChecks, db.logEntries, async () => {
     const id = `${cycle}|${planItemId}`;

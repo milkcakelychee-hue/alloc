@@ -57,6 +57,18 @@ describe('ขั้นที่ 7 บันทึก', () => {
     expect(planLabelOf('c-fun', items)).toBeNull();
   });
 
+  it('ข้อมูลเก่าที่หมวดเดียวผูกหลายงบ: นับเข้างบแรกตามลำดับ ไม่นับซ้ำทุกงบ', () => {
+    const shared = [
+      item('variable', 'ผ่อน ก', 1532, { logCategoryIds: ['c-bill'] }),
+      item('variable', 'ผ่อน ข', 665, { logCategoryIds: ['c-bill'] }),
+      item('variable', 'ค่าโทร', 321, { logCategoryIds: ['c-bill'] })
+    ];
+    const e = [entry('2026-10-05', 'c-bill', 1532), entry('2026-10-06', 'c-bill', 321)];
+    const p = dailyBudgetParts(groups, shared, e, '2026-10');
+    expect(p.map((x) => [x.item.name, x.spent, x.budget])).toEqual([['ผ่อน ก', B(1853), B(1532)]]);
+    expect(planLabelOf('c-bill', shared)).toBe('ผ่อน ก');
+  });
+
   it('อินไซต์: เฉลี่ยวันธรรมดา 86.67 · เสาร์อาทิตย์ 443.61 · ลดวันละ 75 ให้พอดีงบ', () => {
     expect(weekdaySplit(exp, TODAY, 27)).toEqual({ weekdayAvg: 8667, weekendAvg: 44361 });
     expect(cutPerDay(B(4105.25), B(5000), B(5598.07), 8)).toBe(B(75));

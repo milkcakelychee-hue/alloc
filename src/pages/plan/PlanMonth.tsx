@@ -71,10 +71,10 @@ export function PlanMonth() {
   const { byAccount, salaryLeft } = accountTransfers(groups, items, m, amountOf);
   const accName = (id: string | null) => accounts.find((a) => a.id === id)?.name;
 
-  // ติ๊กจ่ายแล้ว (เหมือนการ์ด "จ่ายหรือยัง"): รายจ่ายผันแปรบันทึกให้ในหมวดแรกที่ผูกไว้ · ยกเลิกติ๊ก = ลบรายการนั้น
-  const toggleCheck = async (it: PlanItem, kind: GroupKind) => {
+  // ติ๊กจ่ายแล้ว (เหมือนการ์ด "จ่ายหรือยัง"): ติ๊กอย่างเดียว ไม่บันทึกรายจ่าย
+  const toggleCheck = async (it: PlanItem) => {
     if (checked.has(it.id)) await unmarkPaid(db, m, it.id);
-    else await markDuePaid(db, { item: it, kind, cycle: m, amount: amountOf(it, m), today });
+    else await markDuePaid(db, { item: it, cycle: m });
   };
 
   // โหมดเช็กจ่ายแล้ว: บรรทัดย่อยเหลือแค่บัญชี ไม่ให้แถวยาวเกิน
@@ -117,7 +117,7 @@ export function PlanMonth() {
                 <div key={it.id} className={`irow${paid ? ' paid' : ''}`} {...dragItem}>
                   {sortMode && !checkMode && list.length > 1 && <Grip label={`ลากเพื่อย้าย ${it.name}`} {...dragHandle} />}
                   {canCheck && (
-                    <button className="icheck" role="checkbox" aria-checked={on} aria-label={`จ่ายแล้ว ${it.name}`} onClick={() => toggleCheck(it, g.kind)}>
+                    <button className="icheck" role="checkbox" aria-checked={on} aria-label={`จ่ายแล้ว ${it.name}`} onClick={() => toggleCheck(it)}>
                       <span className={on ? 'on' : ''}>{on && <Icon name="checkSq" size={14} stroke={3} />}</span>
                     </button>
                   )}
@@ -199,7 +199,7 @@ export function PlanMonth() {
           <div className="cm-top"><span className="t"><Icon name="checkSq" size={18} stroke={2.4} />เช็กว่าจ่าย / โอนแล้ว</span>
             <button className="pill-btn" onClick={() => setCheckMode(false)}>เสร็จ</button></div>
           <span className="bar"><span style={{ width: `${checkable.length ? (checkable.filter((i) => checked.has(i.id)).length / checkable.length) * 100 : 0}%` }} /></span>
-          <span className="t2 num">ติ๊กแล้ว {checkable.filter((i) => checked.has(i.id)).length} / {checkable.length} · โอนแล้ว {formatBaht(checkedAmt)} · <span className="nw">แตะช่องหน้ารายการ</span> · <span className="nw">รายจ่ายผันแปรที่ติ๊ก</span><span className="nw">บันทึกลงบันทึกให้</span> · <span className="nw">คงที่ ออม ลงทุน ติ๊กอย่างเดียว</span></span>
+          <span className="t2 num">ติ๊กแล้ว {checkable.filter((i) => checked.has(i.id)).length} / {checkable.length} · โอนแล้ว {formatBaht(checkedAmt)} · <span className="nw">แตะช่องหน้ารายการ</span> · <span className="nw">ติ๊กเพื่อจำว่าแบ่งเงินแล้ว</span> <span className="nw">ไม่ลงบันทึก</span></span>
         </section>
       )}
 

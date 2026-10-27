@@ -4,7 +4,7 @@ import { addDays, addMonths, cycleOf, cycleRange, daysBetween, type Pay } from '
 import { weekday } from './payday';
 import { parseBaht } from './money';
 import { rawAmount, type AmountOf } from './plan';
-import { categoryBudget, cycleDays } from './log';
+import { budgetItemByCat, categoryBudget, cycleDays } from './log';
 
 // ---------- แป้นตัวเลข ----------
 
@@ -80,23 +80,23 @@ export function dayTotals(entries: LogEntry[]) {
 
 // ---------- งบรายวัน แยกรายการในแผน ----------
 
-/** งบใช้จ่ายรายวันแยกตามรายการผันแปรที่ผูกหมวดบันทึก: ยอดแผน และที่ใช้ไปในหมวดที่ผูก */
+/** งบใช้จ่ายรายวันแยกตามรายการผันแปรที่มีหมวดเลือกใช้: ยอดแผน หมวดที่ใช้งบนี้ และที่ใช้ไป (รายการละครั้ง) */
 export function dailyBudgetParts(groups: PlanGroup[], items: PlanItem[], cycleExpenses: LogEntry[], cycle: Month, amountOf: AmountOf = rawAmount) {
   const variable = new Set(groups.filter((g) => g.enabled && g.kind === 'variable').map((g) => g.id));
+  const by = budgetItemByCat(items);
   return items
-    .filter((i) => variable.has(i.groupId) && i.logCategoryIds.length > 0)
+    .filter((i) => variable.has(i.groupId))
     .map((i) => {
-      const cats = new Set(i.logCategoryIds);
-      return { item: i, budget: amountOf(i, cycle), spent: cycleExpenses.filter((e) => cats.has(e.categoryId)).reduce((s, e) => s + e.myShare, 0) };
+      const cats = [...by].filter(([, x]) => x.id === i.id).map(([c]) => c);
+      const set = new Set(cats);
+      return { item: i, cats, budget: amountOf(i, cycle), spent: cycleExpenses.filter((e) => set.has(e.categoryId)).reduce((s, e) => s + e.myShare, 0) };
     })
-    .filter((p) => p.budget > 0);
+    .filter((p) => p.cats.length > 0 && p.budget > 0);
 }
 
-/** รายการในแผนที่หมวดนั้นนับเข้างบ (ชื่อแรก + จำนวนที่เหลือ) · null = นอกงบ */
+/** ชื่อรายการในแผนที่หมวดนั้นใช้งบ · null = นอกงบ */
 export function planLabelOf(categoryId: string, items: PlanItem[]) {
-  const linked = items.filter((i) => i.logCategoryIds.includes(categoryId));
-  if (!linked.length) return null;
-  return linked.length === 1 ? linked[0].name : `${linked[0].name} +${linked.length - 1}`;
+  return budgetItemByCat(items).get(categoryId)?.name ?? null;
 }
 
 /** งบที่รายการนี้ตัด (ตอนแก้/ดูรายการ): ชื่อแผน · เหลือ / งบ */

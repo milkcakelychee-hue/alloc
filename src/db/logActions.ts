@@ -28,16 +28,6 @@ export async function repeatEntry(db: AllocDB, id: string, today: DateStr, now =
   return addEntry(db, { type: old.type, amount: old.amountPaid, categoryId: old.categoryId, date: today, note: old.note }, now);
 }
 
-/**
- * แก้หมวดของรายการที่บันทึกจากการ์ด "จ่ายหรือยัง" แล้วผู้ใช้ตอบ "ใช้หมวดนี้กับรายการในแผน":
- * หมวดใหม่ขึ้นเป็นหมวดแรกของรายการในแผน (การ์ดครั้งหน้าใช้หมวดนี้)
- */
-export async function linkCategoryFirst(db: AllocDB, planItemId: string, categoryId: string, now = Date.now()) {
-  const it = await db.planItems.get(planItemId);
-  if (!it) return;
-  await db.planItems.update(planItemId, { logCategoryIds: [categoryId, ...it.logCategoryIds.filter((c) => c !== categoryId)], updatedAt: now });
-}
-
 // ---------- จัดการหมวด ----------
 
 export async function addCategory(db: AllocDB, c: { type: LogType; name: string; icon: string; bg: string; fg: string }, now = Date.now()) {
@@ -66,14 +56,13 @@ export async function toggleCategoryHidden(db: AllocDB, id: string, now = Date.n
   if (cat) await db.logCategories.update(id, { hidden: !cat.hidden, updatedAt: now });
 }
 
-/** ผูกหมวดกับรายการในแผนจากฝั่งหมวด: ใส่/เอาหมวดออกจาก logCategoryIds ของแต่ละรายการ */
-export async function setCategoryLinks(db: AllocDB, categoryId: string, planItemIds: string[], now = Date.now()) {
-  const want = new Set(planItemIds);
+/** เลือกงบของหมวด: หมวดหนึ่งใช้งบได้รายการเดียว · null = นอกงบ */
+export async function setCategoryBudget(db: AllocDB, categoryId: string, planItemId: string | null, now = Date.now()) {
   await db.transaction('rw', db.planItems, async () => {
     for (const it of await db.planItems.toArray()) {
       const has = it.logCategoryIds.includes(categoryId);
-      if (want.has(it.id) && !has) await db.planItems.update(it.id, { logCategoryIds: [...it.logCategoryIds, categoryId], updatedAt: now });
-      if (!want.has(it.id) && has) await db.planItems.update(it.id, { logCategoryIds: it.logCategoryIds.filter((c) => c !== categoryId), updatedAt: now });
+      if (it.id === planItemId && !has) await db.planItems.update(it.id, { logCategoryIds: [...it.logCategoryIds, categoryId], updatedAt: now });
+      if (it.id !== planItemId && has) await db.planItems.update(it.id, { logCategoryIds: it.logCategoryIds.filter((c) => c !== categoryId), updatedAt: now });
     }
   });
 }

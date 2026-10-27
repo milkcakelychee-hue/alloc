@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AllocDB } from './db';
 import { ensureDefaults } from './defaults';
-import { addCategory, addEntry, linkCategoryFirst, moveCategory, repeatEntry, setCategoryLinks, toggleCategoryHidden, updateEntry } from './logActions';
+import { addCategory, addEntry, moveCategory, repeatEntry, setCategoryBudget, toggleCategoryHidden, updateEntry } from './logActions';
 import { B, item } from '../calc/testkit';
 
 let n = 0;
@@ -34,15 +34,7 @@ describe('บันทึก', () => {
     expect((await d.logEntries.get('x'))!.myShare).toBe(B(450));
   });
 
-  it('ใช้หมวดใหม่กับรายการในแผน: ขึ้นเป็นหมวดแรก', async () => {
-    const d = await fresh();
-    const it1 = item('fixed', 'ค่าเน็ต', 599, { logCategoryIds: ['c-other'] });
-    await d.planItems.put(it1);
-    await linkCategoryFirst(d, it1.id, 'c-bill');
-    expect((await d.planItems.get(it1.id))!.logCategoryIds).toEqual(['c-bill', 'c-other']);
-  });
-
-  it('จัดหมวด: เพิ่มต่อท้าย เลื่อน ซ่อน ผูกแผน', async () => {
+  it('จัดหมวด: เพิ่มต่อท้าย เลื่อน ซ่อน เลือกงบ', async () => {
     const d = await fresh();
     const c = await addCategory(d, { type: 'expense', name: 'ค่าหมอ', icon: 'n-heart', bg: '#FBE3E3', fg: '#16231C' });
     expect(c.order).toBe(11);
@@ -51,10 +43,13 @@ describe('บันทึก', () => {
     expect(list.slice(-2).map((x) => x.name)).toEqual(['ค่าหมอ', 'สัตว์เลี้ยง']);
     await toggleCategoryHidden(d, c.id);
     expect((await d.logCategories.get(c.id))!.hidden).toBe(true);
-    const a = item('variable', 'ยา', 300), b = item('variable', 'ยิม', 900, { logCategoryIds: [c.id] });
+    // หมวดหนึ่งใช้งบได้รายการเดียว: เลือกงบใหม่ = ย้ายออกจากงบเดิม · null = นอกงบ
+    const a = item('variable', 'ยา', 300), b = item('variable', 'ยิม', 900, { logCategoryIds: [c.id, 'c-fun'] });
     await d.planItems.bulkPut([a, b]);
-    await setCategoryLinks(d, c.id, [a.id]);
-    expect([(await d.planItems.get(a.id))!.logCategoryIds, (await d.planItems.get(b.id))!.logCategoryIds]).toEqual([[c.id], []]);
+    await setCategoryBudget(d, c.id, a.id);
+    expect([(await d.planItems.get(a.id))!.logCategoryIds, (await d.planItems.get(b.id))!.logCategoryIds]).toEqual([[c.id], ['c-fun']]);
+    await setCategoryBudget(d, c.id, null);
+    expect((await d.planItems.get(a.id))!.logCategoryIds).toEqual([]);
   });
 });
 

@@ -9,12 +9,13 @@ import { formatBaht } from '../../calc/money';
 import { expensesIn, categoryBudget } from '../../calc/log';
 import { cycleForDate, datePickNote, effectiveStart, evalAmount, pickerCells, planLabelOf } from '../../calc/logView';
 import { goalAwareAmountOf } from '../../calc/goals';
-import { addEntry, linkCategoryFirst, updateEntry } from '../../db/logActions';
+import { addEntry, updateEntry } from '../../db/logActions';
 import { Icon } from '../../components/Icon';
 import { thaiMonthLong } from '../plan/planUi';
 import { CatIcon, catStyle } from './catIcon';
 import { useLogData, dayFull } from './useLogData';
 import { LgSheet } from './EntrySheet';
+import { CatForm } from './LogCats';
 
 const fmt = (s: number) => (s % 100 === 0 ? formatBaht(s, { decimals: false }) : formatBaht(s));
 const dm = (d: string) => thaiDate(d).split(' ').slice(0, 2).join(' ');
@@ -34,7 +35,7 @@ export default function LogAdd() {
   const [cat, setCat] = useState<Record<LogType, string>>({ expense: '', income: '' });
   const [kb, setKb] = useState(false);
   const [pick, setPick] = useState(false);
-  const [askLink, setAskLink] = useState<{ itemId: string; itemName: string; catId: string; catName: string } | null>(null);
+  const [addCat, setAddCat] = useState(false);
   if (!data?.settings) return null;
   const s = data.settings;
   const editing = editId ? data.entries.find((e) => e.id === editId) : undefined;
@@ -88,11 +89,6 @@ export default function LogAdd() {
     const input = { type, amount, categoryId: catId, date, note, cycleMonth: cycle !== cycleOf(date, s.pay) ? cycle : null };
     if (editing) {
       await updateEntry(db, editing.id, input);
-      const item = editing.planItemId ? data.items.find((i) => i.id === editing.planItemId) : null;
-      if (item && editing.categoryId !== catId && item.logCategoryIds[0] !== catId) {
-        setAskLink({ itemId: item.id, itemName: item.name, catId, catName: data.categories.find((c) => c.id === catId)?.name ?? '' });
-        return;
-      }
     } else await addEntry(db, input);
     nav('/log', { replace: true });
   };
@@ -134,12 +130,12 @@ export default function LogAdd() {
       ) : (
         <div className="lga-bud off" role="status">
           <span className="t"><Icon name="alert" size={16} stroke={2} />นอกงบ</span>
-          <span className="s">หมวดนี้ยังไม่ผูกกับงบไหน · <span className="nw">ผูกได้ที่แผน ในรายการที่จะหักงบ</span></span>
+          <span className="s">หมวดนี้ยังไม่ได้เลือกงบ · <span className="nw">เลือกได้ที่ "แก้หมวด"</span></span>
         </div>
       )}
 
       <section className="lga-cats" aria-label="หมวด">
-        <div className="h"><h2>หมวด</h2><Link to={`/log/cats?type=${type}`}>แก้หมวด</Link></div>
+        <div className="h"><h2>หมวด</h2><Link to={`/log/cats?type=${type}`} className="lga-edcat"><Icon name="edit" size={16} stroke={2.2} />แก้หมวด</Link></div>
         <div className={`lga-grid${E ? '' : ' inc'}`}>
           {cats.map((c) => (
             <button key={c.id} aria-label={c.name} aria-pressed={c.id === catId} onClick={() => setCat({ ...cat, [type]: c.id })}>
@@ -147,7 +143,7 @@ export default function LogAdd() {
               <span className="n">{c.name}</span>
             </button>
           ))}
-          <Link to={`/log/cats?type=${type}`} aria-label="เพิ่มหมวด" className="add"><span><Icon name="plus" size={20} stroke={2} /></span>เพิ่มหมวด</Link>
+          <button aria-label="เพิ่มหมวด" className="add" onClick={() => setAddCat(true)}><span><Icon name="plus" size={20} stroke={2} /></span>เพิ่มหมวด</button>
         </div>
       </section>
 
@@ -171,18 +167,10 @@ export default function LogAdd() {
         </div>
       </>}
 
+      {addCat && <CatForm data={data} type={type} cat={null} onClose={() => setAddCat(false)} onAdded={(c) => setCat({ ...cat, [type]: c.id })} />}
+
       {pick && <DatePick date={date} today={today} minDate={minDate} cycleFor={cycleFor} kind={E ? 'exp' : 'inc'} pay={s.pay} days={new Set(data.entries.map((e) => e.date))} onPick={(d) => { setDate(d); setPick(false); }} onClose={() => setPick(false)} />}
 
-      {askLink && (
-        <LgSheet label="ใช้หมวดนี้กับรายการในแผน" onClose={() => nav('/log', { replace: true })}>
-          <div className="lg-sh-h"><span className="t"><h2>ใช้หมวด "{askLink.catName}" กับ "{askLink.itemName}" ในเดือนถัดไปไหม</h2>
-            <span>การ์ด "จ่ายหรือยัง" ครั้งหน้าจะบันทึกเป็นหมวดนี้ให้เลย</span></span></div>
-          <div className="lg-2">
-            <button className="out" onClick={() => nav('/log', { replace: true })}>ไม่ต้อง</button>
-            <button className="pri" onClick={async () => { await linkCategoryFirst(db, askLink.itemId, askLink.catId); nav('/log', { replace: true }); }}>ใช้หมวดนี้</button>
-          </div>
-        </LgSheet>
-      )}
     </main>
   );
 }

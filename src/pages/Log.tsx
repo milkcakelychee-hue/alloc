@@ -20,6 +20,8 @@ import { weekday } from '../calc/payday';
 
 export const dm = (d: string) => thaiDate(d).split(' ').slice(0, 2).join(' ');
 const WD = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+/** ยอดเหลือยาว (หลักหมื่นมีสตางค์) ย่อให้พอดีช่องซ้ายที่ 375 */
+const heroFont = (t: string) => (t.length >= 10 ? 32 : t.length >= 9 ? 36 : t.length >= 8 ? 40 : undefined);
 
 export default function Log() {
   const [sp] = useSearchParams();
@@ -59,7 +61,9 @@ function LogCalendar() {
   const exp = expensesIn(data.entries, cycle, s.pay);
   const parts = dailyBudgetParts(data.groups, data.items, exp, cycle, amountOf);
   const budget = parts.reduce((a, p) => a + p.budget, 0);
-  const spentB = parts.reduce((a, p) => a + p.spent, 0);
+  // รวมยอดรายการละครั้ง (หมวดหนึ่งใช้งบได้งบเดียว)
+  const budCats = new Set(parts.flatMap((p) => p.cats));
+  const spentB = exp.filter((e) => budCats.has(e.categoryId)).reduce((a, e) => a + e.myShare, 0);
   const remaining = budget - spentB;
   const notStarted = isCur && today < r.start; // ตั้งรอบเริ่มใช้แอปไว้ล่วงหน้า ยังไม่ถึงวันแรก
   const daysLeft = notStarted ? daysBetween(r.start, r.end) + 1 : isCur ? daysBetween(today, r.end) : 0;
@@ -105,17 +109,20 @@ function LogCalendar() {
       </div>
 
       <section className="lg-hero" aria-label="งบใช้จ่ายรายวันรอบนี้">
-        <span className="cap">งบใช้จ่ายรายวัน · <span className="nw">คิดเฉพาะรายจ่ายผันแปร</span><span className="nw">ที่ผูกหมวดไว้</span></span>
-        {budget > 0 ? <>
+        <h2 className="ttl">งบใช้จ่ายรายวัน</h2>
+        {budget > 0 ? (
           <div className="top">
             <span className="l"><span className="k">{remaining < 0 ? 'ใช้เกินงบ' : 'เหลือ'}</span>
-              <span className="v num"><b className={remaining < 0 ? 'over' : ''}>{baht(Math.abs(remaining))}</b><span> / {baht(budget)}</span></span></span>
-            {isCur && remaining > 0 && <span className="r"><span className="k">ใช้ได้วันละ</span><b className="num">~{baht(Math.round(perDay / 100) * 100)}</b></span>}
+              <b className={`v num${remaining < 0 ? ' over' : ''}`} style={{ fontSize: heroFont(baht(Math.abs(remaining))) }}>{baht(Math.abs(remaining))}</b>
+              <span className="s num">จากงบ {baht(budget)}</span></span>
+            {isCur && <span className="r"><span className="k">ใช้ได้วันละ</span>
+              <b className="num">{remaining > 0 ? `~${baht(Math.round(perDay / 100) * 100)}` : '0'}</b>
+              <span className="s num">{notStarted ? `${daysLeft} วันในรอบ` : daysLeft === 0 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></span>}
           </div>
-          {isCur && <span className="foot num">{notStarted ? `${daysLeft} วันในรอบ` : daysLeft === 0 ? 'วันสุดท้ายของรอบ' : `อีก ${daysLeft} วันหลังจากวันนี้`}</span>}
-        </> : (
-          <span style={{ fontSize: 15, lineHeight: 1.55 }}>ยังไม่มีงบ · <span className="nw">ผูกหมวดบันทึกกับรายจ่ายผันแปร</span> <span className="nw">ในแท็บแผน</span></span>
+        ) : (
+          <span style={{ fontSize: 15, lineHeight: 1.55 }}>ยังไม่มีงบ · <span className="nw">เลือกงบให้หมวด</span> <span className="nw">ที่ "แก้หมวด"</span></span>
         )}
+        <span className="hn"><Icon name="info" size={18} stroke={2} /><span>นับเฉพาะ<span className="nw">หมวดที่เลือกงบรายจ่ายผันแปรไว้</span></span></span>
       </section>
 
       {(parts.length > 0 || offCats.length > 0) && (
@@ -126,7 +133,7 @@ function LogCalendar() {
             <span className="cv" style={{ transform: budOpen ? 'rotate(180deg)' : undefined }}><Icon name="chevDown" size={18} stroke={2} /></span>
           </button>
           {budOpen && <div id="lg-bud-list" className="list-in">
-          <span className="hint">จดในหมวดที่ผูก <span className="nw">ยอดหักจากงบนั้น</span></span>
+          <span className="hint">จดในหมวดไหน <span className="nw">หักจากงบที่หมวดนั้นเลือกไว้</span></span>
           {parts.map((p) => {
             const left = p.budget - p.spent;
             return (
@@ -134,7 +141,7 @@ function LogCalendar() {
                 <div className="r1"><span className="n">{p.item.name}</span>
                   <span className={`num v${left < 0 ? ' over' : ''}`}>{left < 0 ? `เกิน ${baht(-left)}` : `เหลือ ${baht(left)}`}</span></div>
                 <span className="bar" aria-hidden="true"><span className={left < 0 ? 'over' : ''} style={{ width: `${Math.min(100, p.budget ? (p.spent / p.budget) * 100 : 0)}%` }} /></span>
-                <div className="r2"><span className="cats">{p.item.logCategoryIds.map((id) => catOf(id)).filter(Boolean).map((c) => <span key={c!.id} className="chip" style={catStyle(c)}>{c!.name}</span>)}</span>
+                <div className="r2"><span className="cats">{p.cats.map((id) => catOf(id)).filter(Boolean).map((c) => <span key={c!.id} className="chip" style={catStyle(c)}>{c!.name}</span>)}</span>
                   <span className="num s">{baht(p.spent)} / {baht(p.budget)}</span></div>
               </div>
             );
@@ -143,7 +150,7 @@ function LogCalendar() {
             <div className="bd off">
               <div className="r1"><span className="n">นอกงบ</span><span className="num v">{baht(off)}</span></div>
               <div className="r2"><span className="cats">{offCats.map((c) => <span key={c.id} className="chip" style={catStyle(c)}>{c.name}</span>)}</span>
-                <span className="s">ยังไม่ผูกกับงบไหน</span></div>
+                <span className="s">ยังไม่ได้เลือกงบ</span></div>
             </div>
           )}
           </div>}
@@ -156,7 +163,7 @@ function LogCalendar() {
         <div><span className="k">จ่ายไปแล้ว</span><span className="v exp num">{baht(spentAll)}</span><span className="s">ทุกรายการที่จด</span></div>
         <div><span className="k">ใช้นอกงบ<button className="lg-q" aria-label="ใช้นอกงบคืออะไร" aria-expanded={tip} onClick={() => setTip(!tip)}>?</button></span>
           <span className="v num">{baht(off)}</span><span className="s">อยู่ในยอดจ่ายแล้ว</span>
-          {tip && <div className="lg-tip" role="tooltip" onClick={() => setTip(false)}>ใช้นอกงบ คือส่วนหนึ่งของ "จ่ายไปแล้ว" ที่จดในหมวดซึ่งไม่ได้ผูกกับรายการในแผน เช่น ซื้อของที่ไม่ได้ตั้งงบ หรือจ่ายเกินจากที่วางแผน ไม่รวมรายการที่อยู่ในแผนแล้ว แตะ ? อีกครั้งเพื่อปิด</div>}
+          {tip && <div className="lg-tip" role="tooltip" onClick={() => setTip(false)}>ใช้นอกงบ คือส่วนหนึ่งของ "จ่ายไปแล้ว" ที่จดในหมวดซึ่งยังไม่ได้เลือกงบ เช่น ซื้อของที่ไม่ได้ตั้งงบ หรือจ่ายเกินจากที่วางแผน ไม่รวมรายการที่อยู่ในแผนแล้ว แตะ ? อีกครั้งเพื่อปิด</div>}
         </div>
       </div>
 

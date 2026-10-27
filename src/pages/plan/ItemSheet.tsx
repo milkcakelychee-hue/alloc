@@ -1,11 +1,8 @@
 // แผ่นแก้/เพิ่มรายการในแผน (ต้นแบบ PlanSheet + PlanPeriod + LogCatPick)
 // ทุกการเปลี่ยนเงินในแผนต้องกดยืนยัน: แสดงผลกระทบต่อเงินเหลือก่อนกดบันทึก
 import { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { entryCycle } from '../../calc/log';
 import { MoneyInput } from '../../components/MoneyInput';
 import { db } from '../../db/db';
-import { ICON_DEFAULT_CATEGORIES } from '../../db/defaults';
 import type { Month, PlanItem, PlanPeriod } from '../../db/types';
 import { addMonths, localToday, monthDiff, thaiMonth } from '../../calc/dates';
 import { formatBaht, parseBaht, formatWhole } from '../../calc/money';
@@ -14,16 +11,15 @@ import { goalAwareAmountOf } from '../../calc/goals';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
 import type { PlanData } from './usePlanData';
-import { ITEM_ICONS, QUICK_ICONS, TONE, catIconOf, iconOf, thaiMonthLong, type IconName } from './planUi';
+import { ITEM_ICONS, QUICK_ICONS, TONE, iconOf, thaiMonthLong, type IconName } from './planUi';
 
-type View = 'main' | 'icons' | 'group' | 'cats' | 'account' | 'period' | 'due' | 'delete';
+type View = 'main' | 'icons' | 'group' | 'account' | 'period' | 'due' | 'delete';
 type Props = { data: PlanData; month: Month; current: Month; item: PlanItem | null; groupId: string; onClose: () => void };
 
 const shortM = (m: Month) => thaiMonth(m);
-const bahtShort = (v: number) => formatBaht(v, { decimals: v % 100 !== 0 });
 
 export function ItemSheet({ data, month, current, item, groupId, onClose }: Props) {
-  const { groups, items, accounts, categories, goals, adjustments } = data;
+  const { groups, items, accounts, goals, adjustments } = data;
   const isNew = !item;
   const [view, setView] = useState<View>('main');
   const [name, setName] = useState(item?.name ?? '');
@@ -32,22 +28,18 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
   const [amountText, setAmountText] = useState(item ? formatBaht(startAmt) : '');
   const [scope, setScope] = useState<'month' | 'from'>(item && month in item.monthOverrides ? 'month' : 'from');
   const [gid, setGid] = useState(item?.groupId ?? groupId);
-  const [cats, setCats] = useState<string[]>(item?.logCategoryIds ?? []);
-  const [catsTouched, setCatsTouched] = useState(!isNew);
   const [accountId, setAccountId] = useState<string | null>(item?.accountId ?? null);
   const [period, setPeriod] = useState<PlanPeriod>(item?.period ?? { start: month, endMode: 'none' });
   const [dueDay, setDueDay] = useState<number | null>(item?.dueDay ?? null);
   const [newAcc, setNewAcc] = useState('');
   const [busy, setBusy] = useState(false);
-  const [help, setHelp] = useState<'cats' | 'acc' | 'due' | null>(null);
-  const logs = useLiveQuery(() => db.logEntries.toArray());
+  const [help, setHelp] = useState<'acc' | 'due' | null>(null);
 
   const group = groups.find((g) => g.id === gid)!;
   const kind = group.kind;
   const amount = parseBaht(amountText);
   const amountBad = amountText.trim() !== '' && (amount === null || amount < 0);
   const expenseLike = kind === 'fixed' || kind === 'variable' || kind === 'goalSpend';
-  const effCats = catsTouched ? cats : ICON_DEFAULT_CATEGORIES[icon] ?? [];
 
   // รายการหลังแก้ (ใช้คำนวณผลกระทบ และบันทึก)
   const build = (preview = false): PlanItem | null => {
@@ -57,7 +49,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
       ? { ...item }
       : { id: crypto.randomUUID(), createdAt: now, updatedAt: now, groupId: gid, name: '', icon: 'other', defaultAmount: amount, monthOverrides: {},
           period, accountId: null, goalId: null, logCategoryIds: [], order: Math.max(0, ...items.map((i) => i.order)) + 1, dueDay: null };
-    let next: PlanItem = { ...base, name: name.trim(), icon, groupId: gid, logCategoryIds: expenseLike ? effCats : [], accountId: kind === 'income' ? null : accountId,
+    let next: PlanItem = { ...base, name: name.trim(), icon, groupId: gid, logCategoryIds: expenseLike ? item?.logCategoryIds ?? [] : [], accountId: kind === 'income' ? null : accountId,
       period, dueDay: kind === 'income' ? null : dueDay, updatedAt: now };
     if (item) next = applyAmountChange(next, month, amount, scope);
     return next;
@@ -123,34 +115,6 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
       ))}
     </div>
   ));
-
-  if (view === 'cats') {
-    const usedBy = (cid: string) => items.filter((i) => i.id !== item?.id && i.logCategoryIds.includes(cid)).map((i) => i.name);
-    return sub('งบนี้นับจากหมวดไหน', (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>ติ๊กหมวดที่ใช้จ่ายจากงบ <b style={{ color: 'var(--ink)' }}>"{name || 'รายการนี้'}"</b> · จดรายจ่ายใน<span className="nw">เมนู บันทึก</span>ด้วยหมวดเหล่านี้ <span className="nw">ยอดจะหักจากงบนี้</span> · <span className="nw">หมวดที่ไม่ได้ผูกกับงบไหน = นอกงบ</span>{kind === 'variable' && <> · <span className="nw">หมวดแรกที่ติ๊ก</span>ใช้ตอนติ๊กจ่ายแล้ว<span className="nw">บันทึกให้อัตโนมัติ</span></>}</p>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="muted num" style={{ fontSize: 13 }}>เลือกแล้ว {effCats.length} หมวด</span>
-          <button className="link-btn" onClick={() => { setCats(ICON_DEFAULT_CATEGORIES[icon] ?? []); setCatsTouched(true); }}>ใช้ค่าเริ่มต้นตามไอคอน</button>
-        </div>
-        <div className="list">
-          {categories.filter((c) => c.type === 'expense' && !c.hidden).map((c) => {
-            const on = effCats.includes(c.id);
-            const others = usedBy(c.id);
-            return (
-              <button key={c.id} className="row" role="checkbox" aria-checked={on}
-                onClick={() => { setCats(on ? effCats.filter((x) => x !== c.id) : [...effCats, c.id]); setCatsTouched(true); }}>
-                <span className="ic" style={{ background: c.bg, color: c.fg }}><Icon name={catIconOf(c.icon)} size={18} stroke={2} /></span>
-                <span className="tx"><span className="t1">{c.name}</span>{others.length > 0 && <span className="t2">ใช้กับ {others[0]}{others.length > 1 ? ` +${others.length - 1}` : ''}</span>}</span>
-                <span className={`cbox${on ? ' on' : ''}`} aria-hidden="true">{on && <Icon name="checkSq" size={14} stroke={3} />}</span>
-              </button>
-            );
-          })}
-        </div>
-        <button className="btn btn-pri" onClick={() => setView('main')}>ใช้ {effCats.length} หมวดนี้</button>
-      </div>
-    ));
-  }
 
   if (view === 'account') return sub('แยกบัญชี', (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -228,15 +192,6 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
     </div>
   ));
 
-  const catChips = effCats.map((c) => categories.find((x) => x.id === c)).filter(Boolean);
-  // งบนี้ใช้ไปเท่าไหร่ในเดือนที่แก้: รายจ่ายในหมวดที่ผูก (หมวดที่ใช้ร่วมกับรายการอื่น นับรวมงบของรายการนั้นด้วย)
-  const shared = items.filter((i) => i.id !== item?.id && i.logCategoryIds.some((c) => effCats.includes(c)));
-  const use = amount !== null && logs && data.settings ? (() => {
-    const cats = new Set([...effCats, ...shared.flatMap((i) => i.logCategoryIds)]);
-    const spent = logs.filter((e) => e.type === 'expense' && cats.has(e.categoryId) && entryCycle(e, data.settings!.pay) === month).reduce((a, e) => a + e.myShare, 0);
-    const budget = amount + shared.reduce((a, i) => a + amountOfWith(afterItems)(i, month), 0);
-    return { spent, budget, left: budget - spent };
-  })() : null;
   const diff = after - before;
   return (
     <Sheet title={isNew ? 'เพิ่มรายการ' : 'แก้รายการ'} tone={TONE[kind]} onClose={onClose}>
@@ -297,23 +252,6 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
 
         {next && <MonthStrip item={next} before={item} month={month} amountOf={amountOfWith(afterItems)} />}
 
-        {expenseLike && (
-          <button className="pl-link" onClick={() => setView('cats')} aria-label="เลือกหมวดที่นับเข้างบนี้">
-            <span className="h"><span className="t">งบนี้นับจากหมวดไหน</span><Icon name="chevron" size={16} stroke={2} /></span>
-            <span className="flow">
-              {catChips.length ? catChips.map((c) => <span key={c!.id} className="chip" style={{ background: c!.bg, color: c!.fg }}>{c!.name}</span>) : <span className="chip none">ยังไม่ผูกหมวด</span>}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="ar"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-              <span className="chip goal num">งบ{name.trim() || 'รายการนี้'} {amount !== null ? bahtShort(amount) : ''}</span>
-            </span>
-            <span className="d">{catChips.length ? <>จดรายจ่ายในหมวดเหล่านี้ <span className="nw">ยอดจะหักจากงบนี้</span>{shared.length > 0 && <> · <span className="nw">ใช้งบร่วมกับ {shared.map((i) => i.name).join(', ')}</span></>}</> : <>จดรายจ่ายหมวดไหนก็ไม่หักงบนี้ <span className="nw">แตะเพื่อเลือกหมวด</span></>}</span>
-            {use && catChips.length > 0 && <>
-              <span className="bar" aria-hidden="true"><span className={use.left < 0 ? 'over' : ''} style={{ width: `${Math.min(100, use.budget ? (use.spent / use.budget) * 100 : 0)}%` }} /></span>
-              <span className="d num">{shortM(month)} ใช้ไป {bahtShort(use.spent)} · {use.left < 0 ? `เกิน ${bahtShort(-use.left)}` : `เหลือ ${bahtShort(use.left)}`}</span>
-            </>}
-            {kind === 'variable' && <span className="auto"><Icon name="checkSq" size={14} stroke={2.4} /><span>ติ๊กจ่ายแล้ว บันทึกรายจ่ายให้ในหมวด <b>{catChips[0]?.name ?? 'อื่น ๆ'}</b></span></span>}
-          </button>
-        )}
-
         <div className="list form-rows">
           <button className="row hr-plain" onClick={() => setView('group')}><span className="help-space" aria-hidden="true" /><span className="tx"><span className="t1 lab">หมวด</span></span><span className="val">{group.name}</span><Icon name="chevron" size={16} stroke={2} /></button>
           {kind !== 'income' && (
@@ -326,7 +264,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
             <HelpRow id="h-due" open={help === 'due'} onHelp={() => setHelp(help === 'due' ? null : 'due')} onOpen={() => setView('due')}
               label="ครบกำหนดวันที่" sub="ใส่หรือไม่ใส่ก็ได้"
               value={<span className="val num">{dueDay ? `ทุกวันที่ ${dueDay}` : 'ไม่กำหนด'}</span>}
-              help={<>เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span> ในหน้าหลัก ติ๊กจ่ายแล้ว <span className="nw">รายจ่ายผันแปร</span>แอป<span className="nw">บันทึกในเมนู บันทึก</span>ให้เอง ด้วยยอดในแผนและหมวดแรกที่ผูกไว้ · <span className="nw">รายจ่ายคงที่ติ๊กอย่างเดียว</span></>} />
+              help={<>เมื่อถึงวันจะมี<span className="nw">การ์ด "จ่ายหรือยัง"</span> ในหน้าหลัก ติ๊กจ่ายแล้ว<span className="nw">เพื่อจำว่าแบ่งเงินก้อนนี้แล้ว</span> · <span className="nw">ไม่ลงบันทึก</span></>} />
           )}
         </div>
 
