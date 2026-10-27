@@ -46,8 +46,8 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
   const effCats = catsTouched ? cats : ICON_DEFAULT_CATEGORIES[icon] ?? [];
 
   // รายการหลังแก้ (ใช้คำนวณผลกระทบ และบันทึก)
-  const build = (): PlanItem | null => {
-    if (amount === null || amount < 0 || !name.trim()) return null;
+  const build = (preview = false): PlanItem | null => {
+    if (amount === null || amount < 0 || (!preview && !name.trim())) return null;
     const now = Date.now();
     const base: PlanItem = item
       ? { ...item }
@@ -59,10 +59,12 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
     return next;
   };
   const next = build();
+  const draft = build(true); // ใช้ดูผลต่อเงินเหลือทันทีที่กรอกยอด แม้ยังไม่ใส่ชื่อ
   const amountOfWith = (list: PlanItem[]) => goalAwareAmountOf(goals, list, adjustments, current);
   const before = planTotals(groups, items, month, amountOfWith(items)).leftover;
   const afterItems = next ? (item ? items.map((i) => (i.id === item.id ? next : i)) : [...items, next]) : items;
-  const after = planTotals(groups, afterItems, month, amountOfWith(afterItems)).leftover;
+  const draftItems = draft ? (item ? items.map((i) => (i.id === item.id ? draft : i)) : [...items, draft]) : items;
+  const after = planTotals(groups, draftItems, month, amountOfWith(draftItems)).leftover;
 
   const save = async () => {
     if (!next) return;
@@ -244,6 +246,13 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
           <MoneyInput className="num amt"  autoComplete="off" placeholder="0.00" value={amountText} aria-invalid={amountBad}
             onChange={(e) => setAmountText(e.target.value)} onBlur={() => amount !== null && setAmountText(formatBaht(amount))} />
           {amountBad && <span className="err">ใส่ตัวเลข ทศนิยมไม่เกิน 2 ตำแหน่ง</span>}
+          {draft && amountText.trim() !== '' && (
+            <span className={`amt-impact num${after < 0 ? ' isneg' : ''}`} aria-live="polite">
+              {after < 0 && <Icon name="alert" size={15} stroke={2} />}
+              <span className="nw">{isNew ? 'ถ้าเพิ่มแผนนี้' : 'ถ้าแก้ยอดนี้'} เงินเหลือ {shortM(month)}</span>
+              <span className="nw">{diff !== 0 && <><span>{formatBaht(before)}</span> <span className="ar">→</span> </>}<b className="af">{formatBaht(after)}</b></span>
+            </span>
+          )}
         </label>
 
         {item && (
@@ -300,11 +309,6 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
           )}
         </div>
 
-        {next && diff !== 0 && (
-          <div className={`note${after < 0 ? ' warn' : ''}`}><Icon name="info" size={16} stroke={2} />
-            <span>เงินเหลือ <span className="num nw">{shortM(month)}</span> จะเปลี่ยนจาก <b className="num">{formatBaht(before)}</b> เป็น <b className="num">{formatBaht(after)}</b></span>
-          </div>
-        )}
         <button className="btn btn-pri" disabled={!next || busy} onClick={save}>{isNew ? 'เพิ่มในแผน' : 'บันทึก'}</button>
         {!isNew && <button className="btn text-danger" onClick={() => setView('delete')}>ลบหรือหยุดรายการนี้</button>}
       </div>

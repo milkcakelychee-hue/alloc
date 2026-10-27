@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assetsSummary, incomeSplit, planNextPrompt } from './home';
+import { assetsChange, assetsSummary, incomeSplit, planNextPrompt } from './home';
 import { planTotals } from './plan';
 import { B, adj, goal, groups, item } from './testkit';
 
@@ -17,6 +17,20 @@ describe('หน้าหลัก สรุป', () => {
     expect(a).toMatchObject({ saving: B(15000), invest: B(40350), total: B(55350), savingPct: 27.1, investPct: 72.9 });
     expect(assetsSummary([], []).investPct).toBe(0);
     expect(assetsSummary(gs, [adj(gs[0].id, -15000)]).total).toBe(B(40350));
+  });
+
+  it('สินทรัพย์รวมเปลี่ยนในรอบนี้: นับเฉพาะเงินเก็บ + ลงทุน ของรอบเดียวกัน', () => {
+    const pay = { kind: 'day' as const, day: 25 };
+    const gs = [goal('saving', 'เงินสำรอง', 25000, 12000), goal('invest', 'กองทุน A', 48000, 28000), goal('pvd', 'PVD', 80000, 60000)];
+    const list = [
+      { ...adj(gs[0].id, 6000, 'planDeposit'), cycleMonth: '2026-11' }, // ฝากตามแผนรอบ พ.ย.
+      { ...adj(gs[1].id, 1500.25), date: '2026-11-02' }, // ปรับยอดในรอบ พ.ย.
+      { ...adj(gs[1].id, -500), date: '2026-10-26' }, // วันที่ 26 ต.ค. = รอบ พ.ย. (เงินเข้า 25)
+      { ...adj(gs[0].id, 3000), date: '2026-10-10' }, // รอบ ต.ค. ไม่นับ
+      { ...adj(gs[2].id, 2000, 'planDeposit'), cycleMonth: '2026-11' } // PVD ไม่อยู่ในสินทรัพย์รวม
+    ];
+    expect(assetsChange(gs, list, '2026-11', pay)).toBe(B(7000.25));
+    expect(assetsChange(gs, [], '2026-11', pay)).toBe(0);
   });
 
   it('Savings Rate 32.3% · ออม 19.4% ลงทุน 12.9% รายจ่าย 64.0%', () => {

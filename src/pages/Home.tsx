@@ -8,7 +8,7 @@ import { appCycle, localToday, thaiMonth } from '../calc/dates';
 import { formatBaht } from '../calc/money';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
-import { assetsSummary, incomeSplit, planNextPrompt } from '../calc/home';
+import { assetsChange, assetsSummary, incomeSplit, planNextPrompt } from '../calc/home';
 import { backupStatus } from '../calc/reminders';
 import { Icon } from '../components/Icon';
 import { dateWithDay } from '../components/PayRuleFields';
@@ -40,6 +40,7 @@ function Summary() {
   const cur = appCycle(today, s.pay, s.startCycle);
   const amountOf = goalAwareAmountOf(goals, items, adjustments, cur);
   const a = assetsSummary(goals, adjustments);
+  const chg = assetsChange(goals, adjustments, cur, s.pay);
   const sp = incomeSplit(planTotals(groups, items, cur, amountOf));
   const hide = s.hideNumbers;
   const [int, dec] = formatBaht(a.total).split('.');
@@ -86,6 +87,10 @@ function Summary() {
           </button>
         </div>
         <div className="as-v num">{hide ? <span className="big">{HIDDEN}</span> : <><span className="big">{int}</span><span className="dec">.{dec}</span></>}<span className="u">บาท</span></div>
+        <div className="as-chg num">
+          <span className={`p${chg < 0 ? ' dn' : ''}`}><Icon name={chg < 0 ? 'chevDown' : 'upRight'} size={13} stroke={2.4} />{hide ? HIDDEN : `${chg < 0 ? '−' : '+'}${formatBaht(Math.abs(chg))}`}</span>
+          <span className="k">เดือนนี้ <span className="nw">(รอบ {thaiMonth(cur).split(' ')[0]})</span></span>
+        </div>
         <div className="as-split">
           <svg width="36" height="36" viewBox="0 0 36 36" role="img" aria-label={`สัดส่วน เงินเก็บ ${a.savingPct}% ลงทุน ${a.investPct}%`} style={{ flex: 'none' }}>
             {a.total === 0 && <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="6" />}

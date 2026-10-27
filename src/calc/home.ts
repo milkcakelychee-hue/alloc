@@ -13,6 +13,14 @@ export function assetsSummary(goals: Goal[], adjustments: GoalAdjustment[]) {
   return { ...a, savingPct, investPct: a.total ? Math.round((100 - savingPct) * 10) / 10 : 0 };
 }
 
+/** สินทรัพย์รวมเปลี่ยนไปเท่าไหร่ในรอบนี้ (เงินเก็บ + ลงทุน) · นับรายการปรับยอดของรอบ ไม่นับยอดตั้งต้นของเป้า */
+export function assetsChange(goals: Goal[], adjustments: GoalAdjustment[], cycle: Month, pay: PayRule): Satang {
+  const ids = new Set(goals.filter((g) => g.type === 'saving' || g.type === 'invest').map((g) => g.id));
+  let d = 0;
+  for (const a of adjustments) if (ids.has(a.goalId) && (a.cycleMonth ?? cycleOf(a.date, pay)) === cycle) d += a.delta;
+  return d;
+}
+
 /** แบ่งรายรับของรอบตามแผน: ออม / ลงทุน / รายจ่าย (คงที่ + ผันแปร + รายจ่ายตามเป้าหมาย) */
 export function incomeSplit(t: PlanTotals) {
   const expense: Satang = t.fixed + t.variable + t.goalSpend;

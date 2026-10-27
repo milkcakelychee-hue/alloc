@@ -235,6 +235,13 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .neg { color: var(--danger) !important; }
 
 .plan-h2 { display: flex; flex-direction: column; gap: 2px; padding: 12px 2px 0; }
+.plan-h2 .h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sort-btn { display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 12px; border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink2); font-size: 13px; font-weight: 600; }
+.sort-btn.on { background: var(--pri); color: #FFFFFF; box-shadow: none; padding: 0 16px; }
+.irow.paid .ibtn { opacity: .45; }
+.amt-impact { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 9px 12px; border-radius: 12px; background: var(--card2); font-size: 13px; color: var(--ink2); line-height: 1.45; }
+.amt-impact b { font-weight: 700; color: var(--ink); } .amt-impact .ar { color: var(--ink3); }
+.amt-impact.isneg { background: var(--gx-neg-bg); color: var(--gx-neg); } .amt-impact.isneg b.af { color: var(--gx-neg); }
 .plan-h2 h2 { font-size: 20px; font-weight: 600; }
 .plan-h2 p { margin: 0; font-size: 13px; color: var(--ink3); }
 
@@ -598,6 +605,9 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 .as-v { font-weight: 700; letter-spacing: -.8px; line-height: 1.1; color: var(--hero-ink); }
 .as-v .big { font-size: 42px; } .as-v .dec { font-size: 22px; font-weight: 600; }
 .as-v .u { font-size: 15px; font-weight: 500; margin-left: 6px; color: var(--hero-ink2); letter-spacing: 0; }
+.as-chg { display: flex; align-items: center; gap: 8px; margin-top: -4px; font-size: 13px; color: var(--hero-ink2); }
+.as-chg .p { display: inline-flex; align-items: center; gap: 3px; height: 24px; padding: 0 9px 0 7px; border-radius: 999px; background: rgba(198, 228, 63, .18); color: #C6E43F; font-weight: 600; }
+.as-chg .p.dn { background: rgba(255, 255, 255, .12); color: var(--hero-ink); }
 .as-split { display: flex; align-items: center; gap: 14px; padding-top: 14px; margin-top: 2px; border-top: 1px solid rgba(255, 255, 255, .16); }
 .as-legend { flex: 1; display: flex; gap: 14px; flex-wrap: wrap; }
 .as-legend > div { display: flex; align-items: center; gap: 7px; }

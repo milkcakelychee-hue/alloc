@@ -33,6 +33,7 @@ export function PlanMonth() {
   const [month, setMonth] = useState<Month | null>(() => (/^\d{4}-\d{2}$/.test(sp0.get('m') ?? '') ? sp0.get('m') : null)); // ?m= มาจากหน้าเป้าหมาย
   const [editing, setEditing] = useState<Editing>(null);
   const [checkMode, setCheckMode] = useState(false);
+  const [sortMode, setSortMode] = useState(false); // จุด 6 จุดโชว์เฉพาะตอนกดจัดเรียง กันมือไปโดน
   const [showZero, setShowZero] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [payEdit, setPayEdit] = useState(false);
@@ -112,15 +113,16 @@ export function PlanMonth() {
               const it = list.find((x) => x.id === id)!;
               const on = checked.has(it.id);
               const canCheck = checkMode && g.kind !== 'income' && amountOf(it, m) > 0;
+              const paid = on && g.kind !== 'income' && amountOf(it, m) > 0;
               return (
-                <div key={it.id} className="irow" {...dragItem}>
-                  {!checkMode && list.length > 1 && <Grip label={`ลากเพื่อย้าย ${it.name}`} {...dragHandle} />}
+                <div key={it.id} className={`irow${paid ? ' paid' : ''}`} {...dragItem}>
+                  {sortMode && !checkMode && list.length > 1 && <Grip label={`ลากเพื่อย้าย ${it.name}`} {...dragHandle} />}
                   {canCheck && (
                     <button className="icheck" role="checkbox" aria-checked={on} aria-label={`จ่ายแล้ว ${it.name}`} onClick={() => toggleCheck(it)}>
                       <span className={on ? 'on' : ''}>{on && <Icon name="checkSq" size={14} stroke={3} />}</span>
                     </button>
                   )}
-                  <button className="ibtn" style={{ opacity: canCheck && on ? 0.55 : 1 }} onClick={() => setEditing({ item: it, groupId: g.id })}>
+                  <button className="ibtn" onClick={() => setEditing({ item: it, groupId: g.id })}>
                     <span className="iic"><Icon name={iconOf(it.icon)} size={20} /></span>
                     <span className="tx"><span className="t1">{it.name}</span><span className="t2">{subtitle(it)}</span></span>
                     <span className="num iamt">{formatBaht(amountOf(it, m))}</span>
@@ -183,10 +185,12 @@ export function PlanMonth() {
         <div className="sum-left"><span>เงินเหลือตามแผน</span><b className={`num${t.leftover < 0 ? ' neg' : ''}`}>{formatBaht(t.leftover)}</b></div>
       </section>
 
-      <div className="plan-h2"><h2>วางแผนรายหมวด</h2><p>แตะรายการเพื่อแก้ยอด หรือกด + เพื่อเพิ่มรายการในหมวด</p></div>
+      <div className="plan-h2"><div className="h"><h2>วางแผนรายหมวด</h2>
+        <button className={`sort-btn${sortMode ? ' on' : ''}`} aria-pressed={sortMode} onClick={() => { setSortMode(!sortMode); setCheckMode(false); }}>
+          {sortMode ? 'เสร็จ' : <><Icon name="sort" size={16} stroke={2.2} />จัดเรียง</>}</button></div><p>{sortMode ? <>ลากจุด 6 จุด<span className="nw">หน้ารายการเพื่อย้าย</span></> : 'แตะรายการเพื่อแก้ยอด หรือกด + เพื่อเพิ่มรายการในหมวด'}</p></div>
 
       {!checkMode ? (
-        <button className="check-entry" onClick={() => setCheckMode(true)}>
+        <button className="check-entry" onClick={() => { setCheckMode(true); setSortMode(false); }}>
           <span className="ic"><Icon name="checkSq" size={18} stroke={2.4} /></span>
           <span className="tx"><span className="t1">เช็กว่าจ่าย / โอนแล้ว</span><span className="t2 num">ติ๊กไปแล้ว {checkable.filter((i) => checked.has(i.id)).length} จาก {checkable.length} รายการ</span></span>
           <Icon name="chevron" size={16} stroke={2} />
