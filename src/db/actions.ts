@@ -8,11 +8,12 @@ import { syncDeposits } from './goalActions';
 /**
  * ติ๊ก "จ่ายแล้ว" บนการ์ด: ติ๊กในแผน (จ่าย/โอนแล้ว) + บันทึกรายจ่ายในบันทึกให้อัตโนมัติ
  * ยอด = ยอดในแผน · หมวด = หมวดแรกที่ผูกไว้ ถ้าไม่ผูก = "อื่น ๆ" (นอกงบ)
- * รายการออม/ลงทุนไม่ใช่รายจ่าย: ติ๊กอย่างเดียว ไม่บันทึก
+ * รายการออม/ลงทุน/รายจ่ายตามเป้าหมาย (กันเงินเข้าเป้า) ไม่ใช่รายจ่าย: ติ๊กอย่างเดียว ไม่บันทึก
+ * ใช้ทั้งการ์ดในหน้าหลักและ "เช็กว่าจ่าย / โอนแล้ว" ในหน้าแผน
  */
 export async function markDuePaid(db: AllocDB, opts: { item: PlanItem; kind: GroupKind; cycle: Month; amount: Satang; today: DateStr; now?: number }) {
   const now = opts.now ?? Date.now();
-  const logs = opts.kind !== 'saving' && opts.kind !== 'invest';
+  const logs = opts.kind === 'fixed' || opts.kind === 'variable';
   return db.transaction('rw', db.paidChecks, db.logEntries, async () => {
     let logEntryId: string | null = null;
     if (logs) {
@@ -30,6 +31,16 @@ export async function markDuePaid(db: AllocDB, opts: { item: PlanItem; kind: Gro
 }
 
 /** ลบรายการในบันทึก · ถ้าบันทึกมาจากการ์ด "จ่ายหรือยัง" ยกเลิกติ๊กจ่ายแล้วด้วย (การ์ดกลับมาถ้ายังอยู่ในช่วงครบกำหนด) */
+/** ยกเลิกติ๊กจ่ายแล้ว: เอาติ๊กออก + ลบรายจ่ายที่บันทึกให้อัตโนมัติ */
+export async function unmarkPaid(db: AllocDB, cycle: Month, planItemId: string) {
+  await db.transaction('rw', db.paidChecks, db.logEntries, async () => {
+    const id = `${cycle}|${planItemId}`;
+    const c = await db.paidChecks.get(id);
+    if (c?.logEntryId) await db.logEntries.delete(c.logEntryId);
+    await db.paidChecks.delete(id);
+  });
+}
+
 export async function deleteLogEntry(db: AllocDB, id: string) {
   await db.transaction('rw', db.paidChecks, db.logEntries, async () => {
     await db.logEntries.delete(id);

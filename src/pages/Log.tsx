@@ -17,7 +17,6 @@ import { useLogData, dayFull, type LogData } from './log/useLogData';
 import { EntrySheet } from './log/EntrySheet';
 import { weekday } from '../calc/payday';
 
-const STACK = ['#F2A27A', '#8DB8E6', '#C6E43F', '#E8A0C8', '#B9A6F0', '#7FD1B9'];
 export const dm = (d: string) => thaiDate(d).split(' ').slice(0, 2).join(' ');
 const WD = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
 
@@ -44,7 +43,6 @@ function LogCalendar() {
   const [daySel, setDay] = useState<string | null>(null);
   const [open, setOpen] = useState<LogEntry | null>(null);
   const [tip, setTip] = useState(false);
-  const [det, setDet] = useState(false);
   if (!data?.settings) return null;
   const s = data.settings;
   const cur = appCycle(today, s.pay, s.startCycle);
@@ -77,6 +75,8 @@ function LogCalendar() {
   const incomeAll = [...totals.values()].reduce((a, t) => a + t.income, 0);
   const spentAll = exp.reduce((a, e) => a + e.myShare, 0);
   const off = offBudgetTotal(exp, data.items);
+  const linkedAll = new Set(data.items.flatMap((i) => i.logCategoryIds));
+  const offCats = [...new Set(exp.filter((e) => !linkedAll.has(e.categoryId)).map((e) => e.categoryId))].map(catOf).filter((c): c is NonNullable<typeof c> => !!c);
 
   const cells = calendarCells(cycle, s.pay, today, r.start);
   const lastWithData = [...totals.keys()].sort().at(-1) ?? r.end;
@@ -102,25 +102,43 @@ function LogCalendar() {
       </div>
 
       <section className="lg-hero" aria-label="งบใช้จ่ายรายวันรอบนี้">
+        <span className="cap">งบใช้จ่ายรายวัน · <span className="nw">คิดเฉพาะรายจ่ายผันแปร</span><span className="nw">ที่ผูกหมวดไว้</span></span>
         {budget > 0 ? <>
           <div className="top">
-            <span className="l"><span className="k">งบใช้จ่ายรายวัน {remaining < 0 ? 'เกิน' : 'เหลือ'}</span>
+            <span className="l"><span className="k">{remaining < 0 ? 'ใช้เกินงบ' : 'เหลือ'}</span>
               <span className="v num"><b className={remaining < 0 ? 'over' : ''}>{baht(Math.abs(remaining))}</b><span> / {baht(budget)}</span></span></span>
             {isCur && remaining > 0 && <span className="r"><span className="k">ใช้ได้วันละ</span><b className="num">~{baht(Math.round(perDay / 100) * 100)}</b></span>}
           </div>
-          <button className="more" aria-expanded={det} onClick={() => setDet(!det)}>ดูรายละเอียดงบ {det ? '▴' : '▾'}</button>
-          {det && (
-            <div className="det">
-              <span className="stack">{parts.map((p, i) => <span key={p.item.id} style={{ width: `${(Math.min(p.spent, p.budget) / budget) * 100}%`, background: STACK[i % STACK.length] }} />)}</span>
-              <span className="lgd">{parts.map((p, i) => <span key={p.item.id}><i style={{ background: STACK[i % STACK.length] }} />{p.item.name} <b className="num">{baht(p.spent)}</b><span className="num">/{baht(p.budget)}</span></span>)}</span>
-              <span className="foot">งบนี้มาจากรายจ่ายผันแปรในแผน ({parts.map((p) => p.item.name).join(' · ')}){isCur && <> · {notStarted ? `${daysLeft} วันในรอบ` : `อีก ${daysLeft} วันหลังจากวันนี้`}</>}</span>
-            </div>
-          )}
+          {isCur && <span className="foot num">{notStarted ? `${daysLeft} วันในรอบ` : daysLeft === 0 ? 'วันสุดท้ายของรอบ' : `อีก ${daysLeft} วันหลังจากวันนี้`}</span>}
         </> : (
-          <div className="top"><span className="l"><span className="k">งบใช้จ่ายรายวัน</span>
-            <span style={{ fontSize: 15, lineHeight: 1.55 }}>ยังไม่มีงบ · <span className="nw">ผูกหมวดบันทึกกับรายจ่ายผันแปร</span> <span className="nw">ในแท็บแผน</span></span></span></div>
+          <span style={{ fontSize: 15, lineHeight: 1.55 }}>ยังไม่มีงบ · <span className="nw">ผูกหมวดบันทึกกับรายจ่ายผันแปร</span> <span className="nw">ในแท็บแผน</span></span>
         )}
       </section>
+
+      {(parts.length > 0 || offCats.length > 0) && (
+        <section className="lg-budgets" aria-labelledby="lg-bud-h">
+          <div className="h"><h2 id="lg-bud-h">งบแต่ละรายการ</h2><span>จดในหมวดที่ผูก <span className="nw">ยอดหักจากงบนั้น</span></span></div>
+          {parts.map((p) => {
+            const left = p.budget - p.spent;
+            return (
+              <div key={p.item.id} className="bd">
+                <div className="r1"><span className="n">{p.item.name}</span>
+                  <span className={`num v${left < 0 ? ' over' : ''}`}>{left < 0 ? `เกิน ${baht(-left)}` : `เหลือ ${baht(left)}`}</span></div>
+                <span className="bar" aria-hidden="true"><span className={left < 0 ? 'over' : ''} style={{ width: `${Math.min(100, p.budget ? (p.spent / p.budget) * 100 : 0)}%` }} /></span>
+                <div className="r2"><span className="cats">{p.item.logCategoryIds.map((id) => catOf(id)).filter(Boolean).map((c) => <span key={c!.id} className="chip" style={catStyle(c)}>{c!.name}</span>)}</span>
+                  <span className="num s">{baht(p.spent)} / {baht(p.budget)}</span></div>
+              </div>
+            );
+          })}
+          {offCats.length > 0 && (
+            <div className="bd off">
+              <div className="r1"><span className="n">นอกงบ</span><span className="num v">{baht(off)}</span></div>
+              <div className="r2"><span className="cats">{offCats.map((c) => <span key={c.id} className="chip" style={catStyle(c)}>{c.name}</span>)}</span>
+                <span className="s">ยังไม่ผูกกับงบไหน</span></div>
+            </div>
+          )}
+        </section>
+      )}
 
       <h2 className="lg-sumh">สรุปรอบเงินเดือน{isCur ? 'นี้' : ''}</h2>
       <div className="lg-tiles">
@@ -188,12 +206,13 @@ function EntryRow({ e, data, onOpen }: { e: LogEntry; data: LogData; onOpen: () 
   const cat = data.categories.find((c) => c.id === e.categoryId);
   const label = e.type === 'income' ? 'รายรับ' : planLabelOf(e.categoryId, data.items);
   const title = e.note || cat?.name || 'อื่น ๆ';
-  const sub = [e.note ? cat?.name : null, e.type === 'income' ? 'รายรับ' : label ? `งบ${label}` : 'นอกงบ'].filter(Boolean).join(' · ');
+  const sub = e.note ? cat?.name : e.type === 'income' ? 'รายรับ' : '';
   return (
     <li>
       <button className="lg-row" onClick={onOpen}>
         <span className="cat-ic" style={catStyle(cat)}><CatIcon icon={cat?.icon ?? 'other'} /></span>
-        <span className="t"><span>{title}</span><span>{sub}</span></span>
+        <span className="t"><span>{title}</span>
+          <span className="tags">{e.type === 'expense' && <span className={`lg-tag${label ? ' in' : ' out'}`}>{label ? `งบ${label}` : 'นอกงบ'}</span>}{sub && <span>{sub}</span>}</span></span>
         <span className="a"><b className={`num${e.type === 'income' ? ' inc' : ''}`}>{e.type === 'income' ? '+' : ''}{baht(e.type === 'income' ? e.amountPaid : e.myShare)}</b>
           {e.type === 'expense' && e.myShare !== e.amountPaid && <span className="num">จาก {baht(e.amountPaid)}</span>}</span>
       </button>

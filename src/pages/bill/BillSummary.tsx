@@ -1,5 +1,5 @@
 // บิลแชร์ · สร้างสรุปบิล (บอร์ด BillSummary): บิลเดียว / หลายบิล / คนเดียวจากหลายบิล → ใบแจ้งยอดแยกใบต่อคน
-// ส่งออกเป็นข้อความ / รูป / แชร์ (Web Share API)
+// ส่งออกเป็นข้อความ / รูป (ไม่มีปุ่มแชร์ · เจ้าของขอเอาออก)
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ME_ID, type Bill } from '../../db/types';
@@ -16,7 +16,6 @@ type Mode = 'one' | 'many' | 'person';
 const ManyIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 3.5h10v15" /><path d="M5 6.5h10v14l-2-1.3-3 1.3-3-1.3-2 1.3z" /></svg>;
 const PersonIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c1-3.6 3.8-5.5 7-5.5s6 1.9 7 5.5" /></svg>;
 const ImgIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" /><circle cx="9" cy="10" r="1.5" /><path d="m20.5 16-5-5-8 8" /></svg>;
-const ShareIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4" /><path d="M5 13v6h14v-6" /></svg>;
 
 export function BillSummary() {
   const nav = useNavigate();
@@ -77,23 +76,6 @@ export function BillSummary() {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     flash('บันทึกรูปแล้ว');
   };
-  const share = async () => {
-    const targets = mode !== 'person' && ppl.length > 1 ? ppl : view ? [view] : [];
-    if (!targets.length) return;
-    const back = view;
-    try {
-      const files = [];
-      for (const pid of targets) { const f = await toPng(pid); if (f) files.push(f); }
-      if (back && back !== view) setView(back);
-      const text = targets.map((pid) => receiptText(person(pid)?.name ?? '', issued, receiptOf(pid), s.receiveInfo)).join('\n\n');
-      if (files.length && navigator.canShare?.({ files })) await navigator.share({ files, title: 'ใบแจ้งยอด' });
-      else if (navigator.share) await navigator.share({ text, title: 'ใบแจ้งยอด' });
-      else { await navigator.clipboard.writeText(text); flash('เครื่องนี้แชร์ไม่ได้ คัดลอกข้อความให้แล้ว'); }
-    } catch (e) {
-      if ((e as Error).name !== 'AbortError') flash('แชร์ไม่ได้ ลองบันทึกเป็นรูปแทน');
-    }
-  };
-  const shareLab = mode !== 'person' && ppl.length > 1 ? `แชร์ทั้ง ${ppl.length} ใบ` : `แชร์ใบนี้ให้ ${name}`;
 
   return (
     <main className="page lgp lgp-sub bl-sum">
@@ -174,7 +156,6 @@ export function BillSummary() {
         <button className="out" disabled={!r} onClick={copy}><Icon name="copy" size={18} stroke={2} />คัดลอกข้อความ</button>
         <button className="out" disabled={!r} onClick={saveImg}><ImgIcon />บันทึกเป็นรูป</button>
       </div>
-      <button className="bl-share" disabled={!r} onClick={share}><ShareIcon />{shareLab}</button>
       {toast && <div className="toast" role="status">{toast}</div>}
     </main>
   );

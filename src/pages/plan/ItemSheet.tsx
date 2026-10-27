@@ -1,6 +1,8 @@
 // แผ่นแก้/เพิ่มรายการในแผน (ต้นแบบ PlanSheet + PlanPeriod + LogCatPick)
 // ทุกการเปลี่ยนเงินในแผนต้องกดยืนยัน: แสดงผลกระทบต่อเงินเหลือก่อนกดบันทึก
 import { useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { entryCycle } from '../../calc/log';
 import { MoneyInput } from '../../components/MoneyInput';
 import { db } from '../../db/db';
 import { ICON_DEFAULT_CATEGORIES } from '../../db/defaults';
@@ -18,6 +20,7 @@ type View = 'main' | 'icons' | 'group' | 'cats' | 'account' | 'period' | 'due' |
 type Props = { data: PlanData; month: Month; current: Month; item: PlanItem | null; groupId: string; onClose: () => void };
 
 const shortM = (m: Month) => thaiMonth(m);
+const bahtShort = (v: number) => formatBaht(v, { decimals: v % 100 !== 0 });
 
 export function ItemSheet({ data, month, current, item, groupId, onClose }: Props) {
   const { groups, items, accounts, categories, goals, adjustments } = data;
@@ -37,6 +40,7 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
   const [newAcc, setNewAcc] = useState('');
   const [busy, setBusy] = useState(false);
   const [help, setHelp] = useState<'cats' | 'acc' | 'due' | null>(null);
+  const logs = useLiveQuery(() => db.logEntries.toArray());
 
   const group = groups.find((g) => g.id === gid)!;
   const kind = group.kind;
@@ -122,9 +126,9 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
 
   if (view === 'cats') {
     const usedBy = (cid: string) => items.filter((i) => i.id !== item?.id && i.logCategoryIds.includes(cid)).map((i) => i.name);
-    return sub('ผูกกับหมวดในบันทึก', (
+    return sub('งบนี้นับจากหมวดไหน', (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <p className="muted" style={{ margin: 0, fontSize: 13 }}>เวลาจดรายจ่ายใน<span className="nw">เมนู บันทึก</span> ในหมวดที่ติ๊ก ยอดจะนับเข้างบ <b style={{ color: 'var(--ink)' }}>"{name || 'รายการนี้'}"</b> · <span className="nw">หมวดเดียวใช้กับหลายรายการได้</span> งบรวมกัน · <span className="nw">ไม่ผูก = นอกงบ</span></p>
+        <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>ติ๊กหมวดที่ใช้จ่ายจากงบ <b style={{ color: 'var(--ink)' }}>"{name || 'รายการนี้'}"</b> · จดรายจ่ายใน<span className="nw">เมนู บันทึก</span>ด้วยหมวดเหล่านี้ <span className="nw">ยอดจะหักจากงบนี้</span> · <span className="nw">หมวดที่ไม่ได้ผูกกับงบไหน = นอกงบ</span>{kind === 'fixed' && <> · <span className="nw">หมวดแรกที่ติ๊ก</span>ใช้ตอนติ๊กจ่ายแล้ว<span className="nw">บันทึกให้อัตโนมัติ</span></>}</p>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="muted num" style={{ fontSize: 13 }}>เลือกแล้ว {effCats.length} หมวด</span>
           <button className="link-btn" onClick={() => { setCats(ICON_DEFAULT_CATEGORIES[icon] ?? []); setCatsTouched(true); }}>ใช้ค่าเริ่มต้นตามไอคอน</button>
@@ -225,6 +229,14 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
   ));
 
   const catChips = effCats.map((c) => categories.find((x) => x.id === c)).filter(Boolean);
+  // งบนี้ใช้ไปเท่าไหร่ในเดือนที่แก้: รายจ่ายในหมวดที่ผูก (หมวดที่ใช้ร่วมกับรายการอื่น นับรวมงบของรายการนั้นด้วย)
+  const shared = items.filter((i) => i.id !== item?.id && i.logCategoryIds.some((c) => effCats.includes(c)));
+  const use = amount !== null && logs && data.settings ? (() => {
+    const cats = new Set([...effCats, ...shared.flatMap((i) => i.logCategoryIds)]);
+    const spent = logs.filter((e) => e.type === 'expense' && cats.has(e.categoryId) && entryCycle(e, data.settings!.pay) === month).reduce((a, e) => a + e.myShare, 0);
+    const budget = amount + shared.reduce((a, i) => a + amountOfWith(afterItems)(i, month), 0);
+    return { spent, budget, left: budget - spent };
+  })() : null;
   const diff = after - before;
   return (
     <Sheet title={isNew ? 'เพิ่มรายการ' : 'แก้รายการ'} tone={TONE[kind]} onClose={onClose}>
@@ -285,16 +297,25 @@ export function ItemSheet({ data, month, current, item, groupId, onClose }: Prop
 
         {next && <MonthStrip item={next} before={item} month={month} amountOf={amountOfWith(afterItems)} />}
 
+        {expenseLike && (
+          <button className="pl-link" onClick={() => setView('cats')} aria-label="เลือกหมวดที่นับเข้างบนี้">
+            <span className="h"><span className="t">งบนี้นับจากหมวดไหน</span><Icon name="chevron" size={16} stroke={2} /></span>
+            <span className="flow">
+              {catChips.length ? catChips.map((c) => <span key={c!.id} className="chip" style={{ background: c!.bg, color: c!.fg }}>{c!.name}</span>) : <span className="chip none">ยังไม่ผูกหมวด</span>}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="ar"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              <span className="chip goal num">งบ{name.trim() || 'รายการนี้'} {amount !== null ? bahtShort(amount) : ''}</span>
+            </span>
+            <span className="d">{catChips.length ? <>จดรายจ่ายในหมวดเหล่านี้ <span className="nw">ยอดจะหักจากงบนี้</span>{shared.length > 0 && <> · <span className="nw">ใช้งบร่วมกับ {shared.map((i) => i.name).join(', ')}</span></>}</> : <>จดรายจ่ายหมวดไหนก็ไม่หักงบนี้ <span className="nw">แตะเพื่อเลือกหมวด</span></>}</span>
+            {use && catChips.length > 0 && <>
+              <span className="bar" aria-hidden="true"><span className={use.left < 0 ? 'over' : ''} style={{ width: `${Math.min(100, use.budget ? (use.spent / use.budget) * 100 : 0)}%` }} /></span>
+              <span className="d num">{shortM(month)} ใช้ไป {bahtShort(use.spent)} · {use.left < 0 ? `เกิน ${bahtShort(-use.left)}` : `เหลือ ${bahtShort(use.left)}`}</span>
+            </>}
+            {kind === 'fixed' && <span className="auto"><Icon name="checkSq" size={14} stroke={2.4} /><span>ติ๊กจ่ายแล้ว บันทึกรายจ่ายให้ในหมวด <b>{catChips[0]?.name ?? 'อื่น ๆ'}</b></span></span>}
+          </button>
+        )}
+
         <div className="list form-rows">
           <button className="row hr-plain" onClick={() => setView('group')}><span className="help-space" aria-hidden="true" /><span className="tx"><span className="t1 lab">หมวด</span></span><span className="val">{group.name}</span><Icon name="chevron" size={16} stroke={2} /></button>
-          {expenseLike && (
-            <HelpRow id="h-cats" open={help === 'cats'} onHelp={() => setHelp(help === 'cats' ? null : 'cats')} onOpen={() => setView('cats')}
-              label="ผูกกับหมวดในบันทึก" sub={<>ใช้ตอนจดรายจ่ายใน<span className="nw">เมนู บันทึก</span></>}
-              value={catChips.length
-                ? <span className="chips">{catChips.slice(0, 1).map((c) => <span key={c!.id} className="chip" style={{ background: c!.bg, color: c!.fg }}>{c!.name}</span>)}{catChips.length > 1 && <span className="chip">+{catChips.length - 1}</span>}</span>
-                : <span className="val muted">ไม่ผูก</span>}
-              help={<>เวลาจดรายจ่ายใน<b>เมนู บันทึก</b> แล้วเลือกหมวดที่ผูกไว้ ยอดจะ<span className="nw">นับเข้างบของรายการนี้</span> เช่น ผูก "ค่ากิน" กับ อาหาร + เครื่องดื่ม แล้วจดข้าว 50 บาทในหมวดอาหาร <span className="nw">งบค่ากินจะเหลือน้อยลง 50 บาท</span> · หมวดเดียว<span className="nw">ผูกได้หลายรายการ</span> งบรวมกัน · หมวดที่ไม่ผูกกับรายการไหน<span className="nw">นับเป็นนอกงบ</span></>} />
-          )}
           {kind !== 'income' && (
             <HelpRow id="h-acc" open={help === 'acc'} onHelp={() => setHelp(help === 'acc' ? null : 'acc')} onOpen={() => setView('account')}
               label="แยกบัญชี" sub="โอนเงินก้อนนี้ไปไว้ที่ไหน"

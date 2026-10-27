@@ -124,11 +124,19 @@ export default function LogAdd() {
         </div>
       </section>
 
-      <div className={`lga-hint${b ? (left >= 0 ? ' left' : ' over') : ''}`}>
-        <Icon name="info" size={16} stroke={2} />
-        <span>{!E ? 'รายรับนอกแผน · ไม่เปลี่ยนตัวเลขในแผน' : b ? <>แผน{label} · ใช้ไป <span className="num">{fmt(usedB)} / {fmt(b.budget!)}</span></> : 'บันทึกเป็นรายจ่ายนอกแผน'}</span>
-        {b && <b className="num">{left >= 0 ? `เหลือ ${fmt(left)}` : `เกิน ${fmt(-left)}`}</b>}
-      </div>
+      {!E ? (
+        <div className="lga-hint"><Icon name="info" size={16} stroke={2} /><span>รายรับนอกแผน · ไม่เปลี่ยนตัวเลขในแผน</span></div>
+      ) : b ? (
+        <div className={`lga-bud${left < 0 ? ' over' : ''}`} role="status">
+          <span className="t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 7l10 10M17 9v8H9" /></svg>หักจากงบ{label}</span>
+          <span className="num s">{left >= 0 ? <>หลังจดนี้เหลือ <b>{fmt(left)}</b> จาก {fmt(b.budget!)}</> : <>หลังจดนี้เกินงบ <b>{fmt(-left)}</b> · งบ {fmt(b.budget!)}</>}</span>
+        </div>
+      ) : (
+        <div className="lga-bud off" role="status">
+          <span className="t"><Icon name="alert" size={16} stroke={2} />นอกงบ</span>
+          <span className="s">หมวดนี้ยังไม่ผูกกับงบไหน · <span className="nw">ผูกได้ที่แผน ในรายการที่จะหักงบ</span></span>
+        </div>
+      )}
 
       <section className="lga-cats" aria-label="หมวด">
         <div className="h"><h2>หมวด</h2><Link to={`/log/cats?type=${type}`}>แก้หมวด</Link></div>

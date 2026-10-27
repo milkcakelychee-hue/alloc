@@ -57,7 +57,7 @@ export default function LogCats() {
           const body = <>
             <span className="cat-ic" style={catStyle(c)}><CatIcon icon={c.icon} /></span>
             <span className="t"><b>{c.name}{c.hidden ? ' (ซ่อน)' : ''}</b>
-              <span className={lk ? 'lk' : ''}>{lk ? `นับเข้างบ ${lk}` : E ? 'ยังไม่ผูกแผน · นับเป็นนอกงบ' : 'รายรับนอกแผน'}</span></span>
+              <span className={lk ? 'lk' : ''}>{lk ? `หักจากงบ${lk}` : E ? 'นอกงบ · ยังไม่ผูกกับงบไหน' : 'รายรับนอกแผน'}</span></span>
           </>;
           return (
             <li key={c.id} {...dragItem}>

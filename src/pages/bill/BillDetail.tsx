@@ -16,6 +16,7 @@ import { Grip, SortList } from '../../components/SortList';
 import { baht } from '../goals/goalUi';
 import { LgSheet } from '../log/EntrySheet';
 import { CatIcon, catStyle } from '../log/catIcon';
+import { planLabelOf } from '../../calc/logView';
 import { Avatar, PERSON_COLORS, StatusPill, STATUS_LABEL, initial, itemsOf, paymentsOf, useBillData } from './billUi';
 import { PaySheet } from './PaySheet';
 import { BillIcon } from './BillList';
@@ -37,6 +38,7 @@ function BillEditor({ id }: { id: string }) {
   const nav = useNavigate();
   const data = useBillData();
   const cats = useLiveQuery(() => db.logCategories.where('type').equals('expense').sortBy('order'));
+  const planItems = useLiveQuery(() => db.planItems.toArray());
   const [d, setD] = useState<Draft | null>(null);
   const [base, setBase] = useState('');
   const [ed, setEd] = useState(isNew);
@@ -76,6 +78,7 @@ function BillEditor({ id }: { id: string }) {
   const total = valid.reduce((a, r) => a + r.price, 0);
   const savedStatus: PayStatus | null = bill ? billSummary(itemsOf(data, bill.id), pays).status : null;
   const cat = cats?.find((c) => c.id === d.categoryId);
+  const budgetOf = planItems ? planLabelOf(d.categoryId, planItems) : null;
   const badRow = parsed.find((r) => !r.name.trim() || r.p === null || r.p <= 0);
 
   const back = () => (dirty ? setAsk('leave') : nav('/log?tab=bill'));
@@ -92,7 +95,7 @@ function BillEditor({ id }: { id: string }) {
   const save = async () => {
     if (!d.title.trim()) { setErr('ใส่ชื่อบิล'); setEd(true); return; }
     if (badRow) { setErr(`รายการ "${badRow.name || 'ไม่มีชื่อ'}" ยังไม่มีชื่อหรือราคา`); setEd(true); return; }
-    if (dirty || isNew) await saveBill(db, { id: isNew ? undefined : id, title: d.title, date: d.date, endDate: d.endDate, categoryId: d.categoryId, note: d.note, peopleIds: d.peopleIds,
+    if (dirty || isNew) await saveBill(db, { id: isNew ? undefined : id, title: d.title, date: d.date, endDate: null, categoryId: d.categoryId, note: d.note, peopleIds: d.peopleIds,
       items: parsed.map((r) => ({ id: r.id, name: r.name, price: r.p!, peopleIds: r.peopleIds })) });
     nav('/log?tab=bill', { replace: true });
   };
@@ -103,7 +106,7 @@ function BillEditor({ id }: { id: string }) {
       <div className="lg-head">
         <button className="lg-sq" aria-label="กลับไปบิลแชร์" onClick={back}><Icon name="back" size={20} stroke={2} /></button>
         <span className="bl-dh"><h1>{d.title.trim() || (isNew ? 'บิลใหม่' : 'บิล')}</h1>
-          <span className="num">{billDateLabel(d.date, d.endDate)}{savedStatus ? ` · ${STATUS_LABEL[savedStatus]}` : ''}</span></span>
+          <span className="num">กำหนดจ่าย {billDateLabel(d.date)}{savedStatus ? ` · ${STATUS_LABEL[savedStatus]}` : ''}</span></span>
         <button className={`gx-hbtn${ed ? ' on' : ''}`} aria-pressed={ed} onClick={() => setEd(!ed)}>{ed ? 'เสร็จ' : 'แก้ไข'}</button>
       </div>
 
@@ -119,15 +122,11 @@ function BillEditor({ id }: { id: string }) {
         <section aria-label="ข้อมูลบิล" className="bl-box">
           <h2>ข้อมูลบิล</h2>
           <label className="bl-fld"><span>ชื่อบิล</span><input value={d.title} onChange={(e) => set({ title: e.target.value })} placeholder="เช่น ของใช้ในบ้าน ต.ค." /></label>
-          <div className="bl-dates">
-            <label className="bl-fld"><span>วันที่</span><input type="date" className="num" value={d.date} onChange={(e) => e.target.value && set({ date: e.target.value })} /></label>
-            {d.endDate !== null
-              ? <label className="bl-fld"><span>ถึงวันที่ <button className="link-btn" onClick={(e) => { e.preventDefault(); set({ endDate: null }); }}>เอาออก</button></span><input type="date" className="num" min={d.date} value={d.endDate} onChange={(e) => set({ endDate: e.target.value || null })} /></label>
-              : <button className="bl-addend" onClick={() => set({ endDate: d.date })}><Icon name="plus" size={16} stroke={2.2} />ถึงวันที่ (บิลหลายวัน)</button>}
-          </div>
+          <label className="bl-fld"><span>วันที่กำหนดจ่าย</span>
+            <input type="date" className="num" value={d.date} onChange={(e) => set({ date: e.target.value || localToday() })} /></label>
           <button className="bl-catrow" onClick={() => setSheet('cat')}>
             <span className="cat-ic" style={catStyle(cat)}><CatIcon icon={cat?.icon ?? 'other'} size={18} /></span>
-            <span className="tx"><span className="t1">ลงบันทึกในหมวด {cat?.name ?? 'อื่น ๆ'}</span><span className="t2">ส่วนของฉันนับเป็น<span className="nw">รายจ่าย 1 รายการ</span> <span className="nw">วันที่ตามบิล</span></span></span>
+            <span className="tx"><span className="t1">ลงบันทึกในหมวด {cat?.name ?? 'อื่น ๆ'}</span><span className="t2">ส่วนของฉันนับเป็น<span className="nw">รายจ่าย 1 รายการ</span> · {budgetOf ? <span className="nw">หักจากงบ{budgetOf}</span> : <span className="nw">นอกงบ</span>}</span></span>
             <Icon name="chevron" size={16} stroke={2} />
           </button>
         </section>

@@ -15,7 +15,7 @@ import { usePlanData } from './usePlanData';
 import { TONE, groupAddLabel, iconOf, thaiMonthLong } from './planUi';
 import { ItemSheet } from './ItemSheet';
 import { Grip, SortList } from '../../components/SortList';
-import { reorderPlanItems } from '../../db/actions';
+import { markDuePaid, reorderPlanItems, unmarkPaid } from '../../db/actions';
 import { PayDateSheet } from './PayDateSheet';
 import { PlanThree, TriLegend } from './PlanThree';
 import { payRuleLabel } from '../../components/PayRuleFields';
@@ -71,11 +71,10 @@ export function PlanMonth() {
   const { byAccount, salaryLeft } = accountTransfers(groups, items, m, amountOf);
   const accName = (id: string | null) => accounts.find((a) => a.id === id)?.name;
 
-  const toggleCheck = async (it: PlanItem) => {
-    const id = `${m}|${it.id}`;
-    const now = Date.now();
-    if (checked.has(it.id)) await db.paidChecks.delete(id);
-    else await db.paidChecks.put({ id, cycleMonth: m, planItemId: it.id, checked: true, createdAt: now, updatedAt: now });
+  // ติ๊กจ่ายแล้ว = บันทึกรายจ่ายให้ในหมวดแรกที่ผูกไว้ (เหมือนการ์ด "จ่ายหรือยัง") · ยกเลิกติ๊ก = ลบรายการนั้น
+  const toggleCheck = async (it: PlanItem, kind: GroupKind) => {
+    if (checked.has(it.id)) await unmarkPaid(db, m, it.id);
+    else await markDuePaid(db, { item: it, kind, cycle: m, amount: amountOf(it, m), today });
   };
 
   // โหมดเช็กจ่ายแล้ว: บรรทัดย่อยเหลือแค่บัญชี ไม่ให้แถวยาวเกิน
@@ -118,7 +117,7 @@ export function PlanMonth() {
                 <div key={it.id} className={`irow${paid ? ' paid' : ''}`} {...dragItem}>
                   {sortMode && !checkMode && list.length > 1 && <Grip label={`ลากเพื่อย้าย ${it.name}`} {...dragHandle} />}
                   {canCheck && (
-                    <button className="icheck" role="checkbox" aria-checked={on} aria-label={`จ่ายแล้ว ${it.name}`} onClick={() => toggleCheck(it)}>
+                    <button className="icheck" role="checkbox" aria-checked={on} aria-label={`จ่ายแล้ว ${it.name}`} onClick={() => toggleCheck(it, g.kind)}>
                       <span className={on ? 'on' : ''}>{on && <Icon name="checkSq" size={14} stroke={3} />}</span>
                     </button>
                   )}
@@ -200,7 +199,7 @@ export function PlanMonth() {
           <div className="cm-top"><span className="t"><Icon name="checkSq" size={18} stroke={2.4} />เช็กว่าจ่าย / โอนแล้ว</span>
             <button className="pill-btn" onClick={() => setCheckMode(false)}>เสร็จ</button></div>
           <span className="bar"><span style={{ width: `${checkable.length ? (checkable.filter((i) => checked.has(i.id)).length / checkable.length) * 100 : 0}%` }} /></span>
-          <span className="t2 num">ติ๊กแล้ว {checkable.filter((i) => checked.has(i.id)).length} / {checkable.length} · โอนแล้ว {formatBaht(checkedAmt)} · <span className="nw">แตะช่องหน้ารายการ</span> · <span className="nw">ไม่เปลี่ยนตัวเลขในแผน</span></span>
+          <span className="t2 num">ติ๊กแล้ว {checkable.filter((i) => checked.has(i.id)).length} / {checkable.length} · โอนแล้ว {formatBaht(checkedAmt)} · <span className="nw">แตะช่องหน้ารายการ</span> · <span className="nw">รายจ่ายที่ติ๊กบันทึกลงบันทึกให้</span> <span className="nw">ในหมวดแรกที่ผูกไว้</span></span>
         </section>
       )}
 

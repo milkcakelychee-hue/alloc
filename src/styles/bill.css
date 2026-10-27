@@ -169,23 +169,6 @@
 .bl-addrow button { width: 44px; height: 44px; border-radius: 12px; background: var(--pri); color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex: none; }
 .bl-note { resize: none; border: 0; border-radius: 12px; background: var(--card2); padding: 10px 12px; font: inherit; font-size: 16px; line-height: 1.45; color: var(--ink); }
 
-.bl-shares .owe { font-size: 12.5px; color: var(--bl-u); display: inline-flex; align-items: center; gap: 8px; background: var(--bl-u-bg); border-radius: 999px; padding: 5px 14px; font-weight: 600; line-height: 1.2; }
-.bl-shares .owe b { color: var(--bl-u); font-size: 15px; font-weight: 700; }
-.bl-shares .owe.done { color: var(--bl-p); background: var(--bl-p-bg); }
-.bl-shares .me, .bl-shares .pr { display: flex; align-items: center; gap: 10px; padding: 4px 14px; flex-wrap: wrap; row-gap: 10px; }
-.bl-shares .pr { padding: 12px 14px; border-radius: 14px; background: var(--bl-owe-bg); box-shadow: inset 0 0 0 1px var(--bl-owe-line); }
-.bl-shares .pr.paid { background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
-.bl-shares .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.3; }
-.bl-shares .n { font-size: 15px; font-weight: 600; } .bl-shares .n .c { font-size: 12px; font-weight: 400; color: var(--ink3); }
-.bl-shares .s { font-size: 12px; color: var(--ink3); display: flex; align-items: center; gap: 4px; }
-.bl-shares .me > b, .bl-shares .pr > b { font-size: 16px; font-weight: 700; }
-.bl-shares .paybtn { height: 34px; flex-basis: 100%; border-radius: 999px; background: var(--card); color: var(--sel); font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; border-top: 1px dashed #E3D3A8; }
-.bl-shares .paybtn.off { color: var(--ink3); font-weight: 500; font-size: 12px; border-top: 0; background: transparent; height: auto; white-space: normal; text-align: center; }
-.bl-shares .hist { flex-basis: 100%; list-style: none; margin: 0; padding: 0 0 0 44px; display: flex; flex-direction: column; gap: 2px; }
-.bl-shares .hist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink2); min-height: 32px; }
-.bl-shares .hist li > button { width: 32px; height: 32px; border-radius: 999px; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
-.bl-shares .hist .cf { display: flex; gap: 6px; } .bl-shares .hist .cf button { height: 30px; padding: 0 10px; border-radius: 999px; background: var(--card2); color: var(--ink); font-size: 12.5px; font-weight: 600; }
-.bl-shares .hist .cf .yes { background: #A63D27; color: #FFFFFF; }
 .lg-info.bad { color: var(--bl-u); }
 .bl-acts { display: flex; gap: 8px; }
 .bl-acts > * { flex: 1; height: 54px; border-radius: 16px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
@@ -284,5 +267,3 @@
 .bl-rb .ln.ok, .bl-rb .ln.ok .num { color: #2F6B47; }
 .bl-rb .ln.tot { font-size: 13.5px; font-weight: 700; color: #16231C; }
 .bl-rb .nt { font-size: 12px; color: #8A6212; background: #FDF6E3; border-radius: 6px; padding: 4px 8px; }
-.bl-share { height: 56px; border-radius: 16px; background: var(--pri); color: #FFFFFF; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; }
-.bl-share:disabled, .bl-acts.two > :disabled { opacity: .5; }

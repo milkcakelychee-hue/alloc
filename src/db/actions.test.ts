@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AllocDB } from './db';
 import { ensureDefaults } from './defaults';
-import { applyActualSalary, confirmPay, deleteLogEntry, markDuePaid, snoozePay } from './actions';
+import { applyActualSalary, confirmPay, deleteLogEntry, markDuePaid, snoozePay, unmarkPaid } from './actions';
 import { B, item } from '../calc/testkit';
 import { rawAmount } from '../calc/plan';
 
@@ -24,6 +24,16 @@ describe('การ์ด จ่ายหรือยัง', () => {
     const d = await fresh();
     const id = await markDuePaid(d, { item: item('fixed', 'ค่าธรรมเนียม', 30), kind: 'fixed', cycle: '2026-10', amount: B(30), today: '2026-10-18' });
     expect((await d.logEntries.get(id!))?.categoryId).toBe('c-other');
+  });
+
+  it('ติ๊กในหน้าแผนแล้วยกเลิก: รายจ่ายที่บันทึกให้หายด้วย · กันเงินเข้าเป้าไม่บันทึก', async () => {
+    const d = await fresh();
+    const it1 = item('fixed', 'ค่าเน็ต', 599, { logCategoryIds: ['c-bill'] });
+    await markDuePaid(d, { item: it1, kind: 'fixed', cycle: '2026-11', amount: B(599), today: '2026-10-27' });
+    expect(await d.logEntries.get((await d.paidChecks.get(`2026-11|${it1.id}`))!.logEntryId!)).toMatchObject({ cycleMonth: '2026-11', categoryId: 'c-bill' });
+    await unmarkPaid(d, '2026-11', it1.id);
+    expect([await d.logEntries.count(), await d.paidChecks.count()]).toEqual([0, 0]);
+    expect(await markDuePaid(d, { item: item('goalSpend', 'ทริป', 1200), kind: 'goalSpend', cycle: '2026-11', amount: B(1200), today: '2026-10-27' })).toBeNull();
   });
 
   it('รายการออม: ติ๊กอย่างเดียว ไม่บันทึกเป็นรายจ่าย', async () => {

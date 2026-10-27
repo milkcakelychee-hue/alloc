@@ -294,3 +294,30 @@
 .lgc-field input { height: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); padding: 0 14px; font: inherit; font-size: 15px; color: var(--ink); }
 .lg-fab.off { background: var(--card2); color: var(--ink2); box-shadow: none; font-size: 16px; font-weight: 600; }
 .lgc-list li[data-dragging] { border-radius: 14px; background: var(--card); }  .lgc-row .grip { margin-left: -6px; }
+
+/* ทำให้เห็นหน้าที่ของการผูกหมวด: หมวดที่ผูก → หักจากงบรายการในแผน */
+.lg-hero .cap { font-size: 12.5px; color: #C2D6C7; line-height: 1.45; margin-bottom: -6px; }
+.lg-hero .foot { margin-top: -6px; }
+.lg-budgets { background: var(--card); border-radius: 22px; padding: 14px 16px; box-shadow: var(--cardline); display: flex; flex-direction: column; gap: 12px; }
+.lg-budgets .h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.lg-budgets h2 { margin: 0; font-size: 15px; font-weight: 600; } .lg-budgets .h > span { font-size: 12px; color: var(--ink3); text-align: right; }
+.lg-budgets .bd { display: flex; flex-direction: column; gap: 6px; }
+.lg-budgets .bd.off { padding-top: 12px; border-top: 1px solid var(--line-in); }
+.lg-budgets .r1, .lg-budgets .r2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lg-budgets .n { font-size: 15px; font-weight: 600; } .lg-budgets .v { font-size: 14px; font-weight: 600; color: var(--lg-inc); } .lg-budgets .v.over { color: var(--danger); }
+.lg-budgets .off .v { color: var(--warning); }
+.lg-budgets .bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--track); }
+.lg-budgets .bar span { background: #1D9E75; } .lg-budgets .bar span.over { background: var(--expense); }
+.lg-budgets .cats { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.lg-budgets .chip { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.lg-budgets .s { font-size: 12px; color: var(--ink3); flex: none; }
+.lg-row .t .tags { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; color: var(--ink3); white-space: nowrap; overflow: hidden; }
+.lg-tag { flex: none; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; }
+.lg-tag.in { background: var(--lg-tag-in-bg); color: var(--lg-tag-in); } .lg-tag.out { background: var(--warning-bg); color: var(--warning); }
+:root { --lg-tag-in-bg: #E3EFE6; --lg-tag-in: #2F6B47; }
+:root[data-theme='dark'] { --lg-tag-in-bg: #233D29; --lg-tag-in: #8FCCA3; }
+.lga-bud { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border-radius: 14px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--lg-tag-in); }
+.lga-bud .t { display: flex; align-items: center; gap: 6px; font-size: 14.5px; font-weight: 600; color: var(--lg-tag-in); }
+.lga-bud .s { font-size: 12.5px; color: var(--ink2); padding-left: 22px; line-height: 1.45; } .lga-bud .s b { color: var(--ink); }
+.lga-bud.over { box-shadow: inset 0 0 0 1.5px var(--expense); } .lga-bud.over .t { color: var(--expense); }
+.lga-bud.off { box-shadow: none; border: 1.5px dashed var(--warning); } .lga-bud.off .t { color: var(--warning); }
