@@ -6,6 +6,15 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.0.1', date: 'ต.ค. 69',
+    sections: [
+      { title: 'ปรับแก้', items: [
+        'งบใช้จ่ายรายวันหักรายจ่ายนอกงบด้วย เพราะเงินส่วนนี้ต้องดึงจากงบก้อนอื่นมาใช้',
+        'รายรับที่จดในหน้าบันทึกบวกเพิ่มเข้างบใช้จ่ายรายวัน งบแต่ละรายการยังเท่าเดิม'
+      ] }
+    ]
+  },
+  {
     version: '1.0', date: 'ต.ค. 69',
     sections: [
       { title: 'ทำอะไรได้บ้าง', items: [

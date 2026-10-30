@@ -95,6 +95,24 @@ export function dailyBudgetParts(groups: PlanGroup[], items: PlanItem[], cycleEx
     .filter((p) => p.budget > 0);
 }
 
+/**
+ * ป้ายงบใช้จ่ายรายวัน: งบรวม = งบแต่ละรายการ + รายรับที่จดในรอบ (ไม่รวมเงินเดือน)
+ * ใช้ไป = ที่ตัดงบแต่ละรายการ + นอกงบ (นอกงบต้องดึงจากงบก้อนใดก้อนหนึ่งอยู่ดี) · งบแต่ละรายการไม่เปลี่ยน
+ */
+export function heroBudget(parts: { budget: Satang; cats: string[] }[], cycleEntries: LogEntry[], items: PlanItem[]) {
+  const planned = parts.reduce((a, p) => a + p.budget, 0);
+  const budCats = new Set(parts.flatMap((p) => p.cats));
+  const linked = new Set(items.flatMap((i) => i.logCategoryIds));
+  let income = 0, spentB = 0, off = 0;
+  for (const e of cycleEntries) {
+    if (e.type === 'income') income += e.myShare;
+    else if (budCats.has(e.categoryId)) spentB += e.myShare;
+    else if (!linked.has(e.categoryId)) off += e.myShare;
+  }
+  const budget = planned + income;
+  return { planned, income, off, budget, spent: spentB + off, remaining: budget - spentB - off };
+}
+
 /** ชื่องบที่หมวดนั้นใช้ (หลายงบ = ชื่อรวม) · null = นอกงบ */
 export function planLabelOf(categoryId: string, items: PlanItem[]) {
   const mine = items.filter((i) => i.logCategoryIds.includes(categoryId)).sort((a, b) => a.order - b.order);

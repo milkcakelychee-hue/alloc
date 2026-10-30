@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calendarCells, cutPerDay, dailyBudgetParts, datePickNote, dayTotals, evalAmount, pickerCells, planLabelOf, typicalRange, weekdaySplit } from './logView';
+import { calendarCells, cutPerDay, dailyBudgetParts, heroBudget, datePickNote, dayTotals, evalAmount, pickerCells, planLabelOf, typicalRange, weekdaySplit } from './logView';
 import { categoryBudget, expensesIn } from './log';
 import { B, entry, groups, item } from './testkit';
 
@@ -102,5 +102,19 @@ describe('เงินเดือนเข้าก่อนกำหนด', (
     const e = entry('2026-10-25', 'c-food', 60, 60, { cycleMonth: '2026-11' });
     expect(entryCycle(e, 27)).toBe('2026-11');
     expect(expensesIn([e], '2026-11', 27)).toHaveLength(1);
+  });
+});
+
+describe('ป้ายงบใช้จ่ายรายวัน', () => {
+  it('นอกงบหักจากงบรวม · รายรับที่จดบวกเข้างบรวม · งบแต่ละรายการไม่เปลี่ยน', () => {
+    const its = [item('variable', 'ค่ากิน', 4800, { logCategoryIds: ['c-food'] })];
+    const es = [
+      entry('2026-10-03', 'c-food', 1000), entry('2026-10-05', 'c-gift', 700),
+      entry('2026-10-06', 'i-side', 2000, 2000, { type: 'income' })
+    ];
+    const parts = dailyBudgetParts(groups, its, es.filter((e) => e.type === 'expense'), '2026-10');
+    const h = heroBudget(parts, es, its);
+    expect(h).toMatchObject({ planned: B(4800), income: B(2000), off: B(700), budget: B(6800), remaining: B(5100) });
+    expect(parts[0].budget - parts[0].spent).toBe(B(3800));
   });
 });

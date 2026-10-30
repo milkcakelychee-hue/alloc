@@ -8,7 +8,7 @@ import { expectedPayDate } from '../calc/payday';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
 import { entryCycle, expensesIn, offBudgetTotal } from '../calc/log';
-import { calendarCells, dailyBudgetParts, dayTotals, effectiveStart, planLabelOf, salaryEvent } from '../calc/logView';
+import { calendarCells, dailyBudgetParts, heroBudget, dayTotals, effectiveStart, planLabelOf, salaryEvent } from '../calc/logView';
 import { Icon } from '../components/Icon';
 import { BillList } from './bill/BillList';
 import { baht } from './goals/goalUi';
@@ -60,11 +60,8 @@ function LogCalendar() {
   const inCycle = data.entries.filter((e) => entryCycle(e, s.pay) === cycle);
   const exp = expensesIn(data.entries, cycle, s.pay);
   const parts = dailyBudgetParts(data.groups, data.items, exp, cycle, amountOf);
-  const budget = parts.reduce((a, p) => a + p.budget, 0);
-  // รวมยอดรายการละครั้ง (กองงบไม่ซ้อนกัน)
-  const budCats = new Set(parts.flatMap((p) => p.cats));
-  const spentB = exp.filter((e) => budCats.has(e.categoryId)).reduce((a, e) => a + e.myShare, 0);
-  const remaining = budget - spentB;
+  const hero = heroBudget(parts, inCycle, data.items);
+  const { budget, remaining } = hero;
   const notStarted = isCur && today < r.start; // ตั้งรอบเริ่มใช้แอปไว้ล่วงหน้า ยังไม่ถึงวันแรก
   const daysLeft = notStarted ? daysBetween(r.start, r.end) + 1 : isCur ? daysBetween(today, r.end) : 0;
   const perDay = Math.round(remaining / Math.max(daysLeft, 1));
@@ -114,7 +111,8 @@ function LogCalendar() {
           <div className="top">
             <span className="l"><span className="k">{remaining < 0 ? 'ใช้เกินงบ' : 'เหลือ'}</span>
               <b className={`v num${remaining < 0 ? ' over' : ''}`} style={{ fontSize: heroFont(baht(Math.abs(remaining))) }}>{baht(Math.abs(remaining))}</b>
-              <span className="s num">จากงบ {baht(budget)}</span></span>
+              <span className="s num">จากงบ {baht(budget)}</span>
+              {(hero.income > 0 || hero.off > 0) && <span className="s num">{hero.income > 0 && <span className="nw">รายรับเพิ่ม +{baht(hero.income)}</span>}{hero.income > 0 && hero.off > 0 && ' · '}{hero.off > 0 && <span className="nw">นอกงบ {baht(hero.off)}</span>}</span>}</span>
             {isCur && <span className="r"><span className="k">ใช้ได้วันละ</span>
               <b className="num">{remaining > 0 ? `~${baht(Math.round(perDay / 100) * 100)}` : '0'}</b>
               <span className="s num">{notStarted ? `${daysLeft} วันในรอบ` : daysLeft === 0 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></span>}
@@ -122,7 +120,7 @@ function LogCalendar() {
         ) : (
           <span style={{ fontSize: 15, lineHeight: 1.55 }}>ยังไม่มีงบ · <span className="nw">เลือกงบให้หมวด</span> <span className="nw">ที่ "แก้หมวด"</span></span>
         )}
-        <span className="hn"><Icon name="info" size={18} stroke={2} /><span>นับเฉพาะ<span className="nw">หมวดที่เลือกงบรายจ่ายผันแปรไว้</span></span></span>
+        <span className="hn"><Icon name="info" size={18} stroke={2} /><span><span className="nw">งบรายจ่ายผันแปร</span> <span className="nw">+ รายรับที่จด</span> · <span className="nw">หักทุกรายจ่าย รวมนอกงบ</span></span></span>
       </section>
 
       {(parts.length > 0 || offCats.length > 0) && (
