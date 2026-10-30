@@ -6,6 +6,14 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.0.2', date: 'ต.ค. 69',
+    sections: [
+      { title: 'ปรับแก้', items: [
+        'งบแต่ละรายการแสดงรายจ่ายนอกงบเป็นแถบสีแดงแถวล่างสุด บอกยอดที่ใช้ไป'
+      ] }
+    ]
+  },
+  {
     version: '1.0.1', date: 'ต.ค. 69',
     sections: [
       { title: 'ปรับแก้', items: [

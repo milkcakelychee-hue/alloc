@@ -146,9 +146,9 @@ function LogCalendar() {
           })}
           {offCats.length > 0 && (
             <div className="bd off">
-              <div className="r1"><span className="n">นอกงบ</span><span className="num v">{baht(off)}</span></div>
-              <div className="r2"><span className="cats">{offCats.map((c) => <span key={c.id} className="chip" style={catStyle(c)}>{c.name}</span>)}</span>
-                <span className="s">ยังไม่ได้เลือกงบ</span></div>
+              <div className="r1"><span className="n">นอกงบ</span><span className="num v">ใช้ไป {baht(off)}</span></div>
+              <span className="bar" aria-hidden="true"><span className="over" style={{ width: '100%' }} /></span>
+              <div className="r2"><span className="cats">{offCats.map((c) => <span key={c.id} className="chip" style={catStyle(c)}>{c.name}</span>)}</span></div>
             </div>
           )}
           </div>}

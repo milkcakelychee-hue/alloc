@@ -309,7 +309,7 @@
 .lg-budgets .bd.off { padding-top: 12px; border-top: 1px solid var(--line-in); }
 .lg-budgets .r1, .lg-budgets .r2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .lg-budgets .n { font-size: 15px; font-weight: 600; } .lg-budgets .v { font-size: 14px; font-weight: 600; color: var(--lg-inc); } .lg-budgets .v.over { color: var(--danger); }
-.lg-budgets .off .v { color: var(--warning); }
+.lg-budgets .off .v { color: var(--expense); }
 .lg-budgets .bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--track); }
 .lg-budgets .bar span { background: #1D9E75; } .lg-budgets .bar span.over { background: var(--expense); }
 .lg-budgets .cats { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
