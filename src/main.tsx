@@ -89,3 +89,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </HashRouter>
   </React.StrictMode>
 );
+
+// iOS Safari ไม่สนใจ user-scalable=no: กันถ่างนิ้วซูมด้วย gesture event (Safari เท่านั้น)
+for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });

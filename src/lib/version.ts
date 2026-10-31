@@ -6,6 +6,14 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.0.3', date: 'พ.ย. 69',
+    sections: [
+      { title: 'ปรับแก้', items: [
+        'ล็อกขนาดหน้าจอ เลื่อนขึ้นลงได้ตามปกติ แต่ถ่างนิ้วหรือแตะสองครั้งแล้วไม่ซูม'
+      ] }
+    ]
+  },
+  {
     version: '1.0.2', date: 'ต.ค. 69',
     sections: [
       { title: 'ปรับแก้', items: [

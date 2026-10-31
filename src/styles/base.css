@@ -1,5 +1,5 @@
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; touch-action: pan-x pan-y; } /* ล็อกซูม: เลื่อนได้ แต่ถ่างนิ้ว/แตะสองครั้งซูมไม่ได้ */
 body {
   margin: 0;
   background: var(--bg);
