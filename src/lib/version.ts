@@ -6,6 +6,15 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.1.1', date: 'พ.ย. 69',
+    sections: [
+      { title: 'ปรับแก้', items: [
+        'เครื่องใหม่ที่เข้าสู่ระบบซิงก์แล้วค้างอยู่หน้าเริ่มใช้งาน: ข้อมูลลงมาถึงเมื่อไหร่ แอปพาไปหน้าหลักเอง',
+        'ถ้าบัญชีนั้นยังไม่มีข้อมูลบนคลาวด์ แอปบอกให้ไปเข้าสู่ระบบในเครื่องที่มีข้อมูลก่อน'
+      ] }
+    ]
+  },
+  {
     version: '1.1', date: 'พ.ย. 69',
     sections: [
       { title: 'ทำอะไรได้เพิ่ม', items: [

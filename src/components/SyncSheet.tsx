@@ -68,9 +68,13 @@ export function SyncSheet({ onClose, welcome, onPulled }: Props) {
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
         <span style={{ fontSize: 15, fontWeight: 600, overflowWrap: 'anywhere' }}>{s.email}</span>
         <span className="muted" style={{ fontSize: 13, color: s.status === 'error' ? 'var(--danger)' : undefined }}>
-          {s.status === 'ok' || s.status === 'off' ? 'ซิงก์แล้ว' : syncLabel(s)}
+          {s.status === 'ok' || s.status === 'off' ? (welcome ? 'เข้าสู่ระบบแล้ว' : 'ซิงก์แล้ว') : syncLabel(s)}
         </span>
       </div>
+      {welcome && s.status !== 'error' && s.status !== 'syncing' && (
+        <div className="note warn" style={{ marginBottom: 12 }}><Icon name="alert" size={16} stroke={2} />
+          <span>ยังไม่มีข้อมูลบนคลาวด์ของ<span className="nw">บัญชีนี้</span> เปิดแอปใน<span className="nw">เครื่องที่มีข้อมูล</span> เข้าสู่ระบบด้วย<span className="nw">อีเมลเดียวกัน</span>ให้ขึ้นว่า<span className="nw">ซิงก์แล้ว</span> แล้วกลับมากด<span className="nw">ซิงก์ตอนนี้</span></span></div>
+      )}
       <button className="btn btn-pri" style={{ width: '100%' }} disabled={s.status === 'syncing'} onClick={() => syncNow()}>ซิงก์ตอนนี้</button>
       {s.hasConflictCopy && (
         <div className="note" style={{ marginTop: 12, flexDirection: 'column', gap: 10 }}>

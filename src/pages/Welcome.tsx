@@ -1,5 +1,5 @@
 // เริ่มใช้งาน: เริ่มใหม่ (ตั้งเงินเดือน) / กู้จากไฟล์สำรอง → พร้อมใช้
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MoneyInput } from '../components/MoneyInput';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../db/db';
@@ -13,6 +13,8 @@ import { AppGuide } from '../components/AppGuide';
 import { Icon } from '../components/Icon';
 import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
 import { SyncSheet } from '../components/SyncSheet';
+import { useSettings } from '../db/hooks';
+import { useSync } from '../lib/sync';
 
 type Step = 'start' | 'salary' | 'done';
 
@@ -28,6 +30,13 @@ export default function Welcome() {
   const [shift, setShift] = useState<WeekendShift>('before');
   const [busy, setBusy] = useState(false);
   const picker = useRef<RestorePickerHandle>(null);
+  // ข้อมูลจากบัญชีซิงก์ลงมาถึงเครื่องเมื่อไหร่ (ตอนเข้าสู่ระบบ กดซิงก์ตอนนี้ หรือเปิดแอปใหม่) ไปขั้น "พร้อมใช้" ทันที
+  const onboardedAt = useSettings()?.onboardedAt;
+  const syncEmail = useSync().email;
+  useEffect(() => {
+    if (step !== 'start' || !onboardedAt || !syncEmail) return;
+    setSyncOpen(false); setFromCloud(true); setRestored(true); setStep('done');
+  }, [step, onboardedAt, syncEmail]);
 
   const today = localToday();
   const salary = parseBaht(salaryText);
