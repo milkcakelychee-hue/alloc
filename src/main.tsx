@@ -29,6 +29,7 @@ import Welcome from './pages/Welcome';
 import { useSettings } from './db/hooks';
 import { syncDeposits } from './db/goalActions';
 import { localToday } from './calc/dates';
+import { clearNotice, startSync, syncSettled, useSync } from './lib/sync';
 
 function Shell() {
   const [upd, setUpd] = useState(hasPendingUpdate());
@@ -39,11 +40,18 @@ function Shell() {
   if (live) last.current = live;
   const settings = last.current;
   const loc = useLocation();
+  const { notice } = useSync();
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(clearNotice, 6000);
+    return () => clearTimeout(t);
+  }, [notice]);
   // บวกยอดเป้าตามแผนของรอบที่เงินเดือนเข้าแล้ว (เลยวันเงินเข้า 7 วันโดยไม่กดยืนยัน = ถือว่าเข้า)
   const ready = !!settings?.onboardedAt;
   useEffect(() => {
     if (!ready) return;
-    const run = () => { if (document.visibilityState === 'visible') syncDeposits(db, localToday()).catch(() => {}); };
+    // รอซิงก์รอบที่กำลังทำอยู่ก่อน: ไม่ให้ยอดที่บวกเองชนกับข้อมูลที่เพิ่งดึงมาจากอีกเครื่อง
+    const run = () => { if (document.visibilityState === 'visible') syncSettled().then(() => syncDeposits(db, localToday())).catch(() => {}); };
     run();
     document.addEventListener('visibilitychange', run);
     return () => document.removeEventListener('visibilitychange', run);
@@ -72,13 +80,15 @@ function Shell() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {!onWelcome && loc.pathname !== '/goals/new' && loc.pathname !== '/log/add' && <TabBar />}
+      {notice && !upd && <button className="toast" onClick={clearNotice}>{notice}</button>}
       {upd && <button className="toast" onClick={() => applyUpdate()}>มีอัปเดตใหม่ · แตะเพื่อรีเฟรช</button>}
     </>
   );
 }
 
 applyTheme();
-ensureDefaults(db).then(() => Promise.all([syncThemeFromDb(), applyHideOnOpen(db)]));
+// ซิงก์รอบแรกก่อน แล้วค่อยซ่อนตัวเลข (ข้อมูลที่ดึงมาอาจตั้งให้แสดงอยู่)
+ensureDefaults(db).then(() => Promise.all([syncThemeFromDb(), startSync().then(() => applyHideOnOpen(db))]));
 // ขอให้เบราว์เซอร์ไม่ลบข้อมูลเอง (iOS ไม่รับประกัน จึงยังต้องสำรองไฟล์)
 navigator.storage?.persist?.().catch(() => {});
 

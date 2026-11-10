@@ -17,6 +17,8 @@ import { Grip, SortList } from '../components/SortList';
 import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
 import { PayRuleSheet } from '../components/PayRuleSheet';
 import { payRuleLabel } from '../components/PayRuleFields';
+import { SyncSheet } from '../components/SyncSheet';
+import { signOut, syncLabel, useSync } from '../lib/sync';
 
 const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'light', label: 'สว่าง' },
@@ -35,6 +37,8 @@ export default function Settings() {
   const [startOpen, setStartOpen] = useState(false);
   const [accOpen, setAccOpen] = useState(false);
   const [wipeOpen, setWipeOpen] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
+  const sync = useSync();
   const accounts = useLiveQuery(() => db.accounts.orderBy('order').toArray(), []) ?? [];
   const catCount = useLiveQuery(() => db.logCategories.filter((c) => !c.hidden).count(), []) ?? 0;
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2500); };
@@ -137,7 +141,12 @@ export default function Settings() {
 
       <span className="sec">ข้อมูล</span>
       <div className="list">
-        <div className={`row${bs.due ? ' alert' : ''}`} style={{ paddingTop: 12, paddingBottom: 12 }}>
+        <button className={`row${sync.status === 'error' || sync.status === 'ask' ? ' alert' : ''}`} onClick={() => setSyncOpen(true)}>
+          <span className="ic"><Icon name="cloud" size={18} stroke={2} /></span>
+          <span className="tx"><span className="t1">ซิงก์ข้ามเครื่อง</span><span className="t2">{syncLabel(sync)}</span></span>
+          {chev}
+        </button>
+        <div className={`row${bs.due && !sync.email ? ' alert' : ''}`} style={{ paddingTop: 12, paddingBottom: 12 }}>
           <span className="ic"><Icon name="backup" size={18} stroke={2} /></span>
           <span className="tx"><span className="t1">สำรองข้อมูล</span><span className="t2 num">{lastText}</span></span>
           <button className="pill-btn" onClick={backup}>สำรองตอนนี้</button>
@@ -155,13 +164,16 @@ export default function Settings() {
       </div>
       <div className="note">
         <Icon name="info" size={16} stroke={2} />
-        <span>ข้อมูลอยู่ใน<span className="nw">เครื่องนี้</span>เท่านั้น iPhone อาจล้าง<span className="nw">ข้อมูลเว็บ</span>เองถ้าไม่ได้เปิดแอปนาน ๆ ควรสำรองเก็บไว้ใน<span className="nw">แอปไฟล์</span>หรือ <span className="nw">iCloud Drive</span></span>
+        {sync.email
+          ? <span>ข้อมูลเก็บใน<span className="nw">เครื่องนี้</span> และ<span className="nw">ส่งขึ้นคลาวด์</span>ทุกครั้งที่แก้ เปิดเครื่องอื่นด้วย<span className="nw">บัญชีเดียวกัน</span>จะได้<span className="nw">ข้อมูลชุดเดียวกัน</span> · ไฟล์สำรองยังควรเก็บไว้<span className="nw">เป็นครั้งคราว</span></span>
+          : <span>ข้อมูลอยู่ใน<span className="nw">เครื่องนี้</span>เท่านั้น iPhone อาจล้าง<span className="nw">ข้อมูลเว็บ</span>เองถ้าไม่ได้เปิดแอปนาน ๆ ควรสำรองเก็บไว้ใน<span className="nw">แอปไฟล์</span>หรือ <span className="nw">iCloud Drive</span></span>}
       </div>
       <RestorePicker ref={picker} onRestored={() => { setTheme(getThemePref()); flash('กู้คืนเรียบร้อย'); }} />
 
       <div className="list">
         <button className="row st-danger" onClick={() => setWipeOpen(true)}>ล้างข้อมูลทั้งหมด</button>
       </div>
+      {syncOpen && <SyncSheet onClose={() => setSyncOpen(false)} />}
       {wipeOpen && <WipeSheet onBackup={backup} onClose={() => setWipeOpen(false)} onDone={() => setTheme('system')} />}
 
       <span className="sec">เกี่ยวกับ</span>
@@ -279,13 +291,13 @@ function WipeSheet({ onBackup, onClose, onDone }: { onBackup: () => Promise<void
   return (
     <Sheet title="ล้างข้อมูลทั้งหมด" onClose={onClose}>
       <div className="note warn" style={{ marginBottom: 12 }}><Icon name="alert" size={16} stroke={2} />
-        <span>แผน เป้าหมาย บันทึก บิลแชร์ และการตั้งค่า<span className="nw">ในเครื่องนี้</span>จะหายทั้งหมด <span className="nw">กู้คืนไม่ได้</span> ถ้าไม่มี<span className="nw">ไฟล์สำรอง</span></span></div>
+        <span>แผน เป้าหมาย บันทึก บิลแชร์ และการตั้งค่า<span className="nw">ในเครื่องนี้</span>จะหายทั้งหมด <span className="nw">กู้คืนไม่ได้</span> ถ้าไม่มี<span className="nw">ไฟล์สำรอง</span> · เครื่องนี้จะ<span className="nw">ออกจากระบบซิงก์</span> ข้อมูลบนคลาวด์<span className="nw">ไม่ถูกลบ</span></span></div>
       <button className="btn" style={{ width: '100%', marginBottom: 12 }} onClick={onBackup}><Icon name="backup" size={18} stroke={2} />สำรองข้อมูลก่อน</button>
       <label className="field" style={{ marginBottom: 12 }}><span className="label">พิมพ์คำว่า ล้าง เพื่อยืนยัน</span>
         <input value={word} onChange={(e) => setWord(e.target.value)} autoComplete="off" placeholder="ล้าง" style={{ fontSize: 16, fontWeight: 500 }} />
       </label>
       <button className="btn st-del-solid" style={{ width: '100%' }} disabled={!ok || busy}
-        onClick={async () => { setBusy(true); await clearAllData(db); await setThemePref('system'); onDone(); }}>ล้างข้อมูลทั้งหมด</button>
+        onClick={async () => { setBusy(true); await signOut(); await clearAllData(db); await setThemePref('system'); onDone(); }}>ล้างข้อมูลทั้งหมด</button>
     </Sheet>
   );
 }

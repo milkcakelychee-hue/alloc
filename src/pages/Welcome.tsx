@@ -12,6 +12,7 @@ import { AppMark } from '../components/AppMark';
 import { AppGuide } from '../components/AppGuide';
 import { Icon } from '../components/Icon';
 import { RestorePicker, type RestorePickerHandle } from '../components/RestorePicker';
+import { SyncSheet } from '../components/SyncSheet';
 
 type Step = 'start' | 'salary' | 'done';
 
@@ -20,6 +21,8 @@ export default function Welcome() {
   const exit = () => nav('/', { replace: true });
   const [step, setStep] = useState<Step>('start');
   const [restored, setRestored] = useState(false);
+  const [fromCloud, setFromCloud] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
   const [salaryText, setSalaryText] = useState('');
   const [pay, setPay] = useState<PayRule>({ kind: 'day', day: 27 });
   const [shift, setShift] = useState<WeekendShift>('before');
@@ -83,7 +86,7 @@ export default function Welcome() {
           <span className="done-mark"><Icon name="check" size={30} stroke={2.4} /></span>
           <h1>{restored ? 'กู้คืนเรียบร้อย' : 'พร้อมใช้แล้ว'}</h1>
           <span className="muted">{restored
-            ? <>ข้อมูลจากไฟล์สำรอง<span className="nw">กลับมาครบแล้ว</span></>
+            ? <>ข้อมูลจาก{fromCloud ? 'บัญชีซิงก์' : 'ไฟล์สำรอง'}<span className="nw">กลับมาครบแล้ว</span></>
             : <>มาดูกันว่า Alloc <span className="nw">ช่วยอะไรได้บ้าง</span></>}</span>
         </div>
         <AppGuide restored={restored} />
@@ -112,11 +115,18 @@ export default function Welcome() {
         <span className="tx"><span className="t1">กู้จากไฟล์สำรอง</span><span className="t2">ไฟล์ .alloc ที่สำรองไว้<span className="nw">จากเครื่องเดิม</span></span></span>
         <Icon name="chevron" size={18} stroke={2} />
       </button>
+      <button className="option" onClick={() => setSyncOpen(true)}>
+        <span className="ic"><Icon name="cloud" /></span>
+        <span className="tx"><span className="t1">เข้าสู่ระบบซิงก์</span><span className="t2">ดึงข้อมูลจากเครื่องอื่น<span className="nw">ที่ใช้บัญชีเดียวกัน</span></span></span>
+        <Icon name="chevron" size={18} stroke={2} />
+      </button>
       <div className="note" style={{ marginTop: 'auto' }}>
         <Icon name="lock" size={16} stroke={2} />
-        <span>ข้อมูลทั้งหมดเก็บใน<span className="nw">เครื่องคุณ</span>เท่านั้น <span className="nw">ไม่มีบัญชีผู้ใช้</span> <span className="nw">ไม่ส่งขึ้นเซิร์ฟเวอร์</span> · สำรองเองได้จาก<span className="nw">หน้าตั้งค่า</span></span>
+        <span>ข้อมูลเก็บใน<span className="nw">เครื่องคุณ</span> <span className="nw">ไม่ส่งขึ้นเซิร์ฟเวอร์</span> เว้นแต่<span className="nw">เข้าสู่ระบบซิงก์</span>เอง · สำรองเป็นไฟล์ได้จาก<span className="nw">หน้าตั้งค่า</span></span>
       </div>
       <RestorePicker ref={picker} onRestored={() => { setRestored(true); setStep('done'); }} />
+      {syncOpen && <SyncSheet welcome onClose={() => setSyncOpen(false)}
+        onPulled={() => { setSyncOpen(false); setFromCloud(true); setRestored(true); setStep('done'); }} />}
     </main>
   );
 }

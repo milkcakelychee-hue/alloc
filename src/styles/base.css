@@ -66,6 +66,8 @@ p, li, .t2, .note > span, .empty span, .hint, .err { text-wrap: pretty; }
 }
 .btn-pri { background: var(--pri); color: var(--onpri); }
 .btn-ghost { background: var(--card2); color: var(--ink); }
+/* ปุ่มเด่นสีเขียวอ่อนไล่สี (สร้างบัญชีซิงก์) · ตัวหนังสือเขียวเข้มทั้งสองธีม */
+.btn-lime { background: var(--lime-card); color: #1E3B2C; }
 
 /* เมนูล่าง 4 แท็บ */
 .tabbar {
