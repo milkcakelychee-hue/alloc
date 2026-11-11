@@ -72,3 +72,125 @@
   .toast { bottom: 24px; background: var(--toast); color: var(--on-toast); }
 }
 @keyframes side { from { transform: translateX(40px); opacity: .6; } }
+
+/* ---------- ขั้นที่ 2: ตาราง 12 เดือน + สรุปทั้งปี ---------- */
+@media (min-width: 1024px) {
+  .desk-top .lead:empty, .desk-top .acts:empty { display: none; }
+  .desk-top .acts { display: flex; align-items: center; gap: 6px; }
+  .desk-full { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+  .ib { height: 36px; padding: 0 12px; border-radius: 12px; background: var(--card2); color: var(--ink); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .ib:hover:not(:disabled) { background: var(--line); }
+  .ib:disabled { opacity: .45; cursor: default; }
+  .ib:focus-visible, .lnk:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .ib.sq { width: 36px; padding: 0; justify-content: center; }
+  .ib.pri { background: var(--pri); color: var(--onpri); }
+  .ib.pri:hover { background: var(--pri); filter: brightness(1.1); }
+  .ib.line { background: transparent; box-shadow: inset 0 0 0 1.5px var(--sel); }
+  .ib.line:hover { background: var(--hover); }
+  .ib.tall { height: 40px; }
+  .ib.lnk { background: transparent; color: var(--link); height: 34px; font-size: 13px; }
+  .dp-pager { display: flex; align-items: center; gap: 6px; }
+  .dp-pager .yr { height: 36px; padding: 0 16px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; font-size: 14px; font-weight: 600; }
+
+  .dp { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 8px 28px 24px; }
+  .is-rail .dp { padding: 8px 20px 20px; }
+  .dp-legend { display: flex; align-items: center; gap: 16px; height: 36px; flex: none; font-size: 12.5px; color: var(--ink3); white-space: nowrap; }
+  .dp-legend > span { display: flex; align-items: center; gap: 5px; }
+  .dp-legend b { color: var(--ink); }
+  .dp-legend .sp { flex: 1; }
+  .dp-legend .sw { width: 22px; height: 12px; border-radius: 3px; }
+  .sw.hatch { background: repeating-linear-gradient(135deg, var(--hatch) 0 2px, transparent 2px 6px); box-shadow: inset 0 0 0 1px var(--line); }
+  .sw.curbg { background: var(--cur); }
+  .lnk { height: 30px; padding: 0 10px; border-radius: 10px; color: var(--link); font-size: 13px; font-weight: 600; }
+  .lnk:hover { background: var(--hover); }
+  .tri { font-size: 7px; line-height: 1; font-style: normal; }
+  .dp-legend .tri { font-size: 8px; }
+  .tri.up { color: var(--t-exp); }
+  .tri.down { color: var(--t-inc); }
+
+  .dp-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--card); border-radius: var(--r-card); box-shadow: 0 0 0 1px var(--line); }
+  .dp-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .dp-row { display: grid; align-items: center; font-size: 12px; }
+  .dp-row .nm { padding: 0 14px; min-width: 0; }
+  .dp-row .c { display: flex; align-items: center; justify-content: flex-end; gap: 3px; padding-right: 4px; height: 100%; white-space: nowrap; overflow: hidden; }
+  .dp-row .c.past { color: var(--ink3); }
+  .dp-row .c.cur { background: var(--cur); color: var(--ink); }
+  .dp-row .c.tot { background: var(--tot); border-left: 1px solid var(--line); }
+  .dp-head { height: 46px; flex: none; border-bottom: 1px solid var(--line); font-weight: 600; }
+  .dp-head .nm { font-size: 12.5px; color: var(--ink3); }
+  .dp-head .c.fut { color: var(--ink); }
+  .dp-head .c.tot { font-size: 12.5px; }
+  .dp-head .pill { padding: 2px 7px; margin-right: -4px; border-radius: 999px; background: var(--sel); color: var(--onsel); }
+  .dp-grp { height: 36px; border-top: 1px solid var(--line); font-weight: 700; }
+  .dp-grp .nm { height: 100%; padding: 0 8px 0 10px; display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; text-align: left; }
+  .dp-grp .chev { display: flex; transition: transform .15s; }
+  .dp-grp .cnt { font-weight: 500; opacity: .8; }
+  .dp-grp .nm:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .t-inc { background: var(--g-inc); } .t-inc .nm { color: var(--t-inc); }
+  .t-exp { background: var(--g-exp); } .t-exp .nm { color: var(--t-exp); }
+  .t-goal { background: var(--g-goal); } .t-goal .nm { color: var(--t-goal); }
+  .t-sav { background: var(--g-sav); } .t-sav .nm { color: var(--t-sav); }
+  .dp-item { height: 34px; border-top: 1px solid var(--line); }
+  .dp-item:hover { background: var(--hover); }
+  .dp-item .nm { padding: 0 10px 0 30px; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dp-item .c.chg { font-weight: 700; }
+  .dp-item .c.out { background: repeating-linear-gradient(135deg, var(--hatch) 0 2px, transparent 2px 6px); }
+  .dp-item .c.tot { font-weight: 500; }
+  .dp-none { height: 34px; display: flex; align-items: center; padding-left: 30px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink3); }
+  .dp-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 28px 16px; text-align: center; color: var(--ink2); font-size: 13.5px; }
+  .dp-empty strong { color: var(--ink); font-size: 16px; }
+  .dp-foot { flex: none; border-top: 2px solid var(--ink); }
+  .dp-sum { height: 32px; border-top: 1px solid var(--line); font-weight: 700; }
+  .dp-sum .nm { font-size: 13.5px; }
+  .s-inc { background: var(--g-inc); } .s-inc .nm { color: var(--t-inc); }
+  .s-exp { background: var(--g-exp); } .s-exp .nm { color: var(--t-exp); }
+  .s-sav { background: var(--g-sav); } .s-sav .nm { color: var(--t-sav); }
+  .s-left { background: var(--card); }
+  .dp-sum .c.neg { background: var(--redbg); color: var(--danger); border-radius: 6px; }
+  .dp-sum .c.tot.neg { border-radius: 0; }
+
+  /* สรุปทั้งปี */
+  .dy { flex: 1; min-height: 0; overflow-y: auto; padding: 24px 28px; }
+  .dy > .card.empty { max-width: 1120px; margin: 0 auto; }
+  .dy-in { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .dy h2 { font-size: 15px; font-weight: 700; }
+  .dy .card { padding: 18px 20px; }
+  .dy-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .dy-k { display: flex; flex-direction: column; gap: 4px; }
+  .dy-k .l { font-size: 13px; font-weight: 600; color: var(--ink3); }
+  .dy-k b { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .dy-k b.sav { color: var(--t-sav); }
+  .dy-k .s { font-size: 13px; color: var(--ink2); }
+  .dy .neg { color: var(--danger); }
+  .dy-two { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
+  .dy-chart { display: flex; flex-direction: column; gap: 14px; }
+  .dy-chart .bars { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 10px; }
+  .dy-chart .col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .dy-chart .pos { height: 170px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; }
+  .dy-chart .negz { height: 70px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .dy-chart .b { width: 100%; max-width: 46px; border-radius: 5px 5px 0 0; }
+  .dy-chart .negz .b { border-radius: 0 0 5px 5px; background: var(--danger); }
+  .dy-chart .axis { height: 1px; width: 100%; background: var(--ink3); }
+  .dy-chart .v { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .dy-chart .m { font-size: 12px; color: var(--ink3); }
+  .dy-chart .m.on { color: var(--ink); font-weight: 700; }
+  .dy-where { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px !important; }
+  .dy-where .strip { display: flex; gap: 2px; height: 12px; border-radius: 999px; overflow: hidden; }
+  .dy-where .wr { display: flex; align-items: center; gap: 10px; min-height: 40px; border-top: 1px solid var(--line); font-size: 14px; }
+  .dy-where .wr i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .dy-where .wr .n { flex: 1; white-space: nowrap; }
+  .dy-where .wr b { font-weight: 600; }
+  .dy-where .wr .p { width: 52px; text-align: right; color: var(--ink3); }
+  .dy-notes { display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px !important; }
+  .dy-notes .nt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .dy-notes .nt > i { width: 10px; height: 10px; border-radius: 999px; margin-top: 6px; flex: none; }
+  .dy-notes .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.5; }
+  .dy-notes .t1 { font-size: 14.5px; font-weight: 600; }
+  .dy-notes .t2 { font-size: 13px; color: var(--ink2); }
+}
+/* แถบเลื่อนของเนื้อตารางกินความกว้าง: หัวและแถวสรุปเว้นที่เท่ากัน ให้คอลัมน์ตรงกัน */
+@media (min-width: 1024px) {
+  .dp-body { scrollbar-gutter: stable; }
+  .dp-head, .dp-foot { overflow-y: hidden; scrollbar-gutter: stable; }
+}

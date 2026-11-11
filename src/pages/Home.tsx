@@ -16,6 +16,8 @@ import { PlanMonth } from './plan/PlanMonth';
 import { usePlanData } from './plan/usePlanData';
 import { HomeCards } from './HomeCards';
 import { PlanEntry } from './PlanEntry';
+import { useDeskSlots } from '../components/DeskShell';
+import { DeskPlan } from './desk/DeskPlan';
 
 const todayLong = () =>
   new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -26,8 +28,9 @@ const HIDDEN = '••••••';
 
 export default function Home() {
   const [sp] = useSearchParams();
-  // แท็บแผน: ไม่มีปุ่มสลับ มีปุ่มกลับหน้าสรุปด้านบนแทน
-  if (sp.get('tab') === 'plan') return <PlanMonth />;
+  const desk = useDeskSlots();
+  // แท็บแผน: ไม่มีปุ่มสลับ มีปุ่มกลับหน้าสรุปด้านบนแทน · บนคอมเป็นตาราง 12 เดือน
+  if (sp.get('tab') === 'plan') return desk ? <DeskPlan /> : <PlanMonth />;
   return <Summary />;
 }
 

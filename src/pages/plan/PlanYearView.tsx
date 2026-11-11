@@ -61,41 +61,8 @@ export function PlanYearView({ data, year, current, amountOf, onPickMonth }: {
   const px = (v: number) => (Math.max(v, 0) / scale) * H;
   const ticks = Array.from({ length: Math.round(scale / step) }, (_, i) => (i + 1) * step);
 
-  // จุดที่ควรรู้: สร้างจากตัวเลขในแผนเท่านั้น
   const changes = itemChanges(items, months, amountOf);
-  const firstActive = active[0].month;
-  const kindOf = (it: PlanItem) => groups.find((g) => g.id === it.groupId)?.kind;
-  const isExpKind = (k?: GroupKind) => k === 'fixed' || k === 'variable' || k === 'goalSpend';
-  const totalsAt = (m: Month) => planTotals(groups, items, m, amountOf);
-  const notes: { dot: string; title: React.ReactNode; sub: React.ReactNode }[] = [];
-  if (y.negative.length) notes.push({ dot: 'bad', title: <>แผนติดลบ <span className="num">{y.negative.length}</span> เดือน</>, sub: y.negative.map((n) => `${mon(n.month)} −${money(-n.leftover)}`).join(' · ') });
-  if (y.maxExpense) {
-    const why = changes.filter((c) => c.month === y.maxExpense!.month && c.kind !== 'ended' && isExpKind(kindOf(c.item)) && (c.kind === 'started' || c.to > c.from));
-    notes.push({ dot: 'bad', title: <>{mon(y.maxExpense.month)} รายจ่ายสูงสุด <span className="num">{money(y.maxExpense.expense)}</span></>,
-      sub: why.length ? why.slice(0, 2).map((c) => `${c.item.name} ${money(c.kind === 'ended' ? 0 : c.to)}`).join(' + ')
-        : <>เฉลี่ยทั้งปี <span className="num">{money(Math.round((y.fixed + y.variable + y.goalSpend) / y.activeMonths))}</span>/เดือน</> });
-  }
-  const size = (c: (typeof changes)[number]) => (c.kind === 'changed' ? Math.abs(c.to - c.from) : c.kind === 'started' ? c.to : c.from);
-  for (const c of changes.filter((c) => !(c.kind === 'started' && c.month <= firstActive)).sort((a, b) => size(b) - size(a)).slice(0, 3)) {
-    const k = kindOf(c.item);
-    const exp = isExpKind(k);
-    const idx = months.indexOf(c.month);
-    if (c.kind === 'ended') {
-      const next = months[Math.min(idx + 1, 11)];
-      notes.push({ dot: exp ? 'good' : 'warn', title: <>{c.item.name} จบ {mon(c.month)}</>,
-        sub: exp && k && next !== c.month ? <>ตั้งแต่ {mon(next)} {k === 'fixed' ? 'รายจ่ายคงที่' : 'รายจ่าย'}ลดจาก <span className="num">{money(totalsAt(c.month)[k])}</span> เหลือ <span className="num">{money(totalsAt(next)[k])}</span></>
-          : <>เดือนละ <span className="num">{money(c.from)}</span></> });
-    } else {
-      const up = c.kind === 'started' || c.to > c.from;
-      const sr = (m: Month) => { const t = totalsAt(m); return pct1(t.saving + t.invest, t.income); };
-      notes.push({ dot: exp ? (up ? 'bad' : 'good') : up ? 'save' : 'warn',
-        title: <>{mon(c.month)} {c.item.name}{c.kind === 'started' ? ' เริ่ม' : up ? 'เพิ่มเป็น' : 'ลดเป็น'} <span className="num">{money(c.to)}</span></>,
-        sub: c.kind === 'changed'
-          ? (exp ? <>จากเดิม <span className="num">{money(c.from)}</span></> : <>Savings Rate จาก <span className="num">{sr(months[Math.max(idx - 1, 0)])}%</span> เป็น <span className="num">{sr(c.month)}%</span></>)
-          : <>เดือนละ <span className="num">{money(c.to)}</span></> });
-    }
-  }
-  if (minLeftVal >= 0) notes.push({ dot: 'low', title: <>{lowLabel} เงินเหลือน้อยสุด <span className="num">{money(minLeftVal)}</span></>, sub: <>ลองดูแผน<span className="nw">เดือนนั้น</span>ก่อนเงินเดือนเข้า</> });
+  const notes = buildYearNotes(groups, items, year, amountOf);
 
   const copied = copyYearToNext(items, year, amountOf);
   const nextLeftBefore = yearSummary(groups, items, year + 1, amountOf).leftover;
@@ -284,4 +251,52 @@ function CatSheet({ cat, data, year, amountOf, income, activeN, onClose, onPlan 
       </div>
     </Sheet>
   );
+}
+
+export interface YearNote { month: Month; dot: string; title: React.ReactNode; sub: React.ReactNode }
+
+/** จุดที่ควรรู้ของปี: สร้างจากตัวเลขในแผนเท่านั้น (ใช้ทั้งมือถือและหน้าสรุปทั้งปีบนคอม) */
+export function buildYearNotes(groups: PlanData['groups'], items: PlanItem[], year: number, amountOf: AmountOf): YearNote[] {
+  const y = yearSummary(groups, items, year, amountOf);
+  if (y.activeMonths === 0) return [];
+  const months = yearMonths(year);
+  const active = y.months.filter((x) => x.t.income > 0);
+  const minLeftVal = y.minLeft!.leftover;
+  const lowMonths = active.filter((x) => x.t.leftover === minLeftVal).map((x) => x.month);
+  const lowLabel = lowMonths.length > 1 ? `${mon(lowMonths[0])}–${mon(lowMonths[lowMonths.length - 1])}` : mon(lowMonths[0]);
+  const changes = itemChanges(items, months, amountOf);
+  const firstActive = active[0].month;
+  const kindOf = (it: PlanItem) => groups.find((g) => g.id === it.groupId)?.kind;
+  const isExpKind = (k?: GroupKind) => k === 'fixed' || k === 'variable' || k === 'goalSpend';
+  const totalsAt = (m: Month) => planTotals(groups, items, m, amountOf);
+  const notes: YearNote[] = [];
+  if (y.negative.length) notes.push({ month: y.negative[0].month, dot: 'bad', title: <>แผนติดลบ <span className="num">{y.negative.length}</span> เดือน</>, sub: y.negative.map((n) => `${mon(n.month)} −${money(-n.leftover)}`).join(' · ') });
+  if (y.maxExpense) {
+    const why = changes.filter((c) => c.month === y.maxExpense!.month && c.kind !== 'ended' && isExpKind(kindOf(c.item)) && (c.kind === 'started' || c.to > c.from));
+    notes.push({ month: y.maxExpense.month, dot: 'bad', title: <>{mon(y.maxExpense.month)} รายจ่ายสูงสุด <span className="num">{money(y.maxExpense.expense)}</span></>,
+      sub: why.length ? why.slice(0, 2).map((c) => `${c.item.name} ${money(c.kind === 'ended' ? 0 : c.to)}`).join(' + ')
+        : <>เฉลี่ยทั้งปี <span className="num">{money(Math.round((y.fixed + y.variable + y.goalSpend) / y.activeMonths))}</span>/เดือน</> });
+  }
+  const size = (c: (typeof changes)[number]) => (c.kind === 'changed' ? Math.abs(c.to - c.from) : c.kind === 'started' ? c.to : c.from);
+  for (const c of changes.filter((c) => !(c.kind === 'started' && c.month <= firstActive)).sort((a, b) => size(b) - size(a)).slice(0, 3)) {
+    const k = kindOf(c.item);
+    const exp = isExpKind(k);
+    const idx = months.indexOf(c.month);
+    if (c.kind === 'ended') {
+      const next = months[Math.min(idx + 1, 11)];
+      notes.push({ month: c.month, dot: exp ? 'good' : 'warn', title: <>{c.item.name} จบ {mon(c.month)}</>,
+        sub: exp && k && next !== c.month ? <>ตั้งแต่ {mon(next)} {k === 'fixed' ? 'รายจ่ายคงที่' : 'รายจ่าย'}ลดจาก <span className="num">{money(totalsAt(c.month)[k])}</span> เหลือ <span className="num">{money(totalsAt(next)[k])}</span></>
+          : <>เดือนละ <span className="num">{money(c.from)}</span></> });
+    } else {
+      const up = c.kind === 'started' || c.to > c.from;
+      const sr = (m: Month) => { const t = totalsAt(m); return pct1(t.saving + t.invest, t.income); };
+      notes.push({ month: c.month, dot: exp ? (up ? 'bad' : 'good') : up ? 'save' : 'warn',
+        title: <>{mon(c.month)} {c.item.name}{c.kind === 'started' ? ' เริ่ม' : up ? 'เพิ่มเป็น' : 'ลดเป็น'} <span className="num">{money(c.to)}</span></>,
+        sub: c.kind === 'changed'
+          ? (exp ? <>จากเดิม <span className="num">{money(c.from)}</span></> : <>Savings Rate จาก <span className="num">{sr(months[Math.max(idx - 1, 0)])}%</span> เป็น <span className="num">{sr(c.month)}%</span></>)
+          : <>เดือนละ <span className="num">{money(c.to)}</span></> });
+    }
+  }
+  if (minLeftVal >= 0) notes.push({ month: lowMonths[0], dot: 'low', title: <>{lowLabel} เงินเหลือน้อยสุด <span className="num">{money(minLeftVal)}</span></>, sub: <>ลองดูแผน<span className="nw">เดือนนั้น</span>ก่อนเงินเดือนเข้า</> });
+  return notes;
 }

@@ -1,10 +1,11 @@
 // โครงแอปบนคอม (บอร์ด Desk-Shell / Desk-Shell-1024 / Desk-Shell-Log) · ใช้เมื่อจอกว้างตั้งแต่ 1024
-import type { ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import { Icon, P } from './Icon';
 import { AppMark } from './AppMark';
 import { useSettings } from '../db/hooks';
-import { appCycle, localToday, thaiMonth } from '../calc/dates';
+import { appCycle, cycleRange, localToday, thaiDate, thaiMonth } from '../calc/dates';
 import type { DeskMode } from '../lib/useDesk';
 
 const NAV: { to: string; name: string; icon: keyof typeof P; end?: boolean }[] = [
@@ -25,13 +26,24 @@ const FoldIcon = () => (
   </svg>
 );
 
-function pageOf(path: string, planTab: boolean) {
-  if (path === '/' && planTab) return { title: 'วางแผนรายจ่าย', cycle: true };
-  if (path === '/') return { title: 'หน้าหลัก', cycle: true };
-  if (path.startsWith('/goals')) return { title: 'เป้าหมาย', cycle: false };
-  if (path.startsWith('/log')) return { title: 'บันทึก', cycle: false };
-  if (path.startsWith('/settings')) return { title: 'ตั้งค่า', cycle: false };
-  return { title: '', cycle: false };
+// หน้าในโครงคอมวางปุ่มของตัวเองที่แถบบนผ่านช่องนี้ (null = ไม่ได้อยู่บนจอคอม)
+const DeskCtx = createContext<{ actions: HTMLElement | null; lead: HTMLElement | null } | null>(null);
+export const useDeskSlots = () => useContext(DeskCtx);
+/** ปุ่มของหน้าที่แถบบน (ชิดขวา) และปุ่มหน้าชื่อหน้า (เช่น กลับตารางแผน) */
+export function DeskBar({ lead, actions }: { lead?: ReactNode; actions?: ReactNode }) {
+  const c = useDeskSlots();
+  if (!c) return null;
+  return <>{lead && c.lead && createPortal(lead, c.lead)}{actions && c.actions && createPortal(actions, c.actions)}</>;
+}
+
+function pageOf(path: string, planTab: boolean, view: string | null, year: string | null) {
+  if (path === '/' && planTab && view === 'year') return { title: `สรุปทั้งปี ${year ? Number(year) + 543 : ''}`.trim(), cycle: false, full: true };
+  if (path === '/' && planTab) return { title: 'วางแผนรายจ่าย', cycle: true, full: true };
+  if (path === '/') return { title: 'หน้าหลัก', cycle: true, full: false };
+  if (path.startsWith('/goals')) return { title: 'เป้าหมาย', cycle: false, full: false };
+  if (path.startsWith('/log')) return { title: 'บันทึก', cycle: false, full: false };
+  if (path.startsWith('/settings')) return { title: 'ตั้งค่า', cycle: false, full: false };
+  return { title: '', cycle: false, full: false };
 }
 
 const today = () =>
@@ -42,9 +54,16 @@ export function DeskShell({ mode, wide, onToggle, children }: { mode: DeskMode; 
   const [sp] = useSearchParams();
   const s = useSettings();
   const planTab = loc.pathname === '/' && sp.get('tab') === 'plan';
-  const pg = pageOf(loc.pathname, planTab);
+  const pg = pageOf(loc.pathname, planTab, sp.get('view'), sp.get('y'));
+  const [actions, setActions] = useState<HTMLElement | null>(null);
+  const [lead, setLead] = useState<HTMLElement | null>(null);
   const rail = mode === 'rail';
-  const sub = pg.cycle && s ? `${today()} · รอบ ${thaiMonth(appCycle(localToday(), s.pay, s.startCycle))}` : '';
+  const cur = s ? appCycle(localToday(), s.pay, s.startCycle) : null;
+  const range = s && cur ? cycleRange(cur, s.pay) : null;
+  const short = (d: string) => thaiDate(d).replace(/ \d+$/, '');
+  const sub = !s || !cur ? '' : planTab && sp.get('view') === 'year' ? 'ม.ค. – ธ.ค. · ตามแผนในตาราง'
+    : planTab && range ? `รอบ ${thaiMonth(cur)} · ${short(range.start)} – ${short(range.end)}`
+    : pg.cycle ? `${today()} · รอบ ${thaiMonth(cur)}` : '';
 
   return (
     <div className={`desk${rail ? ' is-rail' : ''}`}>
@@ -72,11 +91,17 @@ export function DeskShell({ mode, wide, onToggle, children }: { mode: DeskMode; 
       </aside>
       <div className="desk-main">
         <header className="desk-top">
+          <span ref={setLead} className="lead" />
           <span className="ttl"><h1>{pg.title}</h1>{sub && <span className="sub num">{sub}</span>}</span>
+          <span ref={setActions} className="acts" />
         </header>
-        <div className="desk-colwrap">
-          <div className="desk-col">{children}</div>
-        </div>
+        <DeskCtx.Provider value={{ actions, lead }}>
+          {pg.full ? <div className="desk-full">{children}</div> : (
+            <div className="desk-colwrap">
+              <div className="desk-col">{children}</div>
+            </div>
+          )}
+        </DeskCtx.Provider>
       </div>
     </div>
   );
