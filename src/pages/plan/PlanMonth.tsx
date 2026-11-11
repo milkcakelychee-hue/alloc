@@ -1,5 +1,6 @@
 // แท็บ วางแผนรายจ่าย · มุมมองเดือน (ต้นแบบ Plan1)
 import { useState } from 'react';
+import { usePlanMonth } from './usePlanMonth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
@@ -45,9 +46,11 @@ export function PlanMonth() {
 
   const s = data?.settings;
   const current = s ? appCycle(today, s.pay, s.startCycle) : null;
-  const m = month ?? current;
+  const pm = usePlanMonth(data);
+  const planCur = pm?.planCur ?? current; // ติ๊กครบแล้ว = เดือนถัดไป
+  const m = month ?? planCur;
   const checks = useLiveQuery(() => (m ? db.paidChecks.where('cycleMonth').equals(m).toArray() : []), [m]);
-  if (!data || !s || !m || !current) return null;
+  if (!data || !s || !m || !current || !planCur) return null;
 
   const { groups, items, accounts, goals, adjustments } = data;
   const baseAmount = goalAwareAmountOf(goals, items, adjustments, current);
@@ -166,17 +169,17 @@ export function PlanMonth() {
             <Icon name="edit" size={14} stroke={2} />
           </button>
           {pay.reason !== 'onTime' && <span className="tag warn">{pay.reason === 'override' ? 'แก้เฉพาะเดือนนี้' : `เลื่อนจาก ${thaiDate(pay.nominal).split(' ').slice(0, 2).join(' ')}`}</span>}
-          {m !== current && <button className="link-btn" onClick={() => setMonth(null)}>กลับเดือนนี้</button>}
+          {m !== planCur && <button className="link-btn" onClick={() => setMonth(null)}>กลับเดือนนี้</button>}
         </div>
       )}
-      {view !== 'month' && m !== current && <div className="plan-meta"><button className="link-btn" onClick={() => setMonth(null)}>กลับ{view === 'year' ? 'ปี' : 'เดือน'}นี้</button></div>}
+      {view !== 'month' && m !== planCur && <div className="plan-meta"><button className="link-btn" onClick={() => setMonth(null)}>กลับ{view === 'year' ? 'ปี' : 'เดือน'}นี้</button></div>}
 
 
       {view === '3m' && <><PlanThree data={data} month={m} current={current} amountOf={amountOf} onEdit={(item, em) => { setEditMonth(em); setEditing({ item, groupId: item.groupId }); }} /><TriLegend /></>}
       {view === 'year' && <PlanYearView data={data} year={Number(m.slice(0, 4))} current={current} amountOf={amountOf} onPickMonth={(x) => { setMonth(x); setView('month'); }} />}
       {view === 'month' && <>
       <section className="card plan-sum" aria-label="สรุปแผนเดือนนี้">
-        <div className="sum-top"><span className="t">สรุปแผน{m === current ? 'เดือนนี้' : ` ${thaiMonth(m)}`}</span>
+        <div className="sum-top"><span className="t">สรุปแผน{m === planCur ? 'เดือนนี้' : ` ${thaiMonth(m)}`}</span>
           <span className="muted">Savings Rate <b className="num" style={{ color: 'var(--ink)' }}>{pct1(t.saving + t.invest, t.income)}%</b></span></div>
         <div className="sum-row inc"><span><Icon name="salary" size={18} />รายรับ</span><b className="num">{formatBaht(t.income)}</b></div>
         <div className="sum-row sav"><span><Icon name="piggy" size={18} />ออม + ลงทุน</span><b className="num">{t.saving + t.invest ? '−' : ''}{formatBaht(t.saving + t.invest)}</b></div>
@@ -191,12 +194,12 @@ export function PlanMonth() {
       {!checkMode ? (
         <button className="check-entry" onClick={() => { setCheckMode(true); setSortMode(false); }}>
           <span className="ic"><Icon name="checkSq" size={18} stroke={2.4} /></span>
-          <span className="tx"><span className="t1">เช็กว่าจ่าย / โอนแล้ว</span><span className="t2 num">ติ๊กไปแล้ว {checkable.filter((i) => checked.has(i.id)).length} จาก {checkable.length} รายการ</span></span>
+          <span className="tx"><span className="t1">ติ๊กว่าแบ่งเงินแล้ว</span><span className="t2 num">ติ๊กไปแล้ว {checkable.filter((i) => checked.has(i.id)).length} จาก {checkable.length} รายการ</span></span>
           <Icon name="chevron" size={16} stroke={2} />
         </button>
       ) : (
         <section className="check-mode" aria-label="โหมดเช็กจ่ายแล้ว">
-          <div className="cm-top"><span className="t"><Icon name="checkSq" size={18} stroke={2.4} />เช็กว่าจ่าย / โอนแล้ว</span>
+          <div className="cm-top"><span className="t"><Icon name="checkSq" size={18} stroke={2.4} />ติ๊กว่าแบ่งเงินแล้ว</span>
             <button className="pill-btn" onClick={() => setCheckMode(false)}>เสร็จ</button></div>
           <span className="bar"><span style={{ width: `${checkable.length ? (checkable.filter((i) => checked.has(i.id)).length / checkable.length) * 100 : 0}%` }} /></span>
           <span className="t2 num">ติ๊กแล้ว {checkable.filter((i) => checked.has(i.id)).length} / {checkable.length} · โอนแล้ว {formatBaht(checkedAmt)} · <span className="nw">แตะช่องหน้ารายการ</span> · <span className="nw">ติ๊กเพื่อจำว่าแบ่งเงินแล้ว</span> <span className="nw">ไม่ลงบันทึก</span></span>
