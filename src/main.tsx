@@ -9,6 +9,9 @@ import './styles/base.css';
 import './styles/goals.css';
 import './styles/log.css';
 import './styles/bill.css';
+import './styles/desk.css';
+import { DeskShell } from './components/DeskShell';
+import { useDesk } from './lib/useDesk';
 import { applyTheme, syncThemeFromDb } from './lib/theme';
 import { db } from './db/db';
 import { ensureDefaults } from './db/defaults';
@@ -41,6 +44,7 @@ function Shell() {
   const settings = last.current;
   const loc = useLocation();
   const { notice } = useSync();
+  const desk = useDesk();
   useEffect(() => {
     if (!notice) return;
     const t = setTimeout(clearNotice, 6000);
@@ -60,8 +64,7 @@ function Shell() {
   const onWelcome = loc.pathname === '/welcome';
   // ยังไม่ผ่านหน้าเริ่มใช้งาน → ไป Welcome ก่อน (หน้า Welcome เองจัดการขั้น "พร้อมใช้แล้ว")
   if (!settings.onboardedAt && !onWelcome) return <Navigate to="/welcome" replace />;
-  return (
-    <>
+  const routes = (
       <Routes>
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/" element={<Home />} />
@@ -79,7 +82,12 @@ function Shell() {
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {!onWelcome && loc.pathname !== '/goals/new' && loc.pathname !== '/log/add' && <TabBar />}
+  );
+  const onDesk = desk.mode !== 'mobile' && !onWelcome;
+  return (
+    <>
+      {onDesk ? <DeskShell mode={desk.mode} wide={desk.wide} onToggle={desk.toggle}>{routes}</DeskShell> : routes}
+      {!onDesk && !onWelcome && loc.pathname !== '/goals/new' && loc.pathname !== '/log/add' && <TabBar />}
       {notice && !upd && <button className="toast" onClick={clearNotice}>{notice}</button>}
       {upd && <button className="toast" onClick={() => applyUpdate()}>มีอัปเดตใหม่ · แตะเพื่อรีเฟรช</button>}
     </>

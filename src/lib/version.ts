@@ -6,6 +6,18 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.2', date: 'พ.ย. 69',
+    sections: [
+      { title: 'ทำอะไรได้เพิ่ม', items: [
+        'เปิดบนคอม (จอกว้างตั้งแต่ 1024) มีเมนูด้านซ้าย และปุ่ม "วางแผนรายจ่าย" อยู่บนสุด กด "ย่อเมนู" ให้เหลือแถบไอคอนได้',
+        'หน้าต่าง ๆ บนคอมเปิดเป็นแผงด้านขวาแทนแผ่นเด้งจากล่าง'
+      ] },
+      { title: 'จะเพิ่ม', items: [
+        'ตารางแผน 12 เดือนบนคอม แก้ยอดได้แบบ spreadsheet และหน้าเป้าหมายที่เห็นข้อมูลครบในจอเดียว'
+      ] }
+    ]
+  },
+  {
     version: '1.1.1', date: 'พ.ย. 69',
     sections: [
       { title: 'ปรับแก้', items: [

@@ -1,0 +1,74 @@
+/* จอคอม (ALLOC_DESKTOP_SPEC ข้อ 1–3) · ทุกกฎอยู่ใต้ min-width 1024 เพื่อไม่ให้มือถือเปลี่ยน */
+@media (min-width: 1024px) {
+  .desk { display: flex; height: 100dvh; overflow: hidden; }
+  .desk-side {
+    width: 232px; flex: none; padding: 20px 14px 16px; background: var(--card); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 6px; overflow-y: auto;
+  }
+  .desk-logo { display: flex; align-items: center; gap: 10px; padding: 0 6px 14px; }
+  .desk-logo span:last-child { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .desk-logo > span:first-child { box-shadow: none !important; border-radius: 9px !important; }
+
+  .desk-plan {
+    display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 12px; border-radius: 16px;
+    box-shadow: inset 0 0 0 1.5px var(--sel); color: var(--ink); text-decoration: none;
+  }
+  .desk-plan .tx { display: flex; flex-direction: column; line-height: 1.3; }
+  .desk-plan .t1 { font-size: 15px; font-weight: 600; }
+  .desk-plan .t2 { font-size: 12px; opacity: .75; }
+  .desk-plan:hover { background: var(--hover); }
+  .desk-plan.on { background: var(--sel); color: var(--onsel); }
+
+  .desk-cap { font-size: 12px; font-weight: 600; color: var(--ink3); padding: 14px 12px 4px; }
+  .desk-nav { display: flex; flex-direction: column; gap: 2px; }
+  .desk-nav a, .desk-fold {
+    display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px;
+    color: var(--ink2); font-size: 15px; font-weight: 500; text-decoration: none;
+  }
+  .desk-nav a:hover, .desk-fold:hover { background: var(--hover); color: var(--ink); }
+  .desk-nav a.on { background: var(--sel); color: var(--onsel); font-weight: 600; }
+  .desk-fold { margin-top: auto; width: 100%; font-size: 13.5px; color: var(--ink3); }
+  .desk-side a:focus-visible, .desk-side button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* แถบไอคอน 76 */
+  .is-rail .desk-side { width: 76px; padding: 20px 8px 16px; align-items: stretch; }
+  .is-rail .desk-logo { justify-content: center; padding: 0 0 14px; }
+  .is-rail .desk-plan, .is-rail .desk-nav a {
+    flex-direction: column; justify-content: center; gap: 3px; height: 56px; padding: 0; border-radius: 14px; font-size: 11px;
+  }
+  .is-rail .desk-plan { margin-bottom: 12px; }
+  .is-rail .desk-plan .rl { font-size: 11px; font-weight: 600; }
+  .is-rail .desk-fold { justify-content: center; padding: 0; }
+
+  .desk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .desk-top { height: 64px; flex: none; padding: 0 28px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); }
+  .is-rail .desk-top { padding: 0 20px; }
+  .desk-top .ttl { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 12px; }
+  .desk-top h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
+  .desk-top .sub { font-size: 13px; color: var(--ink3); white-space: nowrap; }
+
+  /* คอลัมน์กลางแบบมือถือ (บันทึก และหน้าที่ยังไม่มีดีไซน์คอม): กว้างสุด 480 เลื่อนในตัวเอง
+     transform ทำให้ของที่ position:fixed ในหน้า (ปุ่มลอย แป้นตัวเลข) อยู่ในคอลัมน์ ไม่ลอยไปกลางจอ */
+  .desk-colwrap { flex: 1; min-height: 0; position: relative; background: var(--card2); display: flex; justify-content: center; }
+  .desk-col {
+    width: 100%; max-width: 480px; height: 100%; overflow-y: auto; background: var(--bg);
+    box-shadow: 0 0 0 1px var(--line); transform: translateZ(0); overscroll-behavior: contain;
+  }
+  .desk-col .page { padding-top: 16px; padding-bottom: 40px; }
+  .desk-col .page-head { display: none; }
+  .desk-col .tabbar { display: none; }
+  .desk-col .lg-fab { bottom: 20px; }
+  .desk-col .plan-entry { display: none; } /* ทางเข้าแผนอยู่ที่เมนูซ้ายแล้ว */
+
+  /* แผ่นเด้ง → แผงด้านขวา 440 มีพื้นหรี่ */
+  .scrim { justify-content: flex-end; align-items: stretch; }
+  .scrim > .sheet {
+    max-width: 440px; max-height: none; height: 100dvh; border-radius: 0; padding: 20px 24px 24px;
+    box-shadow: var(--panel-shadow); animation: side .22s cubic-bezier(.2, .8, .2, 1);
+  }
+  .scrim > .sheet .grab { display: none; }
+  .scrim > .sheet h2 { font-size: 20px; }
+
+  .toast { bottom: 24px; background: var(--toast); color: var(--on-toast); }
+}
+@keyframes side { from { transform: translateX(40px); opacity: .6; } }

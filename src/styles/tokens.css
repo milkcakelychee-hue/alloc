@@ -37,6 +37,20 @@
   --g-save-card: #FFFFFF;     --g-save-head: #E4EEF8;     --g-save-line: #ECECE6;     --g-save-ic: #E4EEF8;
 
   /* สีกราฟ (ลำดับตายตัวจากสเปก หัวข้อ 3 · ตรวจ CVD ด้วย validate_palette แล้ว) */
+  /* จอคอม (ALLOC_DESKTOP_SPEC ข้อ 2) · --scrim ใช้ค่าเดิมของแอป */
+  --hover: rgba(22, 35, 28, .06);
+  --focus: #2F6B47;
+  --panel-shadow: -16px 0 48px rgba(13, 22, 17, .16);
+  --g-inc: #E6EFE4; --g-exp: #FFF0F0; --g-goal: #FAEBDD; --g-sav: #E4EEF8;
+  --t-inc: #2F6B47; --t-exp: #A63D27; --t-goal: #8A4B14; --t-sav: #2A5F8F;
+  --cur: rgba(198, 228, 63, .22);
+  --redbg: #F8E3DC;
+  --hatch: #E4E4DC;
+  --tot: #F6F6F1;
+  --flash: rgba(198, 228, 63, .55);
+  --pop-shadow: 0 10px 28px rgba(13, 22, 17, .18);
+  --toast: #16231C; --on-toast: #FAFAF7;
+
   --c1: #eb6834; --c2: #2a78d6; --c3: #eda100; --c4: #e87ba4; --c5: #6250d6; --c6: #1baf7a;
 
   --font: 'IBM Plex Sans Thai Looped', 'Sukhumvit Set', system-ui, sans-serif;
@@ -72,6 +86,19 @@
   --track: #243A2E;
   --exp: #3A4B41;
   --shadow: rgba(0, 0, 0, .4);
+
+  --hover: rgba(250, 250, 247, .07);
+  --focus: #8FCCA3;
+  --panel-shadow: -16px 0 48px rgba(0, 0, 0, .5);
+  --g-inc: #1B2B17; --g-exp: #2F1313; --g-goal: #2F2113; --g-sav: #13212F;
+  --t-inc: #8FCCA3; --t-exp: #EE927A; --t-goal: #E2B866; --t-sav: #7FB0DE;
+  --cur: rgba(198, 228, 63, .11);
+  --redbg: #3D2119;
+  --hatch: #2E4A3A;
+  --tot: #111D16;
+  --flash: rgba(198, 228, 63, .30);
+  --pop-shadow: 0 10px 28px rgba(0, 0, 0, .55);
+  --toast: #FAFAF7; --on-toast: #0D1611;
 
   --c1: #e0602e; --c3: #c08400; --c4: #d96a93; --c5: #7462e0;
   --g-income-card: #0F190D;   --g-income-head: #1B2B17;   --g-income-line: #283E23;   --g-income-ic: #294224;
