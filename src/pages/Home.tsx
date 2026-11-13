@@ -22,7 +22,7 @@ import { DeskPlan } from './desk/DeskPlan';
 const todayLong = () =>
   new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     .format(new Date())
-    .replace(/^(วัน\S+)\s/, '$1ที่ ');
+    .replace(/^(วัน\S+?)(?:ที่)?\s/, '$1ที่ ');
 
 const HIDDEN = '••••••';
 
