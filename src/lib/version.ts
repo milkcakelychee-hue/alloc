@@ -6,6 +6,10 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.5.1', date: 'พ.ย. 69',
+    sections: [{ title: 'ปรับแก้', items: ['ตัวเลขปีในตารางแผนอยู่กลางป้าย', 'ช่องเงินเหลือที่ติดลบเป็นสี่เหลี่ยม ไม่โค้งมน'] }]
+  },
+  {
     version: '1.5', date: 'พ.ย. 69',
     sections: [
       { title: 'ทำอะไรได้เพิ่ม', items: [
@@ -17,8 +21,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       { title: 'ปรับแก้', items: [
         'ติ๊กครบแล้ว หัวหน้าแผนบอกรอบใหม่ทันที และกดดูรอบที่แล้วได้',
         'ปิดแผงรายละเอียดตอนยังไม่ได้บันทึก จะถามก่อนว่าจะบันทึกไหม',
-        'เปลี่ยนชื่อรายการในแผงรายละเอียดแทนการดับเบิลคลิก',
-        'ตัวเลขปีอยู่กลางป้าย และช่องเงินเหลือติดลบเป็นสี่เหลี่ยม'
+        'เปลี่ยนชื่อรายการในแผงรายละเอียดแทนการดับเบิลคลิก'
       ] },
       { title: 'จะเพิ่ม', items: ['หน้าเป้าหมายบนคอม เห็นข้อมูลทุกอย่างของเป้าในจอเดียว'] }
     ]
