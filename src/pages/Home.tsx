@@ -31,10 +31,10 @@ export default function Home() {
   const desk = useDeskSlots();
   // แท็บแผน: ไม่มีปุ่มสลับ มีปุ่มกลับหน้าสรุปด้านบนแทน · บนคอมเป็นตาราง 12 เดือน
   if (sp.get('tab') === 'plan') return desk ? <DeskPlan /> : <PlanMonth />;
-  return <Summary />;
+  return desk ? <div className="dh"><Summary desk /></div> : <Summary />;
 }
 
-function Summary() {
+function Summary({ desk = false }: { desk?: boolean }) {
   const data = usePlanData();
   const [toast, setToast] = useState('');
   if (!data?.settings) return null;
@@ -50,37 +50,15 @@ function Summary() {
   const C = 88; // วงเล็ก r 14
   const segS = (a.savingPct / 100) * C;
 
-  // ต้องทำ: วางแผนเดือนหน้า · สำรองข้อมูล
-  const next = planNextPrompt({ pay: s.pay, shift: s.weekendShift, overrides: s.payOverrides, today, totalsOf: (m) => planTotals(groups, items, m, amountOf) });
-  const bs = backupStatus(s.lastBackupAt);
-  const extra = [];
-  if (next) {
-    extra.push(
-      <Link key="plan" to={`/?tab=plan&m=${next.cycle}`} className="todo-card red">
-        <span className="ic"><Icon name="alert" size={20} stroke={2} /></span>
-        <span className="tx"><span className="t1">วางแผน <span className="nw">{thaiMonth(next.cycle).split(' ')[0]}</span> <span className="nw">ก่อนเงินเดือนเข้า <span className="num">{dateWithDay(next.payDate).replace(/^\S+ /, '').replace(/ \d\d$/, '')}</span></span></span>
-          <span className="t2 num">{next.daysLeft === 0 ? 'วันนี้' : `อีก ${next.daysLeft} วัน`} · {next.empty ? 'ยังไม่มีแผน' : <>ตอนนี้แผนติดลบ <span className="nw">{formatBaht(-next.leftover)}</span></>}</span></span>
-        <Icon name="chevron" size={16} stroke={2} />
-      </Link>
-    );
-  }
-  if (bs.due) {
-    extra.push(
-      <button key="backup" className="todo-card amb" onClick={async () => { const r = await exportBackup(db); if (r !== 'cancelled') { setToast('สำรองข้อมูลแล้ว'); setTimeout(() => setToast(''), 3000); } }}>
-        <span className="ic"><Icon name="backup" size={20} stroke={1.9} /></span>
-        <span className="tx"><span className="t1">{bs.never ? 'ยังไม่เคยสำรองข้อมูล' : <>ไม่ได้สำรองข้อมูล <span className="num">{bs.days}</span> วัน</>}</span><span className="t2">แตะเพื่อสำรองตอนนี้</span></span>
-        <Icon name="chevron" size={16} stroke={2} />
-      </button>
-    );
-  }
+  const extra = todoExtra(data, (m) => { setToast(m); setTimeout(() => setToast(''), 3000); });
 
   return (
-    <main className="page">
+    <main className={desk ? 'page dh-mob' : 'page'}>
       <div className="page-head">
         <span className="sub num">{todayLong()}</span>
         <h1>ภาพรวมการเงิน</h1>
       </div>
-      <PlanEntry />
+      {!desk && <PlanEntry />}
 
       <section className="hero assets" aria-label="สินทรัพย์รวม">
         <div className="as-top">
@@ -134,4 +112,38 @@ function Summary() {
       {toast && <div className="toast" role="status">{toast}</div>}
     </main>
   );
+}
+
+/** การ์ดต้องทำจากหน้าหลัก (วางแผนเดือนหน้า · สำรองข้อมูล) ใช้ทั้งมือถือและคอม */
+export function todoExtra(data: NonNullable<ReturnType<typeof usePlanData>>, flash: (m: string) => void) {
+  const { settings: s, groups, items, goals, adjustments } = data;
+  if (!s) return [];
+  const today = localToday();
+  const cur = appCycle(today, s.pay, s.startCycle);
+  const amountOf = goalAwareAmountOf(goals, items, adjustments, cur);
+  // ต้องทำ: วางแผนเดือนหน้า · สำรองข้อมูล
+  const next = planNextPrompt({ pay: s.pay, shift: s.weekendShift, overrides: s.payOverrides, today, totalsOf: (m) => planTotals(groups, items, m, amountOf) });
+  const bs = backupStatus(s.lastBackupAt);
+  const extra = [];
+  if (next) {
+    extra.push(
+      <Link key="plan" to={`/?tab=plan&m=${next.cycle}`} className="todo-card red">
+        <span className="ic"><Icon name="alert" size={20} stroke={2} /></span>
+        <span className="tx"><span className="t1">วางแผน <span className="nw">{thaiMonth(next.cycle).split(' ')[0]}</span> <span className="nw">ก่อนเงินเดือนเข้า <span className="num">{dateWithDay(next.payDate).replace(/^\S+ /, '').replace(/ \d\d$/, '')}</span></span></span>
+          <span className="t2 num">{next.daysLeft === 0 ? 'วันนี้' : `อีก ${next.daysLeft} วัน`} · {next.empty ? 'ยังไม่มีแผน' : <>ตอนนี้แผนติดลบ <span className="nw">{formatBaht(-next.leftover)}</span></>}</span></span>
+        <Icon name="chevron" size={16} stroke={2} />
+      </Link>
+    );
+  }
+  if (bs.due) {
+    extra.push(
+      <button key="backup" className="todo-card amb" onClick={async () => { const r = await exportBackup(db); if (r !== 'cancelled') { flash('สำรองข้อมูลแล้ว'); } }}>
+        <span className="ic"><Icon name="backup" size={20} stroke={1.9} /></span>
+        <span className="tx"><span className="t1">{bs.never ? 'ยังไม่เคยสำรองข้อมูล' : <>ไม่ได้สำรองข้อมูล <span className="num">{bs.days}</span> วัน</>}</span><span className="t2">แตะเพื่อสำรองตอนนี้</span></span>
+        <Icon name="chevron" size={16} stroke={2} />
+      </button>
+    );
+  }
+
+  return extra;
 }

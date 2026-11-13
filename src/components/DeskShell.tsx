@@ -39,15 +39,15 @@ export function DeskBar({ lead, actions }: { lead?: ReactNode; actions?: ReactNo
 function pageOf(path: string, planTab: boolean, view: string | null, year: string | null) {
   if (path === '/' && planTab && view === 'year') return { title: `สรุปทั้งปี ${year ? Number(year) + 543 : ''}`.trim(), cycle: false, full: true };
   if (path === '/' && planTab) return { title: 'วางแผนรายจ่าย', cycle: true, full: true };
-  if (path === '/') return { title: 'หน้าหลัก', cycle: true, full: false };
+  if (path === '/') return { title: 'ภาพรวมการเงิน', cycle: true, full: true };
   if (path.startsWith('/goals')) return { title: 'เป้าหมาย', cycle: false, full: true };
   if (path.startsWith('/log')) return { title: 'บันทึก', cycle: false, full: false };
-  if (path.startsWith('/settings')) return { title: 'ตั้งค่า', cycle: false, full: false };
+  if (path.startsWith('/settings')) return { title: 'ตั้งค่า', cycle: false, full: true };
   return { title: '', cycle: false, full: false };
 }
 
 const today = () =>
-  new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date()).replace(/^วัน(\S+?)ที่ /, '$1 ');
+  new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()).replace(/^(วัน\S+?)(?:ที่)?\s/, '$1ที่ ');
 
 export function DeskShell({ mode, wide, onToggle, children }: { mode: DeskMode; wide: boolean; onToggle: () => void; children: ReactNode }) {
   const loc = useLocation();
@@ -66,7 +66,7 @@ export function DeskShell({ mode, wide, onToggle, children }: { mode: DeskMode; 
   const short = (d: string) => thaiDate(d).replace(/ \d+$/, '');
   const sub = !s || !cur ? '' : planTab && sp.get('view') === 'year' ? 'ม.ค. – ธ.ค. · ตามแผนในตาราง'
     : planTab && range ? `รอบ ${thaiMonth(cur)} · ${short(range.start)} – ${short(range.end)}`
-    : pg.cycle ? `${today()} · รอบ ${thaiMonth(cur)}` : '';
+    : pg.cycle && range ? `${today()} · รอบ ${thaiMonth(cur)} · ${short(range.start)} – ${short(range.end)}` : '';
 
   return (
     <div className={`desk${rail ? ' is-rail' : ''}`}>

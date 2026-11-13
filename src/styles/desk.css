@@ -550,3 +550,111 @@
   .dg-ovgoals .r3 { font-size: 11.5px; color: var(--ink2); }
   .dg-ovgoals .r3 b { color: var(--ink); }
 }
+
+/* ===== หน้าหลักบนคอม (Desk-Home) ===== */
+@media (min-width: 1024px) {
+  .dh { flex: 1; min-height: 0; overflow: auto; padding: 24px 28px 40px; }
+  .dh-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+  .dh .card { background: var(--card); border-radius: 22px; box-shadow: 0 0 0 1px var(--line); }
+  .dh-card { padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .dh-h { display: flex; align-items: center; min-height: 32px; font-size: 13px; font-weight: 600; color: var(--ink3); white-space: nowrap; }
+  .dh-h > span { flex: 1; }
+  .dh-h .icb { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--ink3); display: flex; align-items: center; justify-content: center; }
+  .dh-h .icb:hover { background: var(--line); color: var(--ink); }
+  .dh-big { font-size: 36px; font-weight: 700; letter-spacing: -0.8px; line-height: 1.1; white-space: nowrap; }
+  .dh-big .u { font-size: 15px; font-weight: 500; color: var(--ink3); letter-spacing: 0; font-family: 'IBM Plex Sans Thai Looped', sans-serif; }
+  .dh-big small { font-size: 20px; }
+  .dh-rate { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .dh-rate .k { font-size: 14px; color: var(--ink2); white-space: nowrap; }
+  .dh-bar { display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; background: var(--card2); }
+  .dh-bar > span { display: block; }
+  .dh-sts { display: grid; gap: 12px; }
+  .dh-sts.c2 { grid-template-columns: 1fr 1fr; } .dh-sts.c3 { grid-template-columns: repeat(3, 1fr); }
+  .dh-st { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .dh-st .k { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink2); white-space: nowrap; }
+  .dh-st .k i { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+  .dh-st .p { color: var(--ink3); }
+  .dh-st .v { font-size: 17px; font-weight: 700; white-space: nowrap; }
+  .dh-side { grid-row: span 2; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .dh-plan { padding: 20px; display: flex; flex-direction: column; gap: 14px; background: var(--pri) !important; color: var(--onpri); box-shadow: none !important; }
+  .dh-plan .hd { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; }
+  .dh-plan .lv { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dh-plan .lv > span { display: flex; flex-direction: column; gap: 2px; }
+  .dh-plan .k { font-size: 13px; opacity: .8; white-space: nowrap; }
+  .dh-plan .v { font-size: 22px; font-weight: 700; white-space: nowrap; }
+  .dh-plan .go { height: 46px; border-radius: 14px; background: var(--onpri); color: var(--pri); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
+  /* ต้องทำ: การ์ดเดียว แถวเตี้ยแบบบอร์ด */
+  .dh-side .todo { background: var(--card); border-radius: 22px; box-shadow: 0 0 0 1px var(--line); padding: 20px 14px 10px; gap: 6px; }
+  .dh-side .todo-h { padding: 0 6px; align-items: center; gap: 8px; }
+  .dh-side .todo-h h2 { font-size: 16px; font-weight: 700; }
+  .dh-side .todo-h .num { min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: var(--redbg); color: var(--red); font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .dh-side .todo-card, .dh-side .due-card, .dh-side .pay-card { min-height: 60px; padding: 8px; gap: 12px; border-radius: 10px; background: transparent; box-shadow: none; border: 0; font: inherit; color: var(--ink); }
+  .dh-side .todo-card:hover { background: var(--hover); }
+  .dh-side .todo-card .ic, .dh-side .pay-card .ic { width: 36px; height: 36px; border-radius: 11px; }
+  .dh-side .todo-card.red .ic { background: var(--redbg); color: var(--red); }
+  .dh-side .todo-card.amb .ic { background: var(--g-goal); color: var(--t-goal); }
+  .dh-side .pay-card .ic { background: var(--g-inc); color: var(--t-inc); }
+  .dh-side .todo-card .t1, .dh-side .due-card .t1, .dh-side .pay-card .t1 { font-size: 14px; }
+  .dh-side .todo-card .t2, .dh-side .due-card .t2, .dh-side .pay-card .t2 { font-size: 12.5px; color: var(--ink3); }
+  .dh-side .confirm-card { border-radius: 16px; }
+  /* จ่ายหรือยัง กว้าง 2 คอลัมน์ */
+  .dh-pay { grid-column: span 2; padding: 20px 20px 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .dh-pay .hd { display: flex; align-items: baseline; gap: 10px; }
+  .dh-pay h2 { flex: 1; margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; }
+  .dh-pay h2 .m { font-size: 13px; font-weight: 500; color: var(--ink3); }
+  .dh-pay .c { font-size: 13px; color: var(--ink2); white-space: nowrap; }
+  .dh-pay .c b { color: var(--ink); }
+  .dh-pay .cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .dh-pay .cols > div { min-width: 0; }
+  .dh-pr { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 6px; border: 0; border-radius: 10px; background: transparent; color: inherit; text-align: left; font: inherit; font-size: 14px; width: 100%; box-sizing: border-box; cursor: pointer; }
+  .dh-pr:hover { background: var(--hover); }
+  .dh-pr .bx { width: 22px; height: 22px; border-radius: 7px; flex: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 2px var(--ink3); }
+  .dh-pr.on .bx { background: var(--sel); color: var(--onsel); box-shadow: none; }
+  .dh-pr .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.35; }
+  .dh-pr .t1 { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dh-pr .t2 { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dh-pr .amt { font-weight: 600; white-space: nowrap; }
+  .dh-pr.on .t1, .dh-pr.on .amt { color: var(--ink3); }
+  .dh-pay .ft { font-size: 12.5px; color: var(--ink3); }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .dh-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 320px; gap: 16px; }
+  .dh { padding: 20px 20px 40px; }
+  .dh-big { font-size: 30px; }
+}
+
+/* ===== ตั้งค่าบนคอม (Desk-Settings) ===== */
+@media (min-width: 1024px) {
+  .ds { flex: 1; min-height: 0; overflow: auto; padding: 24px 28px 40px; }
+  .ds-in { max-width: 1000px; margin: 0 auto; display: flex; gap: 40px; align-items: flex-start; }
+  .ds-nav { width: 200px; flex: none; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 0; }
+  .ds-nav a { display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 12px; color: var(--ink2); font-size: 14.5px; font-weight: 500; text-decoration: none; }
+  .ds-nav a:hover { background: var(--hover); }
+  .ds-nav a.on { background: var(--card2); color: var(--ink); font-weight: 600; }
+  .ds-body.page { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 28px; }
+  .ds-body .page-head { display: none; }
+  .ds-sec { display: flex; flex-direction: column; gap: 10px; }
+  .ds-sec > h2 { margin: 0; font-size: 17px; font-weight: 700; }
+  .ds-sec .list { border-radius: 22px; box-shadow: 0 0 0 1px var(--line); padding: 4px 20px; }
+  .ds-sec .row { min-height: 60px; padding: 8px 0; gap: 12px; font-size: 15px; }
+  .ds-sec .row + .row, .ds-sec .row + .block, .ds-sec .block + .row { border-top: 1px solid var(--line); }
+  .ds-sec .row:hover:not(.st-info):not(div) { background: transparent; }
+  .ds-sec button.row:hover .t1, .ds-sec a.row:hover .t1 { color: var(--link); }
+  .ds-sec .row > .ic, .ds-sec .ic36 { display: none; }
+  .ds-sec .block { padding: 12px 0; }
+  .ds-sec .t2 { font-size: 13px; color: var(--ink3); }
+}
+@media (min-width: 1024px) {
+  .ds-sec .block { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; }
+  .ds-sec .block .radio3 { width: 270px; flex: none; margin: 0; }
+}
+
+/* หน้าหลักบนคอม = ลำดับและสีแบบมือถือ ขยายเป็น 2 คอลัมน์ (เจ้าของขอ 13 พ.ย. 69) */
+@media (min-width: 1024px) {
+  .dh .page.dh-mob { max-width: 1120px; width: auto; margin: 0 auto; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+  .dh-mob > .page-head { display: none; }
+  .dh-mob > .hero.assets, .dh-mob > .card.sr, .dh-mob > .todo, .dh-mob > .dh-pay, .dh-mob > .toast { grid-column: 1 / -1; }
+  .dh-mob > .todo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+  .dh-mob > .todo > .todo-h, .dh-mob > .todo > .confirm-card { grid-column: 1 / -1; }
+  .dh-mob > .dh-pay { grid-column: 1 / -1; }
+}

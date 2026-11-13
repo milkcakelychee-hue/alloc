@@ -6,6 +6,15 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.7', date: 'พ.ย. 69',
+    sections: [
+      { title: 'ทำอะไรได้เพิ่ม', items: [
+        'บนคอม หน้าหลักเรียงเหมือนมือถือ สินทรัพย์รวมและ Savings Rate กว้างเต็มจอ และ "ต้องทำ" บอกรายการที่ถึงวันจ่าย',
+        'บนคอม หน้าตั้งค่ามีหัวข้อด้านซ้าย กดแล้วเลื่อนไปส่วนนั้น และหน้าย่อยเปิดเป็นแผงด้านขวา'
+      ] }
+    ]
+  },
+  {
     version: '1.6', date: 'พ.ย. 69',
     sections: [
       { title: 'ทำอะไรได้เพิ่ม', items: [

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Icon } from '../components/Icon';
@@ -19,6 +19,10 @@ import { PayRuleSheet } from '../components/PayRuleSheet';
 import { payRuleLabel } from '../components/PayRuleFields';
 import { SyncSheet } from '../components/SyncSheet';
 import { signOut, syncLabel, useSync } from '../lib/sync';
+import { useDeskSlots } from '../components/DeskShell';
+import { useDeskNav, type DeskNav } from './desk/deskSettings';
+
+const SECS: DeskNav = [['pay', 'เงินเดือน'], ['plan', 'แผนและหมวด'], ['view', 'การแสดงผล'], ['data', 'ข้อมูล'], ['about', 'เกี่ยวกับ']];
 
 const THEMES: { value: ThemePref; label: string }[] = [
   { value: 'light', label: 'สว่าง' },
@@ -59,13 +63,19 @@ export default function Settings() {
     const r = await exportCsv(db);
     if (r !== 'cancelled') flash('ส่งออกแล้ว 2 ไฟล์');
   };
+  const desk = useDeskSlots();
+  const nav = useDeskNav(SECS);
+  // บนคอม (บอร์ด Desk-Settings): หัวข้อซ้าย 200 · เนื้อหาเรียงทุกหัวข้อในหน้าเดียว · มือถือเหมือนเดิมทุกอย่าง
+  const sec = (id: string, title: string, body: ReactNode) => desk
+    ? <section id={`st-${id}`} className="ds-sec" ref={nav.reg(id)}><h2>{title}</h2>{body}</section>
+    : <><span className="sec">{title}</span>{body}</>;
   const chev = <span style={{ color: 'var(--ink3)', display: 'flex' }}><Icon name="chevron" size={16} stroke={2} /></span>;
 
-  return (
-    <main className="page">
+  const body = (
+    <>
       <div className="page-head"><h1>ตั้งค่า</h1></div>
 
-      <span className="sec">เงินเดือน</span>
+      {sec('pay', 'เงินเดือน', <>
       <div className="list">
         <button className="row" onClick={() => setPayOpen(true)} disabled={!settings}>
           <span className="ic tg"><Icon name="calendar" size={18} stroke={2} /></span>
@@ -94,8 +104,9 @@ export default function Settings() {
       </div>
       {payOpen && settings && <PayRuleSheet settings={settings} onClose={() => setPayOpen(false)} />}
       {startOpen && settings && <StartCycleSheet settings={settings} onClose={() => setStartOpen(false)} />}
+      </>)}
 
-      <span className="sec">แผนและหมวด</span>
+      {sec('plan', 'แผนและหมวด', <>
       <div className="list">
         <button className="row" onClick={() => setAccOpen(true)}>
           <span className="ic to"><Icon name="transfer" size={18} stroke={2} /></span>
@@ -117,8 +128,9 @@ export default function Settings() {
         </Link>
       </div>
       {accOpen && <AccountsSheet onClose={() => setAccOpen(false)} />}
+      </>)}
 
-      <span className="sec">การแสดงผล</span>
+      {sec('view', 'การแสดงผล', <>
       <div className="list">
         <div className="block">
           <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -138,8 +150,9 @@ export default function Settings() {
           <span className="sw" aria-hidden="true" />
         </button>
       </div>
+      </>)}
 
-      <span className="sec">ข้อมูล</span>
+      {sec('data', 'ข้อมูล', <>
       <div className="list">
         <button className={`row${sync.status === 'error' || sync.status === 'ask' ? ' alert' : ''}`} onClick={() => setSyncOpen(true)}>
           <span className="ic"><Icon name="cloud" size={18} stroke={2} /></span>
@@ -175,8 +188,9 @@ export default function Settings() {
       </div>
       {syncOpen && <SyncSheet onClose={() => setSyncOpen(false)} />}
       {wipeOpen && <WipeSheet onBackup={backup} onClose={() => setWipeOpen(false)} onDone={() => setTheme('system')} />}
+      </>)}
 
-      <span className="sec">เกี่ยวกับ</span>
+      {sec('about', 'เกี่ยวกับ', <>
       <div className="list">
         <button className="row" onClick={() => setNews(true)}>
           <span className="ic"><Icon name="info" size={18} stroke={2} /></span>
@@ -185,6 +199,7 @@ export default function Settings() {
           {chev}
         </button>
       </div>
+      </>)}
       {toast && <div className="toast" role="status">{toast}</div>}
 
       <span className="muted" style={{ textAlign: 'center', fontSize: 12, paddingTop: 4 }}>
@@ -209,7 +224,18 @@ export default function Settings() {
           <button className="btn btn-pri" style={{ width: '100%' }} onClick={() => setNews(false)}>ปิด</button>
         </Sheet>
       )}
-    </main>
+    </>
+  );
+  if (!desk) return <main className="page">{body}</main>;
+  return (
+    <div className="ds" ref={nav.scroller}>
+      <div className="ds-in">
+        <nav aria-label="หัวข้อตั้งค่า" className="ds-nav">
+          {SECS.map(([id, t]) => <a key={id} href={`#st-${id}`} className={nav.on === id ? "on" : ""} aria-current={nav.on === id ? "true" : undefined} onClick={(e) => { e.preventDefault(); nav.go(id); }}>{t}</a>)}
+        </nav>
+        <div className="ds-body page">{body}</div>
+      </div>
+    </div>
   );
 }
 
