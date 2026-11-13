@@ -127,10 +127,10 @@
   .dp-grp .chev { display: flex; transition: transform .15s; }
   .dp-grp .cnt { font-weight: 500; opacity: .8; }
   .dp-grp .nm:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
-  .t-inc { background: var(--g-inc); } .t-inc .nm { color: var(--t-inc); }
-  .t-exp { background: var(--g-exp); } .t-exp .nm { color: var(--t-exp); }
-  .t-goal { background: var(--g-goal); } .t-goal .nm { color: var(--t-goal); }
-  .t-sav { background: var(--g-sav); } .t-sav .nm { color: var(--t-sav); }
+  .dp-grp.t-inc { background: var(--g-inc); } .dp-grp.t-inc .nm { color: var(--t-inc); }
+  .dp-grp.t-exp { background: var(--g-exp); } .dp-grp.t-exp .nm { color: var(--t-exp); }
+  .dp-grp.t-goal { background: var(--g-goal); } .dp-grp.t-goal .nm { color: var(--t-goal); }
+  .dp-grp.t-sav { background: var(--g-sav); } .dp-grp.t-sav .nm { color: var(--t-sav); }
   .dp-item { height: 34px; border-top: 1px solid var(--line); }
   .dp-item:hover { background: var(--hover); }
   .dp-item .nm { padding: 0 10px 0 30px; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -372,4 +372,181 @@
   .dk-newacc input { flex: 1; min-width: 0; }
   .dp-nm .ic { display: flex; flex: none; opacity: .85; }
   .dp-empty .ib { margin-top: 10px; }
+}
+
+/* ===== หน้าเป้าหมายบนคอม (ข้อ 8 · บอร์ด Desk-GoalList) · ซ้าย 340 ขวาเต็ม เลื่อนแยกกัน ===== */
+@media (min-width:1024px) {
+  .dg { flex: 1; min-height: 0; display: flex; gap: 20px; padding: 20px 24px 0; }
+  .dg-left { width: 340px; flex: none; overflow-y: auto; padding: 0 4px 24px; display: flex; flex-direction: column; gap: 6px; scrollbar-gutter: stable; }
+  .dg-right { flex: 1; min-width: 0; overflow-y: auto; padding: 0 4px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .dg-card { background: var(--card); border-radius: 22px; box-shadow: 0 0 0 1px var(--line); }
+  .dg-total { padding: 18px 16px 14px; display: flex; flex-direction: column; gap: 8px; text-align: left; color: inherit; width: 100%; }
+  .dg-total:hover { box-shadow: 0 0 0 1px var(--ink3); }
+  .dg-total.on { box-shadow: inset 0 0 0 2px var(--sel); }
+  .dg-total .k { font-size: 13px; color: var(--ink2); }
+  .dg-total .v { font-size: 26px; font-weight: 700; }
+  .dg-total .bar, .dg-row .bar, .dg-head .bar { display: block; height: 7px; border-radius: 99px; background: var(--card2); overflow: hidden; }
+  .dg-total .bar > span { display: block; height: 100%; border-radius: 99px; background: var(--t-inc); }
+  .dg-total .ft { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink2); }
+  .dg-total .ft b { color: var(--t-inc); }
+  .dg-grp { display: flex; flex-direction: column; gap: 8px; }
+  .dg-gh { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 6px 0 10px; margin: 14px 0 6px; border-radius: 14px; }
+  .dg-gh .gic { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .dg-gh .nm { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dg-gh.k-sav { background: var(--g-sav); color: var(--t-sav); } .dg-gh.k-goal { background: var(--g-goal); color: var(--t-goal); } .dg-gh.k-inc { background: var(--g-inc); color: var(--t-inc); }
+  .dg-gh .gt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.35; padding: 6px 0; }
+  .dg-gh .s { font-size: 12.5px; color: var(--ink2); white-space: nowrap; }
+  .dg-gh .s b { color: var(--ink); }
+  .dg-gh .icb:disabled { opacity: .35; }
+  .dg-none { padding: 6px 12px 10px; font-size: 13px; color: var(--ink3); }
+  .dg-row { position: relative; border-radius: 14px; }
+  .dg-row .grip { position: absolute; left: -2px; top: 50%; transform: translateY(-50%); color: var(--ink3); cursor: grab; opacity: 0; padding: 4px 0; z-index: 1; }
+  .dg-row:hover .grip, .dg-row .grip:focus-visible { opacity: 1; }
+  .dg-row.dragging { opacity: .4; }
+  .dg-row.dropto::before { content: ''; position: absolute; left: 8px; right: 8px; top: -2px; height: 3px; border-radius: 3px; background: var(--focus); }
+  .dg-pick { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; padding: 10px 12px 10px 12px; border-radius: 14px; text-align: left; color: inherit; }
+  .dg-pick { background: var(--card); box-shadow: 0 0 0 1px var(--line); }
+  .dg-pick:hover { box-shadow: 0 0 0 1px var(--ink3); }
+  .dg-row.on .dg-pick { background: var(--card); box-shadow: inset 0 0 0 2px var(--sel); }
+  .dg-pick:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .dg-pick .ic { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .dg-pick .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .dg-pick .r1 { display: flex; justify-content: space-between; gap: 8px; font-size: 14.5px; }
+  .dg-pick .r1 b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dg-pick .r1 .p { font-size: 13px; font-weight: 700; }
+  .dg-row .bar > span { display: block; height: 100%; border-radius: 99px; }
+  .dg-pick .r3 { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink2); white-space: nowrap; }
+  .dg-pick .r3 b { color: var(--ink); }
+
+  .dg-head { padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
+  .dg-head .r1 { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .dg-head .r1 .ic { width: 48px; height: 48px; border-radius: 15px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--gr) 16%, var(--card)); color: var(--gr); flex: none; }
+  .dg-head .r1 .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .dg-head h2 { margin: 0; font-size: 22px; line-height: 1.3; }
+  .dg-head .ty { font-size: 13px; font-weight: 600; }
+  .dg-head > .k { font-size: 13px; color: var(--ink2); }
+  .dg-head .now { display: flex; align-items: baseline; gap: 10px; }
+  .dg-head .now b { font-size: 32px; font-weight: 700; }
+  .dg-head .now .of { font-size: 14px; color: var(--ink2); flex: 1; }
+  .dg-head .now .p { font-size: 20px; font-weight: 700; }
+  .dg-head .bar { height: 9px; margin: 4px 0 8px; }
+  .dg-head .bar > span { display: block; height: 100%; border-radius: 99px; background: var(--gr); }
+  .dg-head .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 4px 0 6px; }
+  .dg-head .stats > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .dg-head .stats .k { font-size: 12.5px; color: var(--ink2); }
+  .dg-head .stats b { font-size: 16px; }
+  .dg-head .stats .s { font-size: 12px; color: var(--ink3); }
+  .dg .pos { color: var(--t-inc); }
+  .dg .neg { color: var(--danger); }
+  .dg-head .gnote { display: flex; gap: 10px; font-size: 13.5px; color: var(--ink2); padding: 10px 0 4px; border-top: 1px solid var(--line); margin-top: 4px; }
+  .dg-head .gnote .k { color: var(--ink); font-weight: 600; flex: none; }
+  .dg-info { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--g-goal); color: var(--t-goal); font-size: 13.5px; line-height: 1.55; margin-top: 6px; }
+  .dg-info svg { flex: none; margin-top: 2px; }
+  .dg-head .acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--line); margin-top: 6px; }
+  .dg-head .acts .sp { flex: 1; }
+  .dg .act { height: 42px; padding: 0 14px; border-radius: 13px; background: var(--card2); color: var(--ink); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; text-decoration: none; }
+  .dg .act:hover { background: var(--line); }
+  .dg .act.pri { background: var(--pri); color: var(--onpri); }
+  .dg .act.pri:hover { filter: brightness(1.1); }
+  .dg .act.soft { align-self: flex-start; background: var(--g-inc); color: var(--t-inc); }
+  .dg .act:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .dg-sec { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .dg-sec h3 { margin: 0; font-size: 15px; }
+  .dg .muted { margin: 0; font-size: 13px; color: var(--ink3); }
+  .dg-item { display: flex; align-items: center; gap: 12px; }
+  .dg-item .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px; }
+  .dg-item .tx span { font-size: 12.5px; color: var(--ink2); }
+  .dg-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .dg-two > div { padding: 12px 14px; border-radius: 14px; background: var(--card2); display: flex; flex-direction: column; gap: 2px; }
+  .dg-two .k { font-size: 12.5px; color: var(--ink2); }
+  .dg-two b { font-size: 18px; }
+  .dg-two .s { font-size: 12px; color: var(--ink3); }
+
+  .dg-chart .plot { position: relative; margin-top: 4px; }
+  .dg-chart .tgt { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--ink3); opacity: .7; }
+  .dg-chart .tgt span { position: absolute; left: 0; bottom: 3px; font-size: 11.5px; color: var(--ink3); background: var(--card); padding-right: 6px; }
+  .dg-chart .cols { position: absolute; inset: 0; display: grid; gap: 6px; align-items: end; border-bottom: 1px solid var(--line); }
+  .dg-chart .col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; min-width: 0; }
+  .dg-chart .col:hover .b { filter: brightness(1.08); }
+  .dg-chart .lb { font-size: 11px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
+  .dg-chart .lb.now { color: var(--ink); font-weight: 700; }
+  .dg-chart .b { display: block; width: 100%; max-width: 44px; border-radius: 0; }
+  .dg-chart .xl { display: grid; gap: 6px; padding-top: 6px; font-size: 11.5px; color: var(--ink3); text-align: center; white-space: nowrap; }
+  .dg-chart .xl .now { color: var(--ink); font-weight: 700; }
+  .dg-chart .lgd { display: flex; gap: 16px; padding-top: 10px; font-size: 12.5px; color: var(--ink2); }
+  .dg-chart .lgd span { display: inline-flex; align-items: center; gap: 6px; }
+  .dg-chart .lgd i { width: 12px; height: 12px; border-radius: 0; }
+
+  .dg-hist { padding-bottom: 8px; gap: 0; }
+  .dg-hist .hh { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 10px; }
+  .dg-hist .hr { display: grid; grid-template-columns: 130px minmax(0, 1fr) 130px 150px; align-items: center; gap: 8px; min-height: 46px; font-size: 13.5px; border-top: 1px solid var(--line); }
+  .dg-hist .hr.th { min-height: 36px; font-size: 12.5px; color: var(--ink3); }
+  .dg-hist .hr .r { text-align: right; }
+  .dg-hist .hr .tx { display: flex; flex-direction: column; min-width: 0; }
+  .dg-hist .hr .tx small { font-size: 12px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .dg-empty { padding: 56px 32px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .dg-empty .eic { width: 52px; height: 52px; border-radius: 16px; background: var(--card2); display: flex; align-items: center; justify-content: center; color: var(--ink2); }
+  .dg-empty h2 { margin: 6px 0 0; font-size: 20px; }
+  .dg-empty p { margin: 0; color: var(--ink2); font-size: 14px; line-height: 1.6; }
+  .dg-empty .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 10px; margin-top: 14px; }
+  .dg-empty .opts button { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; text-align: left; color: inherit; }
+  .dg-empty .opts button:hover { filter: brightness(.97); }
+  .dg-empty .opts .k-sav { background: var(--g-sav); } .dg-empty .opts .k-goal { background: var(--g-goal); } .dg-empty .opts .k-inc { background: var(--g-inc); }
+  .dg-empty .opts .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--card); display: flex; align-items: center; justify-content: center; flex: none; }
+  .dg-empty .opts .tx { display: flex; flex-direction: column; font-size: 14px; }
+  .dg-empty .opts .tx span { font-size: 12px; color: var(--ink2); }
+
+  /* แผงสร้างเป้า: หน้าเดิมของมือถืออยู่ในแผงขวา · ปุ่มลบเป้ามีกรอบชัด (เจ้าของขอ) */
+  .scrim > .sheet.dg-create { padding: 0; overflow-y: auto; }
+  .scrim > .sheet.dg-create > .page { min-height: 0; padding: 20px 24px 24px; }
+  .scrim .gx-delgoal { box-shadow: inset 0 0 0 1.5px var(--danger); color: var(--danger); border-radius: 14px; justify-content: center; }
+}
+
+/* ภาพรวมเป้าหมายบนคอม (ก้อนรวม + 4 หมวดแบบมือถือ) */
+@media (min-width:1024px) {
+  .dg-ov { display: flex; flex-direction: column; gap: 16px; }
+  .dg-ov .gx-grid.dg-ovgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .dg-ov .gx-tile { min-height: 200px; cursor: pointer; }
+  .dg-ov .gx-tile:hover { transform: translateY(-2px); }
+  .dg-ov .gx-tile:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+}
+
+/* เป้าหมาย: เปิดมาเห็นภาพรวมอย่างเดียว · เลือกแล้วภาพรวมย่อมาเป็นคอลัมน์ซ้ายในสีเดียวกัน (เจ้าของขอ 13 พ.ย. 69) */
+@media (min-width:1024px) {
+  .dg.ov .dg-right { max-width: 1100px; margin: 0 auto; }
+  .dg-total.gx-mini-hero { background: linear-gradient(150deg, #E4F59A 0%, #C6E43F 45%, #A9CF24 100%); color: #16231C; border-radius: 22px; box-shadow: 0 8px 22px rgba(140, 180, 20, .22); }
+  .dg-total.gx-mini-hero .k, .dg-total.gx-mini-hero .ft { color: #2F4214; }
+  .dg-total.gx-mini-hero .bar { background: rgba(22, 35, 28, .14); }
+  .dg-total.gx-mini-hero .bar > span { background: #1E3B2C; }
+  .dg-total.gx-mini-hero .ft b { color: #16231C; background: #16231C; color: #D9F06A; padding: 1px 8px; border-radius: 99px; }
+  .dg-total.gx-mini-hero:hover { filter: brightness(1.03); box-shadow: 0 8px 22px rgba(140, 180, 20, .3); }
+  .dg-gh.t-sav, .dg-gh.t-inv, .dg-gh.t-spend, .dg-gh.t-pvd { color: var(--ink); }
+  .dg-gh.t-inv { color: #16231C; }
+  .dg-gh .gic.ic { width: 32px; height: 32px; border-radius: 10px; }
+}
+
+/* หมวดเป็นกรอบเดียว เป้าในหมวดอยู่ข้างใน · ภาพรวมแสดงเป้าในแต่ละหมวด (เจ้าของขอ 13 พ.ย. 69) */
+@media (min-width:1024px) {
+  .dg-grp { border-radius: 20px; padding: 4px 8px 8px; margin-top: 10px; gap: 6px; }
+  .dg-grp .dg-gh { margin: 0; background: transparent; min-height: 54px; padding: 0 0 0 4px; }
+  .dg-grp .dg-pick { box-shadow: none; }
+  .dg-grp .dg-pick:hover { box-shadow: 0 0 0 1px var(--ink3); }
+  .dg-grp .dg-row.on .dg-pick { box-shadow: inset 0 0 0 2px var(--sel); }
+  .dg-grp .dg-none { padding: 0 8px 8px; }
+  .dg-ov .gx-tile { min-height: 220px; }
+  .dg-ovgoals { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .dg-ovgoals .og { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--card); color: var(--ink); text-align: left; width: 100%; }
+  .dg-ovgoals .og:hover { box-shadow: 0 0 0 1px var(--ink3); }
+  .dg-ovgoals .og:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .dg-ovgoals .ic { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .dg-ovgoals .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .dg-ovgoals .r1 { display: flex; justify-content: space-between; gap: 6px; font-size: 13px; }
+  .dg-ovgoals .r1 b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dg-ovgoals .r1 .num { font-weight: 700; font-size: 12px; }
+  .dg-ovgoals .bar { display: block; height: 5px; border-radius: 99px; background: var(--card2); overflow: hidden; }
+  .dg-ovgoals .bar > span { display: block; height: 100%; border-radius: 99px; }
+  .dg-ovgoals .r3 { font-size: 11.5px; color: var(--ink2); }
+  .dg-ovgoals .r3 b { color: var(--ink); }
 }

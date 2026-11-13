@@ -28,9 +28,9 @@ const MODES: { k: AdjustMode; label: string; help: string; field: string; r1: st
 ];
 
 /** ปรับยอดคงเหลือ (บอร์ด GoalAdjust) */
-export function AdjustSheet({ goal, balance, onClose }: { goal: Goal; balance: Satang; onClose: () => void }) {
-  const [mode, setMode] = useState<AdjustMode>('add');
-  const [text, setText] = useState('');
+export function AdjustSheet({ goal, balance, onClose, initial = 'add', modes }: { goal: Goal; balance: Satang; onClose: () => void; initial?: AdjustMode; modes?: AdjustMode[] }) {
+  const [mode, setMode] = useState<AdjustMode>(initial);
+  const [text, setText] = useState(initial === 'set' ? formatBaht(balance) : '');
   const [reason, setReason] = useState(0);
   const [note, setNote] = useState('');
   const m = MODES.find((x) => x.k === mode)!;
@@ -56,9 +56,9 @@ export function AdjustSheet({ goal, balance, onClose }: { goal: Goal; balance: S
         </span>
         <CloseBtn onClose={onClose} />
       </div>
-      <div className="gx-seg2 three" role="radiogroup" aria-label="ประเภทการปรับ">
-        {MODES.map((x) => <button key={x.k} role="radio" aria-checked={mode === x.k} onClick={() => { setMode(x.k); setReason(0); setText(x.k === 'set' ? formatBaht(balance) : ''); }}>{x.label}</button>)}
-      </div>
+      {(!modes || modes.length > 1) && <div className={`gx-seg2${(modes ?? MODES).length === 3 ? ' three' : ''}`} role="radiogroup" aria-label="ประเภทการปรับ">
+        {MODES.filter((x) => !modes || modes.includes(x.k)).map((x) => <button key={x.k} role="radio" aria-checked={mode === x.k} onClick={() => { setMode(x.k); setReason(0); setText(x.k === 'set' ? formatBaht(balance) : ''); }}>{x.label}</button>)}
+      </div>}
       <p className="gx-adj-help"><Icon name="info" size={15} stroke={2} /><span>{help}</span></p>
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span className="gx-adj-lbl">{m.field}</span>

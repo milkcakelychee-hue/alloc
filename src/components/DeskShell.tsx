@@ -40,7 +40,7 @@ function pageOf(path: string, planTab: boolean, view: string | null, year: strin
   if (path === '/' && planTab && view === 'year') return { title: `สรุปทั้งปี ${year ? Number(year) + 543 : ''}`.trim(), cycle: false, full: true };
   if (path === '/' && planTab) return { title: 'วางแผนรายจ่าย', cycle: true, full: true };
   if (path === '/') return { title: 'หน้าหลัก', cycle: true, full: false };
-  if (path.startsWith('/goals')) return { title: 'เป้าหมาย', cycle: false, full: false };
+  if (path.startsWith('/goals')) return { title: 'เป้าหมาย', cycle: false, full: true };
   if (path.startsWith('/log')) return { title: 'บันทึก', cycle: false, full: false };
   if (path.startsWith('/settings')) return { title: 'ตั้งค่า', cycle: false, full: false };
   return { title: '', cycle: false, full: false };

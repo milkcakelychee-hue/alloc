@@ -4,6 +4,7 @@ import { MoneyInput } from '../components/MoneyInput';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { applyActualSalary, confirmPay, markDuePaid, salaryItemFor, snoozePay } from '../db/actions';
+import { pvdAddedFor } from '../db/goalActions';
 import { cycleOf, daysBetween, localToday, thaiMonth } from '../calc/dates';
 import { formatBaht, parseBaht } from '../calc/money';
 import { planTotals } from '../calc/plan';
@@ -24,6 +25,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
   const [actualText, setActualText] = useState('');
   const [toast, setToast] = useState('');
   const [earlyOpen, setEarlyOpen] = useState(false);
+  const [pvdNote, setPvdNote] = useState<{ cycle: string; mine: number; employer: number; total: number } | null>(null);
   if (!data?.settings || !checks || !receipts) return null;
 
   const { settings: s, groups, items, goals, adjustments } = data;
@@ -40,6 +42,11 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
   const due = dueItems({ groups, items, checks, today, pay: s.pay, amountOf }).filter((d) => okC(d.cycle));
   const kindOf = (gid: string) => groups.find((g) => g.id === gid)!.kind;
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3500); };
+  // เงินเดือนเข้าแล้ว: ถ้ามี PVD บอกว่าส่วนหนึ่งเข้า PVD แล้ว (บวกให้เองตามเงินสมทบ · เจ้าของขอ 13 พ.ย. 69)
+  const paid = async (cycle: string, msg: string) => {
+    const p = await pvdAddedFor(db, cycle);
+    if (p) setPvdNote({ cycle, ...p }); else flash(msg);
+  };
 
   const actual = parseBaht(actualText);
   // เงินเข้าก่อนกำหนด: แตะ "เงินเดือนเข้าแล้ว" บนการ์ดคาดว่าเงินเข้า → ใช้การ์ดยืนยันเดียวกัน
@@ -60,7 +67,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
         </div>
         {!diffMode ? (
           <div className="confirm-actions">
-            <button className="btn btn-pri" onClick={async () => { await confirmPay(db, { cycle: c.cycle, date: today, amount: c.planned }); flash('บันทึกเงินเดือนเข้าแล้ว'); }}>เข้าแล้ว ยอดเท่าเดิม</button>
+            <button className="btn btn-pri" onClick={async () => { await confirmPay(db, { cycle: c.cycle, date: today, amount: c.planned }); await paid(c.cycle, 'บันทึกเงินเดือนเข้าแล้ว'); }}>เข้าแล้ว ยอดเท่าเดิม</button>
             <button className="btn btn-ghost" onClick={() => { setDiffMode(true); setActualText(formatBaht(c.planned)); }}>เข้าแล้ว ยอดไม่เท่าเดิม</button>
             <button className="btn btn-ghost" onClick={async () => { await snoozePay(db, { cycle: c.cycle, today }); setEarlyOpen(false); flash('จะถามอีกครั้งพรุ่งนี้'); }}>ยังไม่เข้า เตือนพรุ่งนี้</button>
           </div>
@@ -77,12 +84,12 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
               const others = c.planned - (salary ? amountOf(salary, c.cycle) : 0);
               await applyActualSalary(db, { item: salary, cycle: c.cycle, actual: Math.max(actual - others, 0) });
               await confirmPay(db, { cycle: c.cycle, date: today, amount: actual });
-              setDiffMode(false); flash('ใช้ยอดจริงในแผนเดือนนี้แล้ว');
+              setDiffMode(false); await paid(c.cycle, 'ใช้ยอดจริงในแผนเดือนนี้แล้ว');
             }}>ใช้ยอดนี้ในแผนเดือนนี้</button>
             <button className="btn btn-ghost" disabled={actual === null} onClick={async () => {
               if (actual === null) return;
               await confirmPay(db, { cycle: c.cycle, date: today, amount: actual });
-              setDiffMode(false); flash('บันทึกยอดจริงแล้ว แผนไม่เปลี่ยน');
+              setDiffMode(false); await paid(c.cycle, 'บันทึกยอดจริงแล้ว แผนไม่เปลี่ยน');
             }}>บันทึกยอดจริง ไม่แก้แผน</button>
             <button className="btn text-danger" style={{ color: 'var(--ink2)' }} onClick={() => setDiffMode(false)}>ย้อนกลับ</button>
           </div>
@@ -93,7 +100,18 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
 
   const up = early ? null : pp.upcoming;
   const count = (pp.confirm ? 1 : 0) + due.length + (up ? 1 : 0) + extra.length;
-  if (count === 0) return toast ? <div className="toast" role="status">{toast}</div> : null;
+  const pvdBox = pvdNote && (
+    <div className="gx-alert-wrap" onClick={() => setPvdNote(null)}>
+      <div className="gx-alert" role="alertdialog" aria-labelledby="pvd-note-t" onClick={(e) => e.stopPropagation()}>
+        <span className="aic" style={{ background: 'var(--gx-pvd)', color: 'var(--gx-pvd-ic)' }}><Icon name="bank" size={24} stroke={2} /></span>
+        <h2 id="pvd-note-t">เงินเดือนเข้าแล้ว</h2>
+        <p>ส่วนหนึ่งเข้า PVD แล้ว <b className="num nw">{formatBaht(pvdNote.total)} บาท</b><br /><span className="num nw">ส่วนของคุณ {formatBaht(pvdNote.mine)}</span> · <span className="num nw">นายจ้างสมทบ {formatBaht(pvdNote.employer)}</span></p>
+        <p className="small">บวกให้เองตามเงินสมทบทุกครั้งที่เงินเดือนเข้า · ดูได้ที่ประวัติยอดของ PVD</p>
+        <div className="gx-2btn"><button className="pri-solid" autoFocus onClick={() => setPvdNote(null)}>รับทราบ</button></div>
+      </div>
+    </div>
+  );
+  if (count === 0) return toast || pvdBox ? <>{toast && <div className="toast" role="status">{toast}</div>}{pvdBox}</> : null;
 
   return (
     <section className="todo" aria-labelledby="todo-h">
@@ -134,6 +152,7 @@ export function HomeCards({ extra = [] }: { extra?: ReactNode[] }) {
       })}
       {extra}
       {toast && <div className="toast" role="status">{toast}</div>}
+      {pvdBox}
     </section>
   );
 }

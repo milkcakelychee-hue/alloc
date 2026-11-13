@@ -363,3 +363,4 @@
 :root[data-theme='dark'] .gx-grip .grip { background: rgba(0, 0, 0, .35); color: #F2F4EF; }
 .gx-card .nm .n3 { font-size: 12px; color: var(--gx-spend-ic); font-weight: 600; }
 :root[data-theme='dark'] .gx-card .nm .n3 { color: #E9C49F; }
+.gx-2btn .pri-solid { background: var(--pri); color: var(--onpri); }

@@ -3,7 +3,7 @@ import { People } from './pages/bill/People';
 import { BillSummary } from './pages/bill/BillSummary';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { HashRouter, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Route, Routes, Navigate, useLocation, useParams } from 'react-router-dom';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/goals.css';
@@ -23,6 +23,7 @@ import Goals from './pages/Goals';
 import GoalCategory from './pages/goals/GoalCategory';
 import GoalCreate from './pages/goals/GoalCreate';
 import GoalHistory from './pages/goals/GoalHistory';
+import { DeskGoals } from './pages/desk/DeskGoals';
 import LogAdd from './pages/log/LogAdd';
 import LogCats from './pages/log/LogCats';
 import LogSpend from './pages/log/LogSpend';
@@ -64,14 +65,26 @@ function Shell() {
   const onWelcome = loc.pathname === '/welcome';
   // ยังไม่ผ่านหน้าเริ่มใช้งาน → ไป Welcome ก่อน (หน้า Welcome เองจัดการขั้น "พร้อมใช้แล้ว")
   if (!settings.onboardedAt && !onWelcome) return <Navigate to="/welcome" replace />;
+  const onDesk = desk.mode !== 'mobile' && !onWelcome;
   const routes = (
       <Routes>
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/" element={<Home />} />
-        <Route path="/goals" element={<Goals />} />
-        <Route path="/goals/new" element={<GoalCreate />} />
-        <Route path="/goals/g/:id" element={<GoalHistory />} />
-        <Route path="/goals/:cat" element={<GoalCategory />} />
+        {onDesk ? (
+          <>
+            {/* บนคอม: เป้าหมายทั้งหมดอยู่หน้าเดียว (ALLOC_DESKTOP_SPEC ข้อ 8) */}
+            <Route path="/goals" element={<DeskGoals />} />
+            <Route path="/goals/g/:id" element={<GoalToDesk />} />
+            <Route path="/goals/*" element={<Navigate to="/goals" replace />} />
+          </>
+        ) : (
+          <>
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/goals/new" element={<GoalCreate />} />
+            <Route path="/goals/g/:id" element={<GoalHistory />} />
+            <Route path="/goals/:cat" element={<GoalCategory />} />
+          </>
+        )}
         <Route path="/log" element={<Log />} />
         <Route path="/log/add" element={<LogAdd />} />
         <Route path="/log/cats" element={<LogCats />} />
@@ -83,7 +96,6 @@ function Shell() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
   );
-  const onDesk = desk.mode !== 'mobile' && !onWelcome;
   return (
     <>
       {onDesk ? <DeskShell mode={desk.mode} wide={desk.wide} onToggle={desk.toggle}>{routes}</DeskShell> : routes}
@@ -110,3 +122,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 // iOS Safari ไม่สนใจ user-scalable=no: กันถ่างนิ้วซูมด้วย gesture event (Safari เท่านั้น)
 for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+
+/** ลิงก์ประวัติยอดของเป้า (เช่น จากแผงรายละเอียดแผน) บนคอม → เลือกเป้านั้นในหน้าเป้าหมาย */
+function GoalToDesk() {
+  const { id } = useParams();
+  return <Navigate to={`/goals?g=${id}`} replace />;
+}

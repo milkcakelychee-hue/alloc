@@ -163,3 +163,18 @@ export async function deleteGoal(db: AllocDB, id: string) {
     await db.goals.delete(id);
   });
 }
+
+/** เรียงเป้าในกลุ่มใหม่ (ลากบนคอม) */
+export async function setGoalOrder(db: AllocDB, orders: { id: string; order: number }[], now = Date.now()) {
+  await db.transaction('rw', db.goals, async () => { for (const o of orders) await db.goals.update(o.id, { order: o.order, updatedAt: now }); });
+}
+
+/** ยอดที่บวกเข้า PVD ในรอบ cycle (ใช้บอกหลังกด "เงินเดือนเข้าแล้ว") · ไม่มี PVD หรือยังไม่บวก = null */
+export async function pvdAddedFor(db: AllocDB, cycle: Month) {
+  const g = (await db.goals.where('type').equals('pvd').toArray())[0];
+  if (!g) return null;
+  const list = (await db.goalAdjustments.where('goalId').equals(g.id).toArray()).filter((a) => a.cycleMonth === cycle);
+  const mine = list.filter((a) => a.kind === 'planDeposit').reduce((s, a) => s + a.delta, 0);
+  const employer = list.filter((a) => a.kind === 'employer').reduce((s, a) => s + a.delta, 0);
+  return mine + employer > 0 ? { mine, employer, total: mine + employer } : null;
+}

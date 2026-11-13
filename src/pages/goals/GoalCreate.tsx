@@ -24,11 +24,12 @@ const CAT_HINT: Record<GoalType, string> = {
 };
 const signed = (s: number) => `${s < 0 ? '−' : ''}${formatBaht(Math.abs(s))}`;
 
-export default function GoalCreate() {
+/** embed: เปิดในแผงขวาของหน้าเป้าหมายบนคอม (ไม่เปลี่ยนหน้า) */
+export default function GoalCreate({ embed }: { embed?: { type: GoalType | null; onClose: () => void; onDone: (id: string) => void } } = {}) {
   const data = useGoalsData();
   const nav = useNavigate();
   const [sp] = useSearchParams();
-  const qType = sp.get('type') as GoalType | null;
+  const qType = embed ? embed.type : sp.get('type') as GoalType | null;
   // เปิดจากหน้าหมวด: ปิดแล้วกลับไปหมวดเดิม
   const back = sp.get('from') ? `/goals/${sp.get('from')}` : '/goals';
   const [type, setType] = useState<GoalType | null>(qType && GOAL_TYPES.includes(qType) ? qType : null);
@@ -82,19 +83,21 @@ export default function GoalCreate() {
   const save = async () => {
     if (!ok || busy) return;
     setBusy(true);
-    await createGoal(db, {
+    const id = await createGoal(db, {
       type: t, name: isPvd ? (name.trim() || 'PVD') : name, icon: st.icon, color: st.color, target: tgt!, opening: have!,
       dueMonth: isPvd ? null : by === 'date' ? dueM : t === 'goalSpend' ? reachM : null,
       plan: withPlan ? { amount: planAmt, start } : null,
       pvd: isPvd ? pvdEntry(pvdFrom, g!, a!, b!) : null
     }, cur);
+    if (embed) { embed.onDone(id); return; }
     nav(`/goals/${CAT[t].path}`, { replace: true });
   };
 
   return (
     <main className="page gx" style={{ gap: 14 }}>
       <div className="gx-head">
-        <Link to={back} aria-label="ปิด" className="gx-hbtn gx-sq"><Icon name="close" size={18} stroke={2.2} /></Link>
+        {embed ? <button aria-label="ปิด" className="gx-hbtn gx-sq" onClick={embed.onClose}><Icon name="close" size={18} stroke={2.2} /></button>
+          : <Link to={back} aria-label="ปิด" className="gx-hbtn gx-sq"><Icon name="close" size={18} stroke={2.2} /></Link>}
         <h1 style={{ fontSize: 20 }}>เป้าหมายใหม่</h1>
       </div>
 

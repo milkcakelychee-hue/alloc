@@ -74,6 +74,7 @@ export interface Goal extends Base {
   closed: boolean; // รายจ่ายตามเป้าหมาย: กด "ใช้เงินก้อนนี้แล้ว"
   contributions?: PvdContribution[]; // เฉพาะ PVD
   depositFrom?: Month; // รอบแรกที่บวกตามแผนอัตโนมัติ (ไม่มี = รอบถัดจากรอบที่สร้าง)
+  order?: number; // ลำดับในกลุ่มที่ลากเรียงบนคอม (ไม่มี = ตามวันที่สร้าง)
 }
 
 export type AdjustmentKind = 'opening' | 'planDeposit' | 'deposit' | 'withdraw' | 'correction' | 'employer' | 'spent';
