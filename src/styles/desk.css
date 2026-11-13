@@ -147,8 +147,7 @@
   .s-exp { background: var(--g-exp); } .s-exp .nm { color: var(--t-exp); }
   .s-sav { background: var(--g-sav); } .s-sav .nm { color: var(--t-sav); }
   .s-left { background: var(--card); }
-  .dp-sum .c.neg { background: var(--redbg); color: var(--danger); border-radius: 6px; }
-  .dp-sum .c.tot.neg { border-radius: 0; }
+  .dp-sum .c.neg { background: var(--redbg); color: var(--danger); border-radius: 0; }
 
   /* สรุปทั้งปี */
   .dy { flex: 1; min-height: 0; overflow-y: auto; padding: 24px 28px; }
