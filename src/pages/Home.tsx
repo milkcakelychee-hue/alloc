@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { db } from '../db/db';
 import { exportBackup } from '../db/backup';
-import { appCycle, cycleRange, localToday, thaiDate, thaiMonth } from '../calc/dates';
+import { addMonths, appCycle, localToday, thaiDate, thaiMonth } from '../calc/dates';
+import { expectedPayDate } from '../calc/payday';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { formatBaht } from '../calc/money';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
@@ -37,7 +39,8 @@ export default function Home() {
 function Summary({ desk = false }: { desk?: boolean }) {
   const data = usePlanData();
   const [toast, setToast] = useState('');
-  if (!data?.settings) return null;
+  const receipts = useLiveQuery(() => db.payReceipts.toArray(), []);
+  if (!data?.settings || !receipts) return null;
   const { settings: s, groups, items, goals, adjustments } = data;
   const today = localToday();
   const cur = appCycle(today, s.pay, s.startCycle);
@@ -46,6 +49,9 @@ function Summary({ desk = false }: { desk?: boolean }) {
   const chg = assetsChange(goals, adjustments, cur, s.pay);
   const sp = incomeSplit(planTotals(groups, items, cur, amountOf));
   const hide = s.hideNumbers;
+  // วันที่เงินเดือนเข้าจริงของรอบนี้ (ยืนยันแล้ว) · ยังไม่ยืนยันใช้วันที่คาดว่าเข้า (เลื่อนหนีวันหยุดแล้ว)
+  const rc = receipts.find((r) => r.id === cur && r.status === 'received' && r.date);
+  const payIn = rc?.date ?? expectedPayDate(s.pay, s.weekendShift, addMonths(cur, -1), s.payOverrides).date;
   const [int, dec] = formatBaht(a.total).split('.');
   const C = 88; // วงเล็ก r 14
   const segS = (a.savingPct / 100) * C;
@@ -70,7 +76,7 @@ function Summary({ desk = false }: { desk?: boolean }) {
         <div className="as-v num">{hide ? <span className="big">{HIDDEN}</span> : <><span className="big">{int}</span><span className="dec">.{dec}</span></>}<span className="u">บาท</span></div>
         <div className="as-chg num">
           <span className={`p${chg < 0 ? ' dn' : ''}`}><Icon name={chg < 0 ? 'chevDown' : 'upRight'} size={13} stroke={2.4} />{hide ? HIDDEN : `${chg < 0 ? '−' : '+'}${formatBaht(Math.abs(chg))}`}</span>
-          <span className="k">จากเงินเดือนเข้า<span className="nw">วันที่ {thaiDate(cycleRange(cur, s.pay).start).replace(/ \d+$/, '')}</span></span>
+          <span className="k">จากเงินเดือนเข้า<span className="nw">วันที่ {thaiDate(payIn).replace(/ \d+$/, '')}</span></span>
         </div>
         <div className="as-split">
           <svg width="36" height="36" viewBox="0 0 36 36" role="img" aria-label={`สัดส่วน เงินเก็บ ${a.savingPct}% ลงทุน ${a.investPct}%`} style={{ flex: 'none' }}>

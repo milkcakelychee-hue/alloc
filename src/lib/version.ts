@@ -6,6 +6,10 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.7.3', date: 'พ.ย. 69',
+    sections: [{ title: 'ปรับแก้', items: ['การ์ดสินทรัพย์รวมใช้วันที่เงินเดือนเข้าจริง (ยังไม่ยืนยันใช้วันที่คาดว่าเข้า)', 'บนคอม ปุ่มบันทึกในหน้าบันทึกติดอยู่ล่างจอ ไม่เลื่อนขึ้นไปทับปฏิทิน'] }]
+  },
+  {
     version: '1.7.2', date: 'พ.ย. 69',
     sections: [{ title: 'ปรับแก้', items: ['การ์ดสินทรัพย์รวมบอกยอดที่เพิ่มขึ้นจากวันที่เงินเดือนเข้า แทนคำว่า "เดือนนี้"'] }]
   },

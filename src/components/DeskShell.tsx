@@ -101,7 +101,7 @@ export function DeskShell({ mode, wide, onToggle, children }: { mode: DeskMode; 
         <DeskCtx.Provider value={{ actions, lead, setSideOpen, setPlanMonth }}>
           {pg.full ? <div className="desk-full">{children}</div> : (
             <div className="desk-colwrap">
-              <div className="desk-col">{children}</div>
+              <div className="desk-col"><div className="desk-scroll">{children}</div></div>
             </div>
           )}
         </DeskCtx.Provider>
