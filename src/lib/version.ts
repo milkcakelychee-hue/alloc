@@ -6,6 +6,10 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.7.2', date: 'พ.ย. 69',
+    sections: [{ title: 'ปรับแก้', items: ['การ์ดสินทรัพย์รวมบอกยอดที่เพิ่มขึ้นจากวันที่เงินเดือนเข้า แทนคำว่า "เดือนนี้"'] }]
+  },
+  {
     version: '1.7.1', date: 'พ.ย. 69',
     sections: [{ title: 'ปรับแก้', items: ['วันที่บนหัวหน้าหลักไม่มีคำว่า "ที่" ซ้ำ'] }]
   },

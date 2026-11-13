@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { db } from '../db/db';
 import { exportBackup } from '../db/backup';
-import { appCycle, localToday, thaiMonth } from '../calc/dates';
+import { appCycle, cycleRange, localToday, thaiDate, thaiMonth } from '../calc/dates';
 import { formatBaht } from '../calc/money';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
@@ -70,7 +70,7 @@ function Summary({ desk = false }: { desk?: boolean }) {
         <div className="as-v num">{hide ? <span className="big">{HIDDEN}</span> : <><span className="big">{int}</span><span className="dec">.{dec}</span></>}<span className="u">บาท</span></div>
         <div className="as-chg num">
           <span className={`p${chg < 0 ? ' dn' : ''}`}><Icon name={chg < 0 ? 'chevDown' : 'upRight'} size={13} stroke={2.4} />{hide ? HIDDEN : `${chg < 0 ? '−' : '+'}${formatBaht(Math.abs(chg))}`}</span>
-          <span className="k">เดือนนี้ <span className="nw">(รอบ {thaiMonth(cur).split(' ')[0]})</span></span>
+          <span className="k">จากเงินเดือนเข้า<span className="nw">วันที่ {thaiDate(cycleRange(cur, s.pay).start).replace(/ \d+$/, '')}</span></span>
         </div>
         <div className="as-split">
           <svg width="36" height="36" viewBox="0 0 36 36" role="img" aria-label={`สัดส่วน เงินเก็บ ${a.savingPct}% ลงทุน ${a.investPct}%`} style={{ flex: 'none' }}>
