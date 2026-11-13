@@ -18,6 +18,7 @@ import { DeskItemPanel } from './DeskItemPanel';
 import { usePlanData, type PlanData } from '../plan/usePlanData';
 import { usePlanMonth } from '../plan/usePlanMonth';
 import { DeskYear } from './DeskYear';
+import { iconOf } from '../plan/planUi';
 
 const MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 type Tier = 'w' | 'm' | 's';
@@ -59,7 +60,10 @@ type Scope = Pos & { item: PlanItem; amount: Satang; scope: 'month' | 'from' };
 type Toast = { text: string; key: number };
 type Flash = { itemId: string; groupId: string; months: Set<number>; key: number };
 
-function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; planCur: Month }) {
+function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: Month; planCur: Month }) {
+  // ติ๊กครบแล้วแผนไปเดือนถัดไป · กด "ดูรอบ …" เพื่อกลับไปดูหรือแก้ติ๊กของรอบที่แล้ว
+  const [look, setLook] = useState(false);
+  const planCur = look && planNow !== cycle ? cycle : planNow;
   const [sp, setSp] = useSearchParams();
   const box = useRef<HTMLDivElement>(null);
   const [tier, setTier] = useState<Tier>('w');
@@ -73,13 +77,16 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
   const [flash, setFlash] = useState<Flash | null>(null);
   const [tickMode, setTickMode] = useState(false); // โหมดติ๊ก: คลิกช่องเดือนนี้ได้หลายรายการ
   const [panelId, setPanelId] = useState<string | null>(null); // แผงรายละเอียดรายการ
-  const [rename, setRename] = useState<{ id: string; text: string } | null>(null);
   const [adding, setAdding] = useState<{ groupId: string; text: string } | null>(null);
   const [delId, setDelId] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ id: string; groupId: string; over: string | null } | null>(null);
+  const draft = useRef<PlanItem | null>(null); // ร่างที่ยังไม่บันทึกในแผงรายละเอียด
+  const [ask, setAsk] = useState<{ next: string | null } | null>(null); // ถามก่อนปิดแผงที่ยังไม่บันทึก
   const pending = useRef<PlanItem | null>(null); // รายการที่เพิ่งเพิ่ม (ก่อนข้อมูลสดมาถึง)
   const slots = useDeskSlots();
   useEffect(() => { slots?.setSideOpen(!!panelId); return () => slots?.setSideOpen(false); }, [panelId, slots]);
+  useEffect(() => { slots?.setPlanMonth(planCur); return () => slots?.setPlanMonth(null); }, [planCur, slots]);
+  useEffect(() => { if (planNow === cycle) setLook(false); }, [planNow, cycle]);
   const checks = useLiveQuery(() => db.paidChecks.where('cycleMonth').equals(planCur).toArray(), [planCur]);
 
   useEffect(() => {
@@ -107,6 +114,7 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
   const allFolded = g.groups.length > 0 && g.groups.every((x) => folded.has(x.group.id));
   const toggle = (id: string) => setFolded((f) => { const n = new Set(f); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const empty = data.items.length === 0;
+  const incomeGroup = data.groups.find((x) => x.enabled && x.kind === 'income');
   const toTick = tickList(data.groups, data.items, planCur, amountOf);
   const nTicked = toTick.filter((i) => checkMap.has(i.id)).length;
 
@@ -187,13 +195,25 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
     await apply(existing ? `เอาติ๊กออก ${item.name}` : `ติ๊กจ่ายแล้ว ${item.name}`, [tickOp(existing, planCur, itemId)]);
   };
 
-  const doRename = async () => {
-    if (!rename) return;
-    const item = live(rename.id);
-    const name = rename.text.trim();
-    setRename(null);
-    if (!item || !name || name === item.name) return;
-    await apply(`เปลี่ยนชื่อ “${item.name}” เป็น “${name}”`, [{ table: 'planItems', id: item.id, before: item, after: { ...item, name, updatedAt: Date.now() } }]);
+  const savePanel = (next: PlanItem) => {
+    const b = live(next.id);
+    draft.current = null;
+    if (!b) return;
+    apply(`แก้ข้อมูล “${b.name}”`, [{ table: 'planItems', id: next.id, before: b, after: { ...next, updatedAt: Date.now() } }]);
+    say(`บันทึกแล้ว · ${next.name}`);
+  };
+  /** เปิด/ปิด/สลับแผง · ถ้ามีร่างค้าง ถามก่อน */
+  const openPanel = (next: string | null) => {
+    if (panelId && draft.current && next !== panelId) { setAsk({ next }); return; }
+    draft.current = null;
+    setPanelId(next);
+  };
+  const finishAsk = (save: boolean) => {
+    if (!ask) return;
+    if (save && draft.current) savePanel(draft.current);
+    draft.current = null;
+    setPanelId(ask.next);
+    setAsk(null);
   };
 
   /** เพิ่มรายการ: เริ่มเดือนนี้ถ้าดูปีปัจจุบัน ไม่งั้นเริ่ม ม.ค. ของปีที่ดู · then = 'amount' ไปใส่ยอดเดือนแรก, 'next' เปิดแถวใหม่ */
@@ -219,7 +239,7 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
     const checks0 = await db.paidChecks.filter((c) => c.planItemId === id).toArray();
     const ops: Op[] = [{ table: 'planItems', id, before: item, after: null }, ...checks0.map((c) => ({ table: 'paidChecks' as const, id: c.id, before: c, after: null }))];
     await apply(`ลบ “${item.name}”`, ops);
-    if (panelId === id) setPanelId(null);
+    if (panelId === id) { draft.current = null; setPanelId(null); }
     if (sel?.itemId === id) setSel(null);
     say(`ลบ “${item.name}” แล้ว`);
   };
@@ -338,6 +358,9 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
         <span><i className="sw curbg" />เดือนนี้</span>
         <span>จ่ายแล้วและเดือนที่ผ่านแล้ว ตัวเลขสีจาง</span>
         <span className="sp" />
+        {planNow !== cycle && year === Number(cycle.slice(0, 4)) && (
+          <button className="lnk" onClick={() => { setLook(!look); setTickMode(false); }}>{look ? `กลับไปรอบ ${thaiMonth(planNow)}` : `ดูรอบ ${thaiMonth(cycle)} ที่ติ๊กครบแล้ว`}</button>
+        )}
         {toTick.length > 0 && year === curYear && (
           <button className={`dp-tickbtn${tickMode ? ' on' : ''}`} aria-pressed={tickMode} onClick={() => { setTickMode(!tickMode); setEdit(null); setScope(null); }}>
             <Icon name="check" size={15} stroke={2.4} />
@@ -376,17 +399,13 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
                     <div key={r.item.id} className={`dp-row dp-item${panelId === r.item.id ? ' picked' : ''}${drag && drag.over === r.item.id ? ' dropto' : ''}${drag?.id === r.item.id ? ' dragging' : ''}`} style={cols} role="row"
                       onDragOver={(ev) => { if (drag && drag.groupId === gg.group.id) { ev.preventDefault(); if (drag.over !== r.item.id) setDrag({ ...drag, over: r.item.id }); } }}
                       onDrop={(ev) => { ev.preventDefault(); doDrop(r.item.id); }}>
-                      {rename?.id === r.item.id ? (
-                        <span className="nm"><input className="dp-name" autoFocus aria-label="ชื่อรายการ" value={rename.text}
-                          onChange={(ev) => setRename({ id: r.item.id, text: ev.target.value })} onBlur={doRename}
-                          onKeyDown={(ev) => { if (ev.key === 'Enter') { ev.preventDefault(); doRename(); } if (ev.key === 'Escape') setRename(null); }} /></span>
-                      ) : (
+                      {(
                         <span className={`nm dp-nm${panelId === r.item.id ? ' on' : ''}`}>
                           {gg.rows.length > 1 && <span className="grip" draggable aria-label={`ลากเพื่อย้าย ${r.item.name}`} title="ลากเพื่อเรียง"
                             onDragStart={(ev) => { ev.dataTransfer.effectAllowed = 'move'; setDrag({ id: r.item.id, groupId: gg.group.id, over: null }); }} onDragEnd={() => setDrag(null)}>
                             <Icon name="grip" size={14} stroke={2} /></span>}
-                          <button className="lbl" title={`${r.item.name} · ดับเบิลคลิกเพื่อเปลี่ยนชื่อ`} onClick={() => setPanelId(panelId === r.item.id ? null : r.item.id)}
-                            onDoubleClick={() => setRename({ id: r.item.id, text: r.item.name })}>{r.item.name}</button>
+                          <span className="ic" style={{ color: `var(--t-${kindTone(gg.group.kind)})` }} aria-hidden="true"><Icon name={iconOf(r.item.icon)} size={14} stroke={2} /></span>
+                          <button className="lbl" title={`${r.item.name} · คลิกเพื่อดูและแก้รายละเอียด`} onClick={() => openPanel(panelId === r.item.id ? null : r.item.id)}>{r.item.name}</button>
                           <button className="del" aria-label={`ลบ ${r.item.name}`} onClick={() => setDelId(r.item.id)}><Icon name="trash" size={14} stroke={2} /></button>
                         </span>
                       )}
@@ -442,6 +461,7 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
             <div className="dp-empty">
               <strong>ยังไม่มีรายการในแผน</strong>
               <span>เริ่มจากใส่รายรับ แล้วเพิ่มรายจ่าย ออม และลงทุนทีละหมวด</span>
+              {incomeGroup && <button className="ib pri" onClick={() => { setEdit(null); setAdding({ groupId: incomeGroup.id, text: '' }); }}><Icon name="plus" size={14} stroke={2.2} />เพิ่มรายรับรายการแรก</button>}
             </div>
           )}
         </div>
@@ -465,8 +485,9 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
       </div>
       {panelId && live(panelId) && (
         <DeskItemPanel data={data} item={live(panelId)!} planCur={planCur} year={year} amountOf={amountOf}
-          onSave={(next) => { const b = live(next.id); if (b) { apply(`แก้ข้อมูล “${b.name}”`, [{ table: 'planItems', id: next.id, before: b, after: next }]); say(`บันทึกแล้ว · ${next.name}`); } setPanelId(null); }}
-          onDelete={() => setDelId(panelId)} onClose={() => setPanelId(null)} />
+          onDraft={(d) => { draft.current = d; }}
+          onSave={(next) => { savePanel(next); setPanelId(null); }}
+          onDelete={() => setDelId(panelId)} onClose={() => openPanel(null)} />
       )}
       </div>
       {delId && live(delId) && (() => {
@@ -487,6 +508,19 @@ function DeskTable({ data, cycle, planCur }: { data: PlanData; cycle: Month; pla
           </div>
         );
       })()}
+      {ask && panelId && live(panelId) && (
+        <div className="dp-scrim" onMouseDown={(ev) => { if (ev.target === ev.currentTarget) setAsk(null); }}>
+          <div className="dp-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dp-ask-t">
+            <h2 id="dp-ask-t">บันทึกการเปลี่ยนแปลงของ “{live(panelId)!.name}” ไหม</h2>
+            <p>ยังไม่ได้บันทึกสิ่งที่แก้ในแผงรายละเอียด</p>
+            <div className="acts">
+              <button className="ib" onClick={() => setAsk(null)}>แก้ต่อ</button>
+              <button className="ib" onClick={() => finishAsk(false)}>ไม่บันทึก</button>
+              <button className="ib pri" autoFocus onClick={() => finishAsk(true)}>บันทึก</button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && (
         <div className="dp-toast" role="status" key={toast.key}>
           <Icon name="check" size={16} stroke={2.2} />

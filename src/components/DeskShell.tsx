@@ -27,7 +27,7 @@ const FoldIcon = () => (
 );
 
 // หน้าในโครงคอมวางปุ่มของตัวเองที่แถบบนผ่านช่องนี้ (null = ไม่ได้อยู่บนจอคอม)
-const DeskCtx = createContext<{ actions: HTMLElement | null; lead: HTMLElement | null; setSideOpen: (v: boolean) => void } | null>(null);
+const DeskCtx = createContext<{ actions: HTMLElement | null; lead: HTMLElement | null; setSideOpen: (v: boolean) => void; setPlanMonth: (m: string | null) => void } | null>(null);
 export const useDeskSlots = () => useContext(DeskCtx);
 /** ปุ่มของหน้าที่แถบบน (ชิดขวา) และปุ่มหน้าชื่อหน้า (เช่น กลับตารางแผน) */
 export function DeskBar({ lead, actions }: { lead?: ReactNode; actions?: ReactNode }) {
@@ -59,7 +59,9 @@ export function DeskShell({ mode, wide, onToggle, children }: { mode: DeskMode; 
   const [lead, setLead] = useState<HTMLElement | null>(null);
   const [sideOpen, setSideOpen] = useState(false); // แผงรายละเอียดเปิด → เมนูซ้ายย่อเป็นแถบไอคอนเอง
   const rail = mode === 'rail' || sideOpen;
-  const cur = s ? appCycle(localToday(), s.pay, s.startCycle) : null;
+  const [planM, setPlanMonth] = useState<string | null>(null); // หน้าแผนบอกเดือนที่แสดงเป็น "เดือนนี้" (ติ๊กครบแล้วไปเดือนถัดไป)
+  const cyc = s ? appCycle(localToday(), s.pay, s.startCycle) : null;
+  const cur = planTab && planM ? planM : cyc;
   const range = s && cur ? cycleRange(cur, s.pay) : null;
   const short = (d: string) => thaiDate(d).replace(/ \d+$/, '');
   const sub = !s || !cur ? '' : planTab && sp.get('view') === 'year' ? 'ม.ค. – ธ.ค. · ตามแผนในตาราง'
@@ -96,7 +98,7 @@ export function DeskShell({ mode, wide, onToggle, children }: { mode: DeskMode; 
           <span className="ttl"><h1>{pg.title}</h1>{sub && <span className="sub num">{sub}</span>}</span>
           <span ref={setActions} className="acts" />
         </header>
-        <DeskCtx.Provider value={{ actions, lead, setSideOpen }}>
+        <DeskCtx.Provider value={{ actions, lead, setSideOpen, setPlanMonth }}>
           {pg.full ? <div className="desk-full">{children}</div> : (
             <div className="desk-colwrap">
               <div className="desk-col">{children}</div>
