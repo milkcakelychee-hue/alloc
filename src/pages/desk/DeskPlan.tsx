@@ -5,12 +5,12 @@ import { useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import type { Month, PaidCheck, PlanItem, Satang } from '../../db/types';
-import { thaiDate, thaiMonth } from '../../calc/dates';
+import { monthDiff, thaiDate, thaiMonth } from '../../calc/dates';
 import { formatBaht } from '../../calc/money';
 import { goalAwareAmountOf } from '../../calc/goals';
 import { planTotals } from '../../calc/plan';
 import { clampYear, kindTone, planGrid, yearBounds, type GridCell } from '../../calc/planGrid';
-import { canTick, tickable as tickList, emptyHistory, parseCell, push, redo, replaceLast, undo, type History, type Op } from '../../calc/planEdit';
+import { canTick, tickable as tickList, emptyHistory, extendToMonth, parseCell, push, redo, replaceLast, undo, type History, type Op } from '../../calc/planEdit';
 import { amountOp, tickOp, writeOps } from '../../db/planOps';
 import { Icon } from '../../components/Icon';
 import { DeskBar, useDeskSlots } from '../../components/DeskShell';
@@ -55,7 +55,7 @@ export function DeskPlan() {
 }
 
 type Pos = { itemId: string; mi: number };
-type Edit = Pos & { text: string; bad: boolean };
+type Edit = Pos & { text: string; bad: boolean; all?: boolean }; // all: เลือกทั้งช่อง พิมพ์ทับได้เลย
 type Scope = Pos & { item: PlanItem; amount: Satang; scope: 'month' | 'from' };
 type Toast = { text: string; key: number };
 type Flash = { itemId: string; groupId: string; months: Set<number>; key: number };
@@ -156,6 +156,20 @@ function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: M
   };
 
   const say = (text: string) => setToast({ text, key: Date.now() });
+
+  /** ช่องลายขีด: ขยายช่วงที่มีผลให้ถึงเดือนนี้ แล้วเปิดช่องให้กรอกยอดต่อ */
+  const extend = async (p: Pos) => {
+    const item = live(p.itemId);
+    if (!item) return;
+    const m = g.months[p.mi];
+    const next = extendToMonth(item, m);
+    if (next === item) return;
+    const before = monthDiff(item.period.start, m) < 0;
+    const lab = before ? `เริ่มตั้งแต่ ${mon(m)}` : `ใช้ต่อตั้งแต่ ${mon(m)}`;
+    await apply(`${item.name} · ${lab}`, [{ table: 'planItems', id: item.id, before: item, after: { ...next, updatedAt: Date.now() } }]);
+    say(`บันทึกแล้ว · ${item.name} ${lab}`);
+    setEdit({ ...p, text: String((next.monthOverrides[m] ?? next.defaultAmount) / 100), bad: false, all: true });
+  };
 
   const chooseScope = async (sc: 'month' | 'from') => {
     if (!scope || scope.scope === sc) { setScope(null); return; }
@@ -296,7 +310,7 @@ function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: M
       if (arrows[ev.key]) { ev.preventDefault(); setScope(null); setSel(move(sel, ...arrows[ev.key])); return; }
       if (ev.key === 'Tab') { ev.preventDefault(); setScope(null); setSel(move(sel, 0, ev.shiftKey ? -1 : 1)); return; }
       if (tickMode) return; // โหมดติ๊ก: ไม่แก้ยอด
-      if (ev.key === 'Enter' || ev.key === 'F2') { ev.preventDefault(); startEdit(sel); return; }
+      if (ev.key === 'Enter' || ev.key === 'F2') { ev.preventDefault(); if (r && r.cells[sel.mi].amount === null) extend(sel); else startEdit(sel); return; }
       if (ev.key === 'Escape') { setScope(null); setSel(null); return; }
       if (/^[0-9.,]$/.test(ev.key)) { ev.preventDefault(); startEdit(sel, ev.key === ',' ? '' : ev.key); }
     };
@@ -424,10 +438,16 @@ function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: M
                               <>
                                 <input className="dp-in num" autoFocus inputMode="decimal" aria-label={`ยอด ${r.item.name} ${MON[mi]}`} aria-invalid={edit!.bad}
                                   value={edit!.text} onChange={(ev) => setEdit({ ...edit!, text: ev.target.value, bad: false })} onKeyDown={onInputKey} onBlur={onInputBlur}
-                                  onFocus={(ev) => { const el = ev.currentTarget; const n = el.value.length; el.setSelectionRange(n, n); }} />
+                                  onFocus={(ev) => { const el = ev.currentTarget; const n = el.value.length; el.setSelectionRange(edit!.all ? 0 : n, n); }} />
                                 {edit!.bad && <span className="dp-pop err" role="alert">ใส่ตัวเลขเท่านั้น</span>}
                               </>
                             ) : c.amount === null ? null : <>{canT && <span className={`dp-cb${paid ? ' on' : ''}`} aria-hidden="true">{paid && <Icon name="check" size={11} stroke={3} />}</span>}{tri(c)}{(canT && tier !== 'w') || (panelId && tier === 's') ? whole(c.amount) : fmtItem(tier, c.amount)}</>}
+                            {isSel && !tickMode && !edit && c.amount === null && (
+                              <span className="dp-pop down" role="dialog" aria-label="นอกช่วงที่มีผล" onMouseDown={(ev) => ev.stopPropagation()}>
+                                <span className="cap">{MON[mi]} อยู่นอกช่วงที่มีผล</span>
+                                <button className="opt" onClick={() => extend({ itemId: r.item.id, mi })}>{monthDiff(r.item.period.start, c.month) < 0 ? 'เริ่มรายการนี้' : 'ใช้รายการนี้ต่อ'}ตั้งแต่ {MON[mi]}<span className="kbd">Enter</span></button>
+                              </span>
+                            )}
                             {sc && (
                               <span className="dp-pop up" role="dialog" aria-label="ขอบเขตของยอด" onMouseDown={(ev) => ev.stopPropagation()}>
                                 <span className="cap">ใช้ยอด <b className="num">{full(scope!.amount)}</b> กับ</span>

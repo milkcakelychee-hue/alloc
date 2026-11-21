@@ -3,8 +3,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { AllocDB } from '../db/db';
 import { ensureDefaults } from '../db/defaults';
 import { amountOp, tickOp, writeOps } from '../db/planOps';
-import { canTick, emptyHistory, parseCell, planMonth, push, redo, replaceLast, undo, type Op } from './planEdit';
+import { canTick, emptyHistory, extendToMonth, parseCell, planMonth, push, redo, replaceLast, undo, type Op } from './planEdit';
 import { rawAmount } from './plan';
+import type { PlanItem } from '../db/types';
 import { B, groups, item } from './testkit';
 
 let n = 0;
@@ -115,5 +116,22 @@ describe('ค่าที่พิมพ์ในช่อง', () => {
     expect(parseCell('abc')).toBeNull();
     expect(parseCell('-5')).toBeNull();
     expect(parseCell('1.234')).toBeNull();
+  });
+});
+
+describe('extendToMonth', () => {
+  const base = { id: 'x', groupId: 'g', name: 'ทดสอบ', defaultAmount: 12300, monthOverrides: {}, order: 0, updatedAt: 0 } as unknown as PlanItem;
+  it('หลังเดือนสุดท้าย ต่อไม่มีกำหนด', () => {
+    const r = extendToMonth({ ...base, period: { start: '2026-01', endMode: 'month', endMonth: '2026-11' } }, '2026-12');
+    expect(r.period).toEqual({ start: '2026-01', endMode: 'none' });
+    expect(r.monthOverrides).toEqual({});
+  });
+  it('ข้ามเดือน ใส่ 0 ให้เดือนที่ข้าม', () => {
+    const r = extendToMonth({ ...base, period: { start: '2026-01', endMode: 'month', endMonth: '2026-09' } }, '2026-12');
+    expect(r.monthOverrides).toEqual({ '2026-10': 0, '2026-11': 0 });
+  });
+  it('ก่อนเดือนเริ่ม เลื่อนเดือนเริ่ม', () => {
+    const r = extendToMonth({ ...base, period: { start: '2026-06', endMode: 'none' } }, '2026-03');
+    expect(r.period.start).toBe('2026-03');
   });
 });

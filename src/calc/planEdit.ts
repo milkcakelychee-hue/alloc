@@ -1,6 +1,6 @@
 // แก้แผนในตารางบนคอม (ALLOC_DESKTOP_SPEC ข้อ 5–6) · ตัวคำนวณล้วน ไม่แตะฐานข้อมูล
 import type { Month, PaidCheck, PlanGroup, PlanItem, Satang } from '../db/types';
-import { addMonths } from './dates';
+import { addMonths, monthDiff } from './dates';
 import { parseBaht } from './money';
 import type { AmountOf } from './plan';
 
@@ -64,4 +64,19 @@ export function tickable(groups: PlanGroup[], items: PlanItem[], m: Month, amoun
 export function planMonth(cycle: Month, groups: PlanGroup[], items: PlanItem[], checkedIds: Set<string>, amountOf: AmountOf): Month {
   const list = tickable(groups, items, cycle, amountOf);
   return list.length > 0 && list.every((i) => checkedIds.has(i.id)) ? addMonths(cycle, 1) : cycle;
+}
+
+/**
+ * ใช้รายการต่อในเดือน m ที่อยู่นอกช่วงที่มีผล (ทางลัดจากช่องลายขีดในตาราง)
+ * ก่อนเดือนเริ่ม: เลื่อนเดือนเริ่มมาที่ m · หลังเดือนสุดท้าย: ไม่มีกำหนดจบ และเดือนที่ข้ามไประหว่างนั้นใส่ 0
+ */
+export function extendToMonth(item: PlanItem, m: Month): PlanItem {
+  const p = item.period;
+  if (monthDiff(p.start, m) < 0) return { ...item, period: { ...p, start: m } };
+  if (p.endMode === 'month' && p.endMonth && monthDiff(m, p.endMonth) < 0) {
+    const monthOverrides = { ...item.monthOverrides };
+    for (let x = addMonths(p.endMonth, 1); x !== m; x = addMonths(x, 1)) monthOverrides[x] = 0;
+    return { ...item, monthOverrides, period: { start: p.start, endMode: 'none' } };
+  }
+  return item;
 }
