@@ -63,7 +63,7 @@ function LogCalendar() {
   const hero = heroBudget(parts, inCycle, data.items);
   const { budget, remaining } = hero;
   const notStarted = isCur && today < r.start; // ตั้งรอบเริ่มใช้แอปไว้ล่วงหน้า ยังไม่ถึงวันแรก
-  const daysLeft = notStarted ? daysBetween(r.start, r.end) + 1 : isCur ? daysBetween(today, r.end) : 0;
+  const daysLeft = notStarted ? daysBetween(r.start, r.end) + 1 : isCur ? daysBetween(today, r.end) + 1 : 0; // นับรวมวันนี้ (เจ้าของขอ 25 พ.ย. 69)
   const perDay = Math.round(remaining / Math.max(daysLeft, 1));
 
   // เงินเดือนของรอบ (ไม่ได้จดเป็นรายการ)
@@ -100,7 +100,7 @@ function LogCalendar() {
       <Tabs />
       <div className="lg-cyc">
         <div className="t"><b>{thaiMonthLong(cycle)}</b>
-          <span className="num"><span className="nw">รอบเงินเดือน {dm(r.start)} – {dm(r.end)}</span>{isCur && <> · <span className="nw">{notStarted ? `เริ่ม ${dm(r.start)}` : daysLeft === 0 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></>}</span></div>
+          <span className="num"><span className="nw">รอบเงินเดือน {dm(r.start)} – {dm(r.end)}</span>{isCur && <> · <span className="nw">{notStarted ? `เริ่ม ${dm(r.start)}` : daysLeft === 1 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></>}</span></div>
         <button className="lg-sq" aria-label="รอบก่อน" disabled={!!s.startCycle && cycle <= s.startCycle} onClick={() => { setCycle(addMonths(cycle, -1)); setDay(null); }}><Icon name="back" size={20} stroke={2} /></button>
         <button className="lg-sq" aria-label="รอบถัดไป" disabled={!canNext} onClick={() => { setCycle(addMonths(cycle, 1)); setDay(null); }}><Icon name="chevron" size={20} stroke={2} /></button>
       </div>
@@ -115,7 +115,7 @@ function LogCalendar() {
               {(hero.income > 0 || hero.off > 0) && <span className="s num">{hero.income > 0 && <span className="nw">รายรับเพิ่ม +{baht(hero.income)}</span>}{hero.income > 0 && hero.off > 0 && ' · '}{hero.off > 0 && <span className="nw">นอกงบ {baht(hero.off)}</span>}</span>}</span>
             {isCur && <span className="r"><span className="k">ใช้ได้วันละ</span>
               <b className="num">{remaining > 0 ? `~${baht(Math.round(perDay / 100) * 100)}` : '0'}</b>
-              <span className="s num">{notStarted ? `${daysLeft} วันในรอบ` : daysLeft === 0 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></span>}
+              <span className="s num">{notStarted ? `${daysLeft} วันในรอบ` : daysLeft === 1 ? 'วันสุดท้าย' : `อีก ${daysLeft} วัน`}</span></span>}
           </div>
         ) : (
           <span style={{ fontSize: 15, lineHeight: 1.55 }}>ยังไม่มีงบ · <span className="nw">เลือกงบให้หมวด</span> <span className="nw">ที่ "แก้หมวด"</span></span>

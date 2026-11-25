@@ -87,7 +87,7 @@
 .lg-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; color: inherit; width: 100%; text-align: left; }
 .lg-row .cat-ic { width: 40px; height: 40px; border-radius: 12px; }
 .lg-row .t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.4; }
-.lg-row .t > span:first-child { font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lg-row .t > span:first-child { font-size: 15px; font-weight: 500; padding: 3px 0; margin: -3px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lg-row .t > span + span { font-size: 12px; color: var(--ink3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lg-row .a { display: flex; flex-direction: column; align-items: flex-end; flex: none; }
 .lg-row .a b { font-size: 15px; font-weight: 600; } .lg-row .a b.inc { color: var(--lg-inc); } .lg-row .a span { font-size: 11px; color: var(--ink3); }
@@ -162,7 +162,7 @@
 .lga-grid > [aria-pressed='true'] { background: var(--card); box-shadow: inset 0 0 0 2px var(--ac); }
 .lga-grid .cat-ic { width: 44px; height: 44px; border-radius: 14px; }
 .lga-grid.inc .cat-ic { width: 56px; height: 56px; border-radius: 18px; }
-.lga-grid .n { font-size: 13px; font-weight: 500; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.lga-grid .n { font-size: 13px; font-weight: 500; line-height: 1.6; margin: -4px 0; /* เผื่อที่ให้สระบน+วรรณยุกต์ซ้อน (น้ำ) ไม่โดนตัด */ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .lga-grid.inc .n { font-size: 14px; }
 .lga-grid .add { border: 1.5px dashed var(--lg-dash); color: var(--ink2); font-size: 13px; font-weight: 500; }
 .lga-grid .add > span { width: 44px; height: 44px; border-radius: 14px; background: var(--card2); display: flex; align-items: center; justify-content: center; }

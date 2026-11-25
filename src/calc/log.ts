@@ -59,7 +59,7 @@ export function cycleDays(today: DateStr, payday: Pay) {
 
 /**
  * งบใช้จ่ายรายวัน = ผลรวมรายการในหมวดผันแปรที่ผูกหมวดบันทึกอย่างน้อย 1 หมวด − ที่ใช้ไปในหมวดเหล่านั้น
- * ใช้ได้วันละ = ที่เหลือ ÷ จำนวนวันที่เหลือหลังวันนี้ · วันสุดท้ายของรอบใช้ที่เหลือทั้งหมด
+ * ใช้ได้วันละ = ที่เหลือ ÷ จำนวนวันที่เหลือรวมวันนี้ · วันสุดท้ายของรอบใช้ที่เหลือทั้งหมด
  */
 export function dailyBudget(groups: PlanGroup[], items: PlanItem[], entries: LogEntry[], today: DateStr, payday: Pay, amountOf: AmountOf = rawAmount) {
   const cycle = cycleOf(today, payday);
@@ -70,8 +70,9 @@ export function dailyBudget(groups: PlanGroup[], items: PlanItem[], entries: Log
   const spent = expensesIn(entries, cycle, payday).filter((e) => cats.has(e.categoryId)).reduce((s, e) => s + e.myShare, 0);
   const remaining = budget - spent;
   const d = cycleDays(today, payday);
-  const perDay = Math.round(remaining / Math.max(d.daysLeft, 1));
-  return { cycle, budget, spent, remaining, daysLeft: d.daysLeft, perDay };
+  const daysLeft = d.daysLeft + 1;
+  const perDay = Math.round(remaining / daysLeft);
+  return { cycle, budget, spent, remaining, daysLeft, perDay };
 }
 
 /** จังหวะงบ: ใช้ไป% เทียบวันที่ผ่านไป% · คาดการณ์ปลายรอบ = ใช้ไป ÷ วันที่ผ่าน × วันในรอบ */

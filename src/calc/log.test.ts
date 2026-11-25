@@ -27,16 +27,16 @@ const entries = [
 const cycleExp = expensesIn(entries, '2026-10', 27);
 
 describe('6.4 งบใช้จ่ายรายวัน (18 ต.ค. 69)', () => {
-  it('งบ 6,500 ใช้ไป 4,105.25 เหลือ 2,394.75 อีก 8 วัน ~299/วัน', () => {
+  it('งบ 6,500 ใช้ไป 4,105.25 เหลือ 2,394.75 อีก 9 วันรวมวันนี้ ~266/วัน', () => {
     const d = dailyBudget(groups, items, entries, TODAY, 27);
-    expect(d).toMatchObject({ cycle: '2026-10', budget: B(6500), spent: B(4105.25), remaining: B(2394.75), daysLeft: 8 });
-    expect(d.perDay).toBe(B(299.34));
-    expect(roundBaht(d.perDay)).toBe(299);
+    expect(d).toMatchObject({ cycle: '2026-10', budget: B(6500), spent: B(4105.25), remaining: B(2394.75), daysLeft: 9 });
+    expect(d.perDay).toBe(B(266.08));
+    expect(roundBaht(d.perDay)).toBe(266);
   });
 
   it('วันสุดท้ายของรอบ ใช้ได้วันละ = ที่เหลือทั้งหมด', () => {
     const d = dailyBudget(groups, items, entries, '2026-10-26', 27);
-    expect(d.daysLeft).toBe(0);
+    expect(d.daysLeft).toBe(1);
     expect(d.perDay).toBe(d.remaining);
   });
 
