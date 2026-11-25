@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calendarCells, cutPerDay, dailyBudgetParts, heroBudget, datePickNote, dayTotals, evalAmount, pickerCells, planLabelOf, typicalRange, weekdaySplit } from './logView';
-import { categoryBudget, expensesIn } from './log';
+import { categoryBudget, expensesIn, fundedItems, offBudgetTotal } from './log';
 import { B, entry, groups, item } from './testkit';
 
 // TEST_CASES.md 6.4 (18 ต.ค. 69 · เงินเดือนเข้าวันที่ 27)
@@ -116,5 +116,14 @@ describe('ป้ายงบใช้จ่ายรายวัน', () => {
     const h = heroBudget(parts, es, its);
     expect(h).toMatchObject({ planned: B(4800), income: B(2000), off: B(700), budget: B(6800), remaining: B(5100) });
     expect(parts[0].budget - parts[0].spent).toBe(B(3800));
+  });
+
+  it('หมวดที่ผูกรายการแต่เดือนนี้งบเป็น 0 นับเป็นนอกงบ ไม่หายจากยอดเหลือ', () => {
+    const its = [item('variable', 'ค่ากิน', 4800, { logCategoryIds: ['c-food'] }), item('variable', 'เติมแก๊ส', 0, { logCategoryIds: ['c-gas'] })];
+    const es = [entry('2026-10-03', 'c-food', 1000), entry('2026-10-04', 'c-gas', 900)];
+    const funded = fundedItems(its, '2026-10');
+    const h = heroBudget(dailyBudgetParts(groups, its, es, '2026-10'), es, funded);
+    expect(h).toMatchObject({ off: B(900), remaining: B(2900) });
+    expect(offBudgetTotal(es, funded)).toBe(B(900));
   });
 });

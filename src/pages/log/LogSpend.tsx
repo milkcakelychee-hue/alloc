@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { appCycle, addMonths, cycleRange, localToday, thaiDate, thaiMonth } from '../../calc/dates';
 import { weekday } from '../../calc/payday';
-import { categoryBudget, cycleDays, expensesIn, offBudgetTotal, pace, topDay, whereMoneyGoes } from '../../calc/log';
+import { categoryBudget, cycleDays, expensesIn, fundedItems, offBudgetTotal, pace, topDay, whereMoneyGoes } from '../../calc/log';
 import { cutPerDay, dailyBudgetParts, planLabelOf, typicalRange, weekdaySplit } from '../../calc/logView';
 import { goalAwareAmountOf } from '../../calc/goals';
 import { Icon } from '../../components/Icon';
@@ -33,6 +33,7 @@ export default function LogSpend() {
   const end = prev ? r.end : today;
   const days = prev ? r.days : cycleDays(today, s.pay).elapsed;
   const amountOf = goalAwareAmountOf(data.goals, data.items, data.adjustments, cur);
+  const funded = fundedItems(data.items, cycle, amountOf);
   const exp = expensesIn(data.entries, cycle, s.pay);
   const w = whereMoneyGoes(exp, 8);
   const total = w.total;
@@ -57,8 +58,8 @@ export default function LogSpend() {
   const pc = main ? pace(main.spent, main.budget, prev ? r.end : today, s.pay) : null;
   const dLeft = prev ? 0 : cycleDays(today, s.pay).daysLeft;
   const cut = main && pc && !prev ? cutPerDay(main.spent, main.budget, pc.projected, dLeft) : null;
-  const off = offBudgetTotal(exp, data.items);
-  const offRows = w.rows.filter((x) => x.categoryId !== 'other' && !planLabelOf(x.categoryId, data.items)).slice(0, 3);
+  const off = offBudgetTotal(exp, funded);
+  const offRows = w.rows.filter((x) => x.categoryId !== 'other' && !planLabelOf(x.categoryId, funded)).slice(0, 3);
   const ws = weekdaySplit(exp, end, s.pay);
   const td = topDay(exp);
   const next = addMonths(cur, 1);

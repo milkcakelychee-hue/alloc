@@ -7,7 +7,7 @@ import { appCycle, addMonths, cycleOf, cycleRange, daysBetween, localToday, thai
 import { expectedPayDate } from '../calc/payday';
 import { planTotals } from '../calc/plan';
 import { goalAwareAmountOf } from '../calc/goals';
-import { entryCycle, expensesIn, offBudgetTotal } from '../calc/log';
+import { entryCycle, expensesIn, fundedItems, offBudgetTotal } from '../calc/log';
 import { calendarCells, dailyBudgetParts, heroBudget, dayTotals, effectiveStart, planLabelOf, salaryEvent } from '../calc/logView';
 import { Icon } from '../components/Icon';
 import { BillList } from './bill/BillList';
@@ -55,12 +55,13 @@ function LogCalendar() {
   const r = { ...cycleRange(cycle, s.pay), start: effectiveStart(cycle, s.pay, data.receipts) };
   const isCur = cycle === cur;
   const amountOf = goalAwareAmountOf(data.goals, data.items, data.adjustments, cur);
+  const funded = fundedItems(data.items, cycle, amountOf);
   const catOf = (id: string) => data.categories.find((c) => c.id === id);
 
   const inCycle = data.entries.filter((e) => entryCycle(e, s.pay) === cycle);
   const exp = expensesIn(data.entries, cycle, s.pay);
   const parts = dailyBudgetParts(data.groups, data.items, exp, cycle, amountOf);
-  const hero = heroBudget(parts, inCycle, data.items);
+  const hero = heroBudget(parts, inCycle, funded);
   const { budget, remaining } = hero;
   const notStarted = isCur && today < r.start; // ตั้งรอบเริ่มใช้แอปไว้ล่วงหน้า ยังไม่ถึงวันแรก
   const daysLeft = notStarted ? daysBetween(r.start, r.end) + 1 : isCur ? daysBetween(today, r.end) + 1 : 0; // นับรวมวันนี้ (เจ้าของขอ 25 พ.ย. 69)
@@ -77,9 +78,9 @@ function LogCalendar() {
   if (sal) { const t = totals.get(sal.date) ?? { income: 0, expense: 0 }; totals.set(sal.date, { ...t, income: t.income + sal.amount }); }
   const incomeAll = [...totals.values()].reduce((a, t) => a + t.income, 0);
   const spentAll = exp.reduce((a, e) => a + e.myShare, 0);
-  const off = offBudgetTotal(exp, data.items);
+  const off = offBudgetTotal(exp, funded);
   const overN = parts.filter((p) => p.spent > p.budget).length;
-  const linkedAll = new Set(data.items.flatMap((i) => i.logCategoryIds));
+  const linkedAll = new Set(funded.flatMap((i) => i.logCategoryIds));
   const offCats = [...new Set(exp.filter((e) => !linkedAll.has(e.categoryId)).map((e) => e.categoryId))].map(catOf).filter((c): c is NonNullable<typeof c> => !!c);
 
   const cells = calendarCells(cycle, s.pay, today, r.start);

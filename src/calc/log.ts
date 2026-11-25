@@ -108,6 +108,10 @@ export function whereMoneyGoes(cycleExpenses: LogEntry[], max = 7): { total: Sat
 }
 
 /** อินไซต์จากตัวเลข: รวมนอกงบ และวันที่จ่ายมากสุด */
+/** รายการที่มียอดในเดือนนั้น · หมวดที่ผูกแต่รายการไม่มีงบเดือนนี้ นับเป็นนอกงบ (เจ้าของขอ 25 พ.ย. 69) */
+export function fundedItems(items: PlanItem[], m: Month, amountOf: AmountOf = rawAmount) {
+  return items.filter((i) => amountOf(i, m) > 0);
+}
 export function offBudgetTotal(cycleExpenses: LogEntry[], items: PlanItem[]) {
   const linked = new Set(items.flatMap((i) => i.logCategoryIds));
   return cycleExpenses.filter((e) => !linked.has(e.categoryId)).reduce((s, e) => s + e.myShare, 0);
