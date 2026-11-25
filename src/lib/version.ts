@@ -6,6 +6,13 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.8', date: 'พ.ย. 69',
+    sections: [{ title: 'ทำอะไรได้เพิ่ม', items: [
+      'หน้าเงินไปไหนดูย้อนหลังได้ 6 รอบ และแสดงทุกหมวดที่มีรายจ่าย',
+      'แตะหมวดเพื่อดูรายละเอียด: กราฟ 6 รอบเทียบงบ เฉลี่ยต่อรอบ จ่ายบ่อยแค่ไหน และประวัติทุกรายการของหมวดนั้น'
+    ] }]
+  },
+  {
     version: '1.7.6', date: 'พ.ย. 69',
     sections: [{ title: 'ปรับแก้', items: ['รายจ่ายในหมวดที่ผูกกับรายการในแผน แต่เดือนนั้นไม่ได้ตั้งงบ นับเป็นนอกงบและหักจากงบใช้จ่ายรายวัน (เดิมหายไปจากยอดเหลือ)'] }]
   },
