@@ -4,7 +4,7 @@ import { addDays, addMonths, cycleOf, cycleRange, daysBetween, type Pay } from '
 import { weekday } from './payday';
 import { parseBaht } from './money';
 import { rawAmount, type AmountOf } from './plan';
-import { budgetPools, categoryBudget, cycleDays, poolName } from './log';
+import { budgetPools, categoryBudget, cycleDays, entryCycle, poolName } from './log';
 
 // ---------- แป้นตัวเลข ----------
 
@@ -195,4 +195,27 @@ export function cycleForDate(d: DateStr, pay: Pay, receipts: Rec[]): Month {
   const c = cycleOf(d, pay);
   const next = addMonths(c, 1);
   return d >= effectiveStart(next, pay, receipts) ? next : c;
+}
+
+/**
+ * ประวัติหมวด n รอบล่าสุด (เก่า → ใหม่) · ยอด = ส่วนของฉัน
+ * เฉลี่ยต่อรอบ/ความถี่ นับเฉพาะรอบตั้งแต่รอบแรกที่มีรายการของหมวดนี้ (ไม่ดึงค่าเฉลี่ยลงด้วยรอบก่อนเริ่มจด)
+ */
+export function categoryHistory(entries: LogEntry[], categoryId: string, pay: Pay, cur: Month, n = 6) {
+  const mine = entries.filter((e) => e.type === 'expense' && e.categoryId === categoryId);
+  const cycles = Array.from({ length: n }, (_, i) => addMonths(cur, i - n + 1));
+  const rows = cycles.map((cycle) => {
+    const es = mine.filter((e) => entryCycle(e, pay) === cycle);
+    return { cycle, total: es.reduce((a, e) => a + e.myShare, 0), count: es.length };
+  });
+  const first = rows.findIndex((r) => r.count > 0);
+  const used = first < 0 ? [] : rows.slice(first);
+  const total = used.reduce((a, r) => a + r.total, 0);
+  const count = used.reduce((a, r) => a + r.count, 0);
+  return {
+    rows,
+    avgPerCycle: used.length ? Math.round(total / used.length) : 0,
+    perCycle: used.length ? count / used.length : 0,
+    avgPerEntry: count ? Math.round(total / count) : 0
+  };
 }

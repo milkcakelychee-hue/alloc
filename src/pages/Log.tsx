@@ -218,7 +218,7 @@ function LogCalendar() {
   );
 }
 
-function EntryRow({ e, data, onOpen }: { e: LogEntry; data: LogData; onOpen: () => void }) {
+export function EntryRow({ e, data, onOpen }: { e: LogEntry; data: LogData; onOpen: () => void }) {
   const cat = data.categories.find((c) => c.id === e.categoryId);
   const label = e.type === 'income' ? 'รายรับ' : planLabelOf(e.categoryId, data.items);
   const title = e.note || cat?.name || 'อื่น ๆ';

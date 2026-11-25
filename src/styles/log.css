@@ -337,3 +337,30 @@
 
 /* หน้าเพิ่มรายการ: ปุ่มแก้หมวดเห็นชัด */
 .lga-cats .h .lga-edcat { display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px 0 11px; border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line); font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
+
+/* รายละเอียดหมวด (เงินไปไหน → หมวด) */
+.lgc-hero { background: var(--card); border-radius: 22px; padding: 16px; box-shadow: var(--cardline); display: flex; flex-direction: column; gap: 2px; }
+.lgc-hero .k { font-size: 12.5px; color: var(--ink3); }
+.lgc-hero b { font-size: 32px; font-weight: 700; letter-spacing: -.6px; line-height: 1.25; }
+.lgc-hero .s { font-size: 13px; color: var(--ink2); line-height: 1.5; } .lgc-hero .over { color: var(--danger); font-weight: 600; }
+.lgc-chart { background: var(--card); border-radius: 22px; padding: 14px 14px 12px; box-shadow: var(--cardline); display: flex; flex-direction: column; gap: 10px; }
+.lgc-chart .h { display: flex; justify-content: space-between; align-items: center; }
+.lgc-chart .h h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.lgc-chart .lgk { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink3); }
+.lgc-chart .lgk i { width: 14px; border-top: 2px dashed var(--ink3); }
+.lgc-chart .bars { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.lgc-chart .col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.lgc-chart .v { font-size: 10.5px; color: var(--ink2); white-space: nowrap; }
+.lgc-chart .area { position: relative; width: 100%; height: 120px; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--line); }
+.lgc-chart .bar { width: 60%; max-width: 32px; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--lg-exp) 40%, var(--card)); }
+.lgc-chart .bar.now { background: var(--lg-exp); }
+.lgc-chart .bar.over { box-shadow: inset 0 2px 0 var(--danger); }
+.lgc-chart .bud { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--ink3); z-index: 1; }
+.lgc-chart .m { font-size: 11.5px; color: var(--ink3); } .lgc-chart .m.now { color: var(--ink); font-weight: 600; }
+.lgc-chart .nt { font-size: 11.5px; color: var(--ink3); line-height: 1.5; }
+.lgc-hh { margin: 6px 2px 0; font-size: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: baseline; }
+.lgc-hh span { font-size: 12.5px; font-weight: 400; color: var(--ink3); }
+.lgc-cyc li.lgc-d { padding: 8px 0 2px; font-size: 12px; color: var(--ink3); }
+.lgc-cyc li.lgc-d:first-child { border-top: 0; padding-top: 0; }
+.lgs-rng { margin: -4px 2px 0; font-size: 12.5px; color: var(--ink3); }
+.lgc-hero .cat-ic { margin-bottom: 8px; }

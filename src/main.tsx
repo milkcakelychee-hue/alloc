@@ -27,6 +27,7 @@ import { DeskGoals } from './pages/desk/DeskGoals';
 import LogAdd from './pages/log/LogAdd';
 import LogCats from './pages/log/LogCats';
 import LogSpend from './pages/log/LogSpend';
+import LogCat from './pages/log/LogCat';
 import Log from './pages/Log';
 import Settings from './pages/Settings';
 import Welcome from './pages/Welcome';
@@ -89,6 +90,7 @@ function Shell() {
         <Route path="/log/add" element={<LogAdd />} />
         <Route path="/log/cats" element={<LogCats />} />
         <Route path="/log/spend" element={<LogSpend />} />
+        <Route path="/log/cat/:id" element={<LogCat />} />
         <Route path="/log/bill/:id" element={<BillDetail />} />
         <Route path="/log/people" element={<People />} />
         <Route path="/log/bill-summary" element={<BillSummary />} />

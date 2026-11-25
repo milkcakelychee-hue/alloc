@@ -1,7 +1,7 @@
 // เงินไปไหน (บอร์ด LogSpend): สัดส่วนรายจ่ายตามหมวด · งบแต่ละหมวด · สิ่งที่น่าสังเกต (คิดจากตัวเลขเท่านั้น)
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { appCycle, addMonths, cycleRange, localToday, thaiDate, thaiMonth } from '../../calc/dates';
+import { appCycle, addMonths, cycleRange, daysBetween, localToday, thaiDate, thaiMonth } from '../../calc/dates';
 import { weekday } from '../../calc/payday';
 import { categoryBudget, cycleDays, expensesIn, fundedItems, offBudgetTotal, pace, topDay, whereMoneyGoes } from '../../calc/log';
 import { cutPerDay, dailyBudgetParts, planLabelOf, typicalRange, weekdaySplit } from '../../calc/logView';
@@ -22,7 +22,8 @@ const light = (c: string, p = 70) => `color-mix(in srgb, ${c} ${p}%, #FFFFFF)`;
 export default function LogSpend() {
   const data = useLogData();
   const nav = useNavigate();
-  const [prev, setPrev] = useState(false);
+  const [mode, setMode] = useState<'cur' | 'prev' | 'six'>('cur');
+  const prev = mode === 'prev', six = mode === 'six';
   const [sel, setSel] = useState<string | null>(null);
   if (!data?.settings) return null;
   const s = data.settings;
@@ -31,10 +32,12 @@ export default function LogSpend() {
   const cycle = prev ? addMonths(cur, -1) : cur;
   const r = cycleRange(cycle, s.pay);
   const end = prev ? r.end : today;
-  const days = prev ? r.days : cycleDays(today, s.pay).elapsed;
+  const sixStart = cycleRange(addMonths(cur, -5), s.pay).start;
+  const days = six ? daysBetween(sixStart, today) + 1 : prev ? r.days : cycleDays(today, s.pay).elapsed;
   const amountOf = goalAwareAmountOf(data.goals, data.items, data.adjustments, cur);
   const funded = fundedItems(data.items, cycle, amountOf);
-  const exp = expensesIn(data.entries, cycle, s.pay);
+  const exp = six ? [0, 1, 2, 3, 4, 5].flatMap((i) => expensesIn(data.entries, addMonths(cur, -i), s.pay)) : expensesIn(data.entries, cycle, s.pay);
+  const allRows = whereMoneyGoes(exp, 999).rows; // รายการหมวด: ทุกหมวด (โดนัทรวมเกิน 8 เป็นอื่น ๆ)
   const w = whereMoneyGoes(exp, 8);
   const total = w.total;
   const colorOf = (id: string) => (id === 'other' ? OTHER : RANK[w.rows.findIndex((x) => x.categoryId === id)] ?? OTHER);
@@ -71,12 +74,15 @@ export default function LogSpend() {
         <span style={{ flex: 1, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}><span style={{ fontSize: 12, color: 'var(--ink3)' }}>บันทึก · สรุปรายจ่าย</span><b style={{ fontSize: 20, fontWeight: 700 }}>เงินไปไหน</b></span>
       </div>
       <div className="lg-tabs" role="tablist" aria-label="ช่วงเวลา" style={{ padding: 4, background: 'var(--card2)', boxShadow: 'none' }}>
-        <button role="tab" aria-selected={!prev} onClick={() => { setPrev(false); setSel(null); }} style={{ height: 36, fontSize: 13, fontWeight: 600 }}>รอบนี้ · <span className="num nw">{dm(cycleRange(cur, s.pay).start)}–{dm(today)}</span></button>
-        <button role="tab" aria-selected={prev} onClick={() => { setPrev(true); setSel(null); }} style={{ height: 36, fontSize: 14, fontWeight: 600 }}>รอบก่อน</button>
+        <button role="tab" aria-selected={mode === 'cur'} onClick={() => { setMode('cur'); setSel(null); }} style={{ height: 36, fontSize: 14, fontWeight: 600 }}>รอบนี้</button>
+        <button role="tab" aria-selected={prev} onClick={() => { setMode('prev'); setSel(null); }} style={{ height: 36, fontSize: 14, fontWeight: 600 }}>รอบก่อน</button>
+        <button role="tab" aria-selected={six} onClick={() => { setMode('six'); setSel(null); }} style={{ height: 36, fontSize: 14, fontWeight: 600 }}>6 รอบ</button>
+      </div>
+      <div className="lgs-rng num">{six ? <>{thaiMonth(addMonths(cur, -5)).split(' ')[0]} – {thaiMonth(cur)} · <span className="nw">{dm(sixStart)} – {dm(today)}</span></> : <>{thaiMonth(cycle)} · <span className="nw">{dm(r.start)} – {dm(end)}</span></>}
       </div>
 
       {total === 0 ? (
-        <section className="lgs-donut"><span className="lg-empty" style={{ border: 0 }}>ยังไม่มีรายจ่ายใน{prev ? 'รอบก่อน' : 'รอบนี้'}</span></section>
+        <section className="lgs-donut"><span className="lg-empty" style={{ border: 0 }}>ยังไม่มีรายจ่ายใน{six ? '6 รอบล่าสุด' : prev ? 'รอบก่อน' : 'รอบนี้'}</span></section>
       ) : <>
         <section className="lgs-donut" aria-label="สัดส่วนรายจ่ายตามหมวด">
           <div className="ring">
@@ -93,29 +99,30 @@ export default function LogSpend() {
             <span className="ctr"><span>{s1 ? nameOf(s1.categoryId) : 'จ่ายไปแล้ว'}</span><b className="num">{baht(s1 ? s1.total : total)}</b>
               <span className="num">{s1 ? `${(s1.ratio * 100).toFixed(1)}% ของทั้งหมด` : `บาท · ${w.rows.length} หมวด`}</span></span>
           </div>
-          <span className="tap">แตะชิ้นกราฟหรือหมวดด้านล่างเพื่อดูทีละหมวด</span>
+          <span className="tap">แตะชิ้นกราฟเพื่อดูทีละหมวด · แตะหมวดด้านล่างเพื่อดูประวัติ</span>
           <div className="ft num"><span>รวม {w.rows.length} หมวด · {days} วัน</span><span>เฉลี่ยวันละ <b>{baht(Math.round(total / days / 100) * 100)}</b></span></div>
         </section>
 
         <div className="lgs-h"><h2>รายละเอียดตามหมวด</h2>
-          <span className="lgk"><span><i style={{ background: RANK[0] }} />ใช้แล้ว</span><span><i style={{ background: 'repeating-linear-gradient(135deg, var(--lg-remain) 0 2px, var(--card) 2px 4px)', boxShadow: 'inset 0 0 0 1px var(--lg-remain)' }} />งบที่เหลือ</span></span></div>
+          {!six && <span className="lgk"><span><i style={{ background: RANK[0] }} />ใช้แล้ว</span><span><i style={{ background: 'repeating-linear-gradient(135deg, var(--lg-remain) 0 2px, var(--card) 2px 4px)', boxShadow: 'inset 0 0 0 1px var(--lg-remain)' }} />งบที่เหลือ</span></span>}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {w.rows.map((x) => {
+          {allRows.map((x) => {
             const cat = x.categoryId === 'other' ? null : catOf(x.categoryId);
             const col = colorOf(x.categoryId);
             const label = cat ? planLabelOf(cat.id, data.items) : null;
-            const b = cat && label ? categoryBudget(cat.id, data.items, exp, cycle, amountOf) : null;
+            const b = cat && label && !six ? categoryBudget(cat.id, data.items, exp, cycle, amountOf) : null;
             const sibs = b ? [...new Set(data.items.filter((i) => i.logCategoryIds.includes(cat!.id)).flatMap((i) => i.logCategoryIds))].filter((id) => id !== cat!.id && exp.some((e) => e.categoryId === id)) : [];
             const sibAmt = (id: string) => exp.filter((e) => e.categoryId === id).reduce((a, e) => a + e.myShare, 0);
             const used = b ? b.spentSelf + b.spentSiblings : 0;
             const scale = b ? Math.max(b.budget!, used) : 1;
             return (
-              <article key={x.categoryId} className="lgs-card" aria-pressed={sel === x.categoryId} onClick={() => setSel(sel === x.categoryId ? null : x.categoryId)}>
+              <article key={x.categoryId} className="lgs-card" aria-pressed={sel === x.categoryId} role="link" tabIndex={0} aria-label={`ดูประวัติ${nameOf(x.categoryId)}`}
+                onClick={() => nav(`/log/cat/${x.categoryId}`)} onKeyDown={(ev) => { if (ev.key === 'Enter') nav(`/log/cat/${x.categoryId}`); }}>
                 <div className="hd">
                   <span className="cat-ic" style={catStyle(cat)}><CatIcon icon={cat?.icon ?? 'other'} /></span>
                   <span className="t"><span><i className="dotc" aria-hidden="true" style={{ background: col }} />{nameOf(x.categoryId)}</span>
                     <span className="num">จด {x.count} ครั้ง · {label ? `นับเข้างบ${label}` : x.categoryId === 'other' ? 'หลายหมวด' : 'นอกงบ'}</span></span>
-                  <Link to="/log" aria-label={`ดูรายการ${nameOf(x.categoryId)}`} className="go" onClick={(e) => e.stopPropagation()}><Icon name="calendar" size={17} stroke={2} /></Link>
+                  <span className="go" aria-hidden="true"><Icon name="chevron" size={17} stroke={2} /></span>
                 </div>
                 <div className="st">
                   <span><span className="k">ยอด</span><span className="v num">{baht(x.total)}</span></span>
@@ -150,10 +157,10 @@ export default function LogSpend() {
             <span className="ic cat-ic" style={catStyle(catOf(top.categoryId))}><CatIcon icon={catOf(top.categoryId)?.icon ?? 'other'} size={18} /></span>
             <span className="t"><span className="itag" style={{ color: 'var(--lg-exp)' }}>มากที่สุด</span>
               <span className="ti">เงินส่วนใหญ่ไปกับหมวด{topGroup.map((id, i) => <span key={id}>{i ? ' + ' : ''}<span className="nw">{nameOf(id)}</span></span>)}</span>
-              <span className="bd">{topGroup.map(nameOf).join(' + ')} รวม <b className="num">{baht(topSum)}</b> คิดเป็น <b className="num">{pctI(topSum / total)}</b> ของรายจ่าย{prev ? 'รอบก่อน' : 'รอบนี้'}{range && <> · ส่วนใหญ่ครั้งละ <span className="num nw">{baht(Math.round(range.low / 100) * 100)}–{baht(Math.round(range.high / 100) * 100)}</span> บาท</>}</span></span>
+              <span className="bd">{topGroup.map(nameOf).join(' + ')} รวม <b className="num">{baht(topSum)}</b> คิดเป็น <b className="num">{pctI(topSum / total)}</b> ของรายจ่าย{six ? '6 รอบล่าสุด' : prev ? 'รอบก่อน' : 'รอบนี้'}{range && <> · ส่วนใหญ่ครั้งละ <span className="num nw">{baht(Math.round(range.low / 100) * 100)}–{baht(Math.round(range.high / 100) * 100)}</span> บาท</>}</span></span>
           </article>
         )}
-        {main && pc && (
+        {main && pc && !six && (
           <article className="lgs-ins">
             <span className="ic" style={{ background: 'var(--gx-ok-bg)', color: 'var(--gx-ok)' }}><Icon name="trend" size={18} stroke={2} /></span>
             <span className="t"><span className="itag" style={{ color: 'var(--gx-ok)' }}>ตามงบ</span>
@@ -162,7 +169,7 @@ export default function LogSpend() {
                 : <> ในขณะที่รอบผ่านไป {pctI(pc.elapsedRatio)} (<span className="num">{cycleDays(today, s.pay).elapsed}/{r.days}</span> วัน) ถ้าจ่ายแบบนี้ต่อจะจบรอบที่ราว <b className="num">{baht(Math.round(pc.projected / 100) * 100)}</b> จากงบ <span className="num">{baht(main.budget)}</span>{cut ? <> · ลดวันละ <span className="num">{baht(cut)}</span> บาทจะพอดีงบ</> : null}</>}</span></span>
           </article>
         )}
-        {off > 0 && (
+        {off > 0 && !six && (
           <article className="lgs-ins">
             <span className="ic" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}><Icon name="alert" size={18} stroke={2} /></span>
             <span className="t"><span className="itag" style={{ color: 'var(--warning)' }}>นอกงบ</span>
@@ -171,12 +178,12 @@ export default function LogSpend() {
               <Link to={`/?tab=plan&m=${next}`}>เพิ่มในแผน {thaiMonth(next).split(' ')[0]} →</Link></span>
           </article>
         )}
-        <article className="lgs-ins">
+        {!six && <article className="lgs-ins">
           <span className="ic" style={{ background: 'var(--inv-bg)', color: 'var(--inv)' }}><Icon name="calendar" size={18} stroke={2} /></span>
           <span className="t"><span className="itag" style={{ color: 'var(--inv)' }}>จังหวะการจ่าย</span>
             <span className="ti">{Math.abs(ws.weekdayAvg - ws.weekendAvg) <= Math.max(ws.weekdayAvg, ws.weekendAvg) * 0.1 ? 'วันธรรมดากับวันหยุดจ่ายพอ ๆ กัน' : ws.weekdayAvg > ws.weekendAvg ? 'วันธรรมดาจ่ายมากกว่าวันหยุด' : 'เสาร์-อาทิตย์จ่ายมากกว่าวันธรรมดา'}</span>
             <span className="bd">วันธรรมดาเฉลี่ย <b className="num">{baht(Math.round(ws.weekdayAvg / 100) * 100)}</b> · เสาร์-อาทิตย์ <b className="num">{baht(Math.round(ws.weekendAvg / 100) * 100)}</b>{td && <> · วันที่จ่ายเยอะสุดคือ <span className="nw num">{WDS[weekday(td.date)]} {dm(td.date)} {baht(td.total)}</span></>}</span></span>
-        </article>
+        </article>}
       </>}
       <span className="lgs-note">คิดจากรายจ่ายที่จดในหน้าบันทึก (นับเฉพาะส่วนของคุณในบิลที่หาร) · ไม่รวมเงินออม และเงินลงทุนที่อยู่ในแผน</span>
     </main>

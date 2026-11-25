@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calendarCells, cutPerDay, dailyBudgetParts, heroBudget, datePickNote, dayTotals, evalAmount, pickerCells, planLabelOf, typicalRange, weekdaySplit } from './logView';
+import { calendarCells, categoryHistory, cutPerDay, dailyBudgetParts, heroBudget, datePickNote, dayTotals, evalAmount, pickerCells, planLabelOf, typicalRange, weekdaySplit } from './logView';
 import { categoryBudget, expensesIn, fundedItems, offBudgetTotal } from './log';
 import { B, entry, groups, item } from './testkit';
 
@@ -125,5 +125,24 @@ describe('ป้ายงบใช้จ่ายรายวัน', () => {
     const h = heroBudget(dailyBudgetParts(groups, its, es, '2026-10'), es, funded);
     expect(h).toMatchObject({ off: B(900), remaining: B(2900) });
     expect(offBudgetTotal(es, funded)).toBe(B(900));
+  });
+});
+
+describe('ประวัติหมวด', () => {
+  it('6 รอบ เก่า→ใหม่ · เฉลี่ยนับตั้งแต่รอบแรกที่มีรายการ', () => {
+    const es = [
+      entry('2026-08-01', 'c-gas', 600), entry('2026-08-15', 'c-gas', 400),
+      entry('2026-10-03', 'c-gas', 500), entry('2026-10-03', 'c-food', 999),
+      entry('2026-10-05', 'i-side', 900, 900, { type: 'income' })
+    ];
+    const h = categoryHistory(es, 'c-gas', 27, '2026-10');
+    expect(h.rows.map((r) => r.cycle)).toEqual(['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10']);
+    expect(h.rows.map((r) => r.total)).toEqual([0, 0, 0, B(1000), 0, B(500)]);
+    expect(h.avgPerCycle).toBe(B(500));
+    expect(h.perCycle).toBe(1);
+    expect(h.avgPerEntry).toBe(B(500));
+  });
+  it('ไม่มีรายการ = ศูนย์ทั้งหมด', () => {
+    expect(categoryHistory([], 'c-gas', 27, '2026-10')).toMatchObject({ avgPerCycle: 0, perCycle: 0, avgPerEntry: 0 });
   });
 });
