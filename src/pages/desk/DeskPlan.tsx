@@ -15,6 +15,7 @@ import { amountOp, tickOp, writeOps } from '../../db/planOps';
 import { Icon } from '../../components/Icon';
 import { DeskBar, useDeskSlots } from '../../components/DeskShell';
 import { DeskItemPanel } from './DeskItemPanel';
+import { DeskAccountPanel } from './DeskAccountPanel';
 import { usePlanData, type PlanData } from '../plan/usePlanData';
 import { usePlanMonth } from '../plan/usePlanMonth';
 import { DeskYear } from './DeskYear';
@@ -77,6 +78,7 @@ function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: M
   const [flash, setFlash] = useState<Flash | null>(null);
   const [tickMode, setTickMode] = useState(false); // โหมดติ๊ก: คลิกช่องเดือนนี้ได้หลายรายการ
   const [panelId, setPanelId] = useState<string | null>(null); // แผงรายละเอียดรายการ
+  const [accOpen, setAccOpen] = useState(false); // แผงแยกบัญชี (เปิดทีละแผงกับแผงรายการ)
   const [adding, setAdding] = useState<{ groupId: string; text: string } | null>(null);
   const [delId, setDelId] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ id: string; groupId: string; over: string | null } | null>(null);
@@ -84,7 +86,8 @@ function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: M
   const [ask, setAsk] = useState<{ next: string | null } | null>(null); // ถามก่อนปิดแผงที่ยังไม่บันทึก
   const pending = useRef<PlanItem | null>(null); // รายการที่เพิ่งเพิ่ม (ก่อนข้อมูลสดมาถึง)
   const slots = useDeskSlots();
-  useEffect(() => { slots?.setSideOpen(!!panelId); return () => slots?.setSideOpen(false); }, [panelId, slots]);
+  useEffect(() => { slots?.setSideOpen(!!panelId || accOpen); return () => slots?.setSideOpen(false); }, [panelId, accOpen, slots]);
+  useEffect(() => { if (panelId) setAccOpen(false); }, [panelId]);
   useEffect(() => { slots?.setPlanMonth(planCur); return () => slots?.setPlanMonth(null); }, [planCur, slots]);
   useEffect(() => { if (planNow === cycle) setLook(false); }, [planNow, cycle]);
   const checks = useLiveQuery(() => db.paidChecks.where('cycleMonth').equals(planCur).toArray(), [planCur]);
@@ -363,6 +366,7 @@ function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: M
           <span className="dp-sep" />
           <YearPager year={year} min={bounds.min} max={bounds.max} onYear={setYear} />
           <button className="ib pri" onClick={() => setYear(curYear)}>เดือนนี้</button>
+          {!empty && <button className={`ib line${accOpen ? ' on' : ''}`} aria-pressed={accOpen} onClick={() => { if (accOpen) { setAccOpen(false); return; } if (panelId && draft.current) { openPanel(null); return; } setPanelId(null); setAccOpen(true); }}><Icon name="wallet" size={16} stroke={2} />แยกบัญชี</button>}
           {!empty && <button className="ib line" onClick={() => setSp({ tab: 'plan', y: String(year), view: 'year' })}><Icon name="chart" size={16} stroke={2} />สรุปทั้งปี {year + 543}</button>}
         </>
       } />
@@ -503,6 +507,10 @@ function DeskTable({ data, cycle, planCur: planNow }: { data: PlanData; cycle: M
           })}
         </div>
       </div>
+      {accOpen && !panelId && (
+        <DeskAccountPanel key={year} data={data} amountOf={amountOf} planCur={planCur} onClose={() => setAccOpen(false)}
+          month={sel ? g.months[sel.mi] : g.months.includes(planCur) ? planCur : g.months[0]} />
+      )}
       {panelId && live(panelId) && (
         <DeskItemPanel data={data} item={live(panelId)!} planCur={planCur} year={year} amountOf={amountOf}
           onDraft={(d) => { draft.current = d; }}

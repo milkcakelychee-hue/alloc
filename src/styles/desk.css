@@ -90,6 +90,17 @@
   .ib.pri:hover { background: var(--pri); filter: brightness(1.1); }
   .ib.line { background: transparent; box-shadow: inset 0 0 0 1.5px var(--sel); }
   .ib.line:hover { background: var(--hover); }
+  .ib.line.on { background: var(--card2); box-shadow: inset 0 0 0 2px var(--ink); }
+  /* แผงแยกบัญชี */
+  .dka-mon { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 14px; }
+  .dka-mon b { font-size: 15px; } .dka-mon small { font-size: 12px; font-weight: 500; color: var(--ink3); }
+  .dka-p { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--ink3); }
+  .dka-empty { border-radius: 16px; background: var(--card2); padding: 12px 14px; font-size: 13px; line-height: 1.55; color: var(--ink2); }
+  .dka-acc { padding-bottom: 8px; }
+  .dka-it { display: flex; align-items: center; gap: 8px; min-height: 30px; font-size: 13px; color: var(--ink2); }
+  .dka-it .ic { display: flex; } .dka-it .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 0; margin: -3px 0; }
+  .dka-left .v { font-size: 16px; } .dka-left .v.neg { color: var(--danger); }
+  .dka-set { align-self: flex-start; margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--link); text-decoration: none; }
   .ib.tall { height: 40px; }
   .ib.lnk { background: transparent; color: var(--link); height: 34px; font-size: 13px; }
   .dp-pager { display: flex; align-items: center; gap: 6px; }
