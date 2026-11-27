@@ -52,14 +52,14 @@ export const barW = (p: number) => `${Math.min(Math.max(p, 0), 1) * 100}%`;
 
 export function useGoalsData() {
   return useLiveQuery(async () => {
-    const [settings, goals, adjustments, items, groups, receipts] = await Promise.all([
+    const [settings, goals, adjustments, items, groups, receipts, accounts] = await Promise.all([
       db.settings.get('app'), db.goals.toArray(), db.goalAdjustments.toArray(), db.planItems.toArray(),
-      db.planGroups.orderBy('order').toArray(), db.payReceipts.toArray()
+      db.planGroups.orderBy('order').toArray(), db.payReceipts.toArray(), db.accounts.orderBy('order').toArray()
     ]);
     goals.sort((a, b) => a.createdAt - b.createdAt);
     adjustments.sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
     items.sort((a, b) => a.order - b.order);
-    return { settings, goals, adjustments, items, groups, receipts };
+    return { settings, goals, adjustments, items, groups, receipts, accounts };
   }, []);
 }
 export type GoalsData = NonNullable<ReturnType<typeof useGoalsData>>;

@@ -6,6 +6,13 @@ export const APP_VERSION = __APP_VERSION__.replace(/\.0$/, '');
 export interface ChangelogEntry { version: string; date: string; sections: { title: string; items: string[] }[] }
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.8.1', date: 'พ.ย. 69',
+    sections: [{ title: 'ทำอะไรได้เพิ่ม', items: [
+      'บนคอม ตารางแผนมีปุ่ม "แยกบัญชี" เปิดแผงด้านขวา ดูว่าเดือนนั้นต้องโอนเข้าบัญชีไหนเท่าไหร่ และเหลือในบัญชีเงินเดือนเท่าไหร่',
+      'สร้างเป้าหมายแล้วเพิ่มลงแผน เลือกบัญชีที่จะโอนเข้าได้เลยในหน้าเดียวกัน'
+    ] }]
+  },
+  {
     version: '1.8', date: 'พ.ย. 69',
     sections: [{ title: 'ทำอะไรได้เพิ่ม', items: [
       'หน้าเงินไปไหนดูย้อนหลังได้ 6 รอบ และแสดงทุกหมวดที่มีรายจ่าย',

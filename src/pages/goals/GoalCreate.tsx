@@ -42,6 +42,7 @@ export default function GoalCreate({ embed }: { embed?: { type: GoalType | null;
   const [startSel, setStartSel] = useState<Month | ''>('');
   const [perText, setPerText] = useState('');
   const [add, setAdd] = useState(true);
+  const [acc, setAcc] = useState(''); // บัญชีปลายทาง · '' = ไม่โอน อยู่ในบัญชีเงินเดือน
   const [pvd, setPvd] = useState({ gross: '', mine: '5', employer: '5', from: '' as Month });
   const [sheet, setSheet] = useState<'style' | 'cat' | null>(null);
   const [busy, setBusy] = useState(false);
@@ -86,7 +87,7 @@ export default function GoalCreate({ embed }: { embed?: { type: GoalType | null;
     const id = await createGoal(db, {
       type: t, name: isPvd ? (name.trim() || 'PVD') : name, icon: st.icon, color: st.color, target: tgt!, opening: have!,
       dueMonth: isPvd ? null : by === 'date' ? dueM : t === 'goalSpend' ? reachM : null,
-      plan: withPlan ? { amount: planAmt, start } : null,
+      plan: withPlan ? { amount: planAmt, start, accountId: data.accounts.some((a) => a.id === acc) ? acc : null } : null,
       pvd: isPvd ? pvdEntry(pvdFrom, g!, a!, b!) : null
     }, cur);
     if (embed) { embed.onDone(id); return; }
@@ -157,6 +158,17 @@ export default function GoalCreate({ embed }: { embed?: { type: GoalType | null;
               <span className="gx-sw" aria-hidden="true" />
             </button>
             {add && <MonthField label="เริ่มเพิ่มลงแผนรอบ" value={start} min={cur} onChange={(v) => v && setStartSel(v)} />}
+            {add && (data.accounts.length > 0 ? (
+              <label className="gx-inrow gx-monthf">
+                <span className="k nw">โอนเข้าบัญชี</span>
+                <span className="mv">{data.accounts.find((a) => a.id === acc)?.name ?? 'ไม่โอน'}</span>
+                <Icon name="chevron" size={16} stroke={2} />
+                <select value={acc} onChange={(e) => setAcc(e.target.value)} aria-label="โอนเข้าบัญชี">
+                  <option value="">ไม่โอน · อยู่ในบัญชีเงินเดือน</option>
+                  {data.accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </label>
+            ) : <span className="gx-acchint">ยังไม่มีบัญชีปลายทาง · <Link to="/settings">เพิ่มบัญชีในตั้งค่า</Link> แล้วเลือกได้ที่นี่</span>)}
             {add && planAmt > 0 && (
               <div className={`gx-impact${after < 0 ? ' isneg' : ''}`}>
                 <span className="t">ผลต่อแผน {thaiMonth(start)}</span>

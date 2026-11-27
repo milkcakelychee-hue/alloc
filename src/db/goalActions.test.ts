@@ -25,7 +25,14 @@ describe('สร้างเป้า + บวกยอดเมื่อเง�
     const id = await createGoal(d, { type: 'goalSpend', name: 'ทริปเกาหลี', icon: 'travel', color: 'brown', target: B(35000), opening: 0, dueMonth: '2027-09', plan: { amount: B(3190), start: '2026-11' } }, '2026-10', created);
     const items = await d.planItems.where('goalId').equals(id).toArray();
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ groupId: 'g-goalSpend', defaultAmount: B(3190), period: { start: '2026-11', endMode: 'goal' } });
+    expect(items[0]).toMatchObject({ groupId: 'g-goalSpend', defaultAmount: B(3190), period: { start: '2026-11', endMode: 'goal' }, accountId: null });
+  });
+
+  it('เลือกบัญชีปลายทางตอนสร้างเป้า = รายการในแผนโอนเข้าบัญชีนั้น', async () => {
+    const d = await fresh();
+    const id = await createGoal(d, { type: 'saving', name: 'เงินเก็บ', icon: 'piggy', color: 'green', target: B(12000), opening: 0, dueMonth: null, plan: { amount: B(1000), start: '2026-11', accountId: 'acc-1' } }, '2026-10', created);
+    const items = await d.planItems.where('goalId').equals(id).toArray();
+    expect(items[0].accountId).toBe('acc-1');
   });
 
   it('บวกตามแผนเฉพาะรอบที่เงินเข้าแล้ว ครั้งเดียวต่อรอบ', async () => {

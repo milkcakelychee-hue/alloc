@@ -41,7 +41,7 @@ export async function syncDeposits(db: AllocDB, today: DateStr, now = Date.now()
 export interface NewGoal {
   type: GoalType; name: string; icon: string; color: string; target: Satang; opening: Satang;
   dueMonth: Month | null; note?: string;
-  plan?: { amount: Satang; start: Month } | null; // เพิ่มลงแผนรายเดือน: ทุกเดือนจนถึงเป้า
+  plan?: { amount: Satang; start: Month; accountId?: string | null } | null; // เพิ่มลงแผนรายเดือน: ทุกเดือนจนถึงเป้า · บัญชีปลายทาง (แยกบัญชี)
   pvd?: PvdContribution | null;
 }
 
@@ -62,7 +62,7 @@ export async function createGoal(db: AllocDB, g: NewGoal, currentCycle: Month, n
       const item: PlanItem = {
         ...stamp(now), groupId, name: goal.name, icon: g.type === 'invest' ? 'trend' : g.type === 'saving' ? 'piggy' : 'gift',
         defaultAmount: g.plan.amount, monthOverrides: {}, period: { start: g.plan.start, endMode: 'goal' },
-        accountId: null, goalId: goal.id, logCategoryIds: [], order, dueDay: null
+        accountId: g.plan.accountId ?? null, goalId: goal.id, logCategoryIds: [], order, dueDay: null
       };
       await db.planItems.add(item);
     }
