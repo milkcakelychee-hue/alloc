@@ -1,5 +1,7 @@
 // แผ่นเด้งของแท็บเป้าหมาย: ปรับยอด (บอร์ด GoalAdjust) · แก้เป้า · เลือกสี/ไอคอน (ดีไซน์ใหม่) · เงินสมทบ PVD
 import { useState, type ReactNode } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { Link } from 'react-router-dom';
 import { MoneyInput } from '../../components/MoneyInput';
 import { SheetFrame } from '../../components/SheetFrame';
 import { db } from '../../db/db';
@@ -137,6 +139,12 @@ export function EditGoalSheet({ goal, onClose, onDelete }: { goal: Goal; onClose
   const [due, setDue] = useState<Month | ''>(goal.dueMonth ?? '');
   const [note, setNote] = useState(goal.note);
   const [picking, setPicking] = useState(false);
+  const linked = useLiveQuery(() => db.planItems.where('goalId').equals(goal.id).toArray(), [goal.id]);
+  const accounts = useLiveQuery(() => db.accounts.orderBy('order').toArray(), []);
+  const [acc, setAcc] = useState<string | null>(null); // null = ยังไม่แตะ ใช้ของเดิม
+  const curAcc = linked?.find((i) => i.accountId)?.accountId ?? '';
+  const accSel = acc ?? curAcc;
+  const showAcc = goal.type !== 'pvd' && !!linked?.length && !!accounts;
   const tgt = parseBaht(target);
   const ok = name.trim() !== '' && tgt !== null && tgt > 0;
   return (
@@ -156,13 +164,24 @@ export function EditGoalSheet({ goal, onClose, onDelete }: { goal: Goal; onClose
             {due && <button className="lnk" style={{ alignSelf: 'flex-start', fontSize: 13, fontWeight: 600, color: 'var(--link)', minHeight: 32 }} onClick={() => setDue('')}>ไม่กำหนดเวลา</button>}
           </div>
         )}
+        {showAcc && (accounts!.length > 0 ? (
+          <label className="gx-inrow gx-monthf">
+            <span className="k nw">โอนเข้าบัญชี</span>
+            <span className="mv">{accounts!.find((a) => a.id === accSel)?.name ?? 'ไม่โอน'}</span>
+            <Icon name="chevron" size={16} stroke={2} />
+            <select value={accSel} onChange={(e) => setAcc(e.target.value)} aria-label="โอนเข้าบัญชี">
+              <option value="">ไม่โอน · อยู่ในบัญชีเงินเดือน</option>
+              {accounts!.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </label>
+        ) : <span className="gx-acchint">ยังไม่มีบัญชีปลายทาง · <Link to="/settings">เพิ่มบัญชีในตั้งค่า</Link> แล้วเลือกได้ที่นี่</span>)}
         <label><span className="lbl">โน้ต <small style={{ color: 'var(--ink3)' }}>(ไม่ใส่ก็ได้)</small></span><input className="in" value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} /></label>
         <p className="gx-adj-help" style={{ margin: 0 }}><Icon name="info" size={15} stroke={2} /><span>แก้ยอดเป้าหรือวันครบ จะไม่เปลี่ยนแผนเอง · <span className="nw">แก้ยอดต่อเดือนที่แท็บแผน</span></span></p>
       </div>
       <div className="gx-sheetbtns">
         <button onClick={onClose}>ยกเลิก</button>
         <button className="pri" disabled={!ok} onClick={async () => {
-          await updateGoal(db, goal.id, { name, icon: style.icon, color: style.color, target: tgt!, dueMonth: due || null, note: note.trim() });
+          await updateGoal(db, goal.id, { name, icon: style.icon, color: style.color, target: tgt!, dueMonth: due || null, note: note.trim() }, Date.now(), showAcc && acc !== null && acc !== curAcc ? (acc || null) : undefined);
           onClose();
         }}>บันทึก</button>
       </div>

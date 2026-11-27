@@ -99,6 +99,7 @@
   .dka-acc { padding-bottom: 8px; }
   .dka-it { display: flex; align-items: center; gap: 8px; min-height: 30px; font-size: 13px; color: var(--ink2); }
   .dka-it .ic { display: flex; } .dka-it .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 0; margin: -3px 0; }
+  .dka-free .ic { width: 14px; } .dka-free .n { color: var(--ink3); }
   .dka-left .v { font-size: 16px; } .dka-left .v.neg { color: var(--danger); }
   .dka-set { align-self: flex-start; margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--link); text-decoration: none; }
   .ib.tall { height: 40px; }

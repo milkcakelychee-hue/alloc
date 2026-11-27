@@ -17,10 +17,22 @@ export function DeskAccountPanel({ data, month: m0, planCur, amountOf, onClose }
   const { byAccount, salaryLeft } = accountTransfers(data.groups, data.items, m, amountOf);
   const enabled = new Map(data.groups.filter((g) => g.enabled).map((g) => [g.id, g]));
   const accs = data.accounts.filter((a) => (byAccount.get(a.id) ?? 0) !== 0);
-  const itemsOf = (accId: string) => data.items
-    .filter((i) => i.accountId === accId && enabled.has(i.groupId) && enabled.get(i.groupId)!.kind !== 'income' && amountOf(i, m) !== 0)
+  const itemsOf = (accId: string | null) => data.items
+    .filter((i) => (i.accountId ?? null) === accId && enabled.has(i.groupId) && enabled.get(i.groupId)!.kind !== 'income' && amountOf(i, m) !== 0)
     .sort((a, b) => amountOf(b, m) - amountOf(a, m));
+  const stays = itemsOf(null);
+  const staysTotal = stays.reduce((a, i) => a + amountOf(i, m), 0);
   const income = data.items.filter((i) => enabled.get(i.groupId)?.kind === 'income').reduce((a, i) => a + amountOf(i, m), 0);
+
+  const row = (i: typeof data.items[number]) => {
+    const g = enabled.get(i.groupId)!;
+    return (
+      <div key={i.id} className="dka-it">
+        <span className="ic" style={{ color: `var(--t-${kindTone(g.kind)})` }}><Icon name={iconOf(i.icon)} size={14} stroke={2} /></span>
+        <span className="n">{i.name}</span><span className="num">{formatBaht(amountOf(i, m))}</span>
+      </div>
+    );
+  };
 
   return (
     <aside className="dk-panel" aria-label="แยกบัญชี">
@@ -44,18 +56,23 @@ export function DeskAccountPanel({ data, month: m0, planCur, amountOf, onClose }
           ) : accs.map((a) => (
             <div key={a.id} className="grp dka-acc">
               <div className="fr"><span className="k"><b>{a.name}</b></span><span className="v num">{formatBaht(byAccount.get(a.id) ?? 0)}</span></div>
-              {itemsOf(a.id).map((i) => {
-                const g = enabled.get(i.groupId)!;
-                return (
-                  <div key={i.id} className="dka-it">
-                    <span className="ic" style={{ color: `var(--t-${kindTone(g.kind)})` }}><Icon name={iconOf(i.icon)} size={14} stroke={2} /></span>
-                    <span className="n">{i.name}</span><span className="num">{formatBaht(amountOf(i, m))}</span>
-                  </div>
-                );
-              })}
+              {itemsOf(a.id).map(row)}
             </div>
           ))}
         </section>
+
+        {(stays.length > 0 || salaryLeft !== 0) && (
+          <section className="dk-sec">
+            <span className="st">อยู่ในบัญชีเงินเดือน</span>
+            <div className="grp dka-acc">
+              <div className="fr"><span className="k"><b>ไม่โอน</b></span><span className="v num">{formatBaht(salaryLeft)}</span></div>
+              {stays.map(row)}
+              {salaryLeft - staysTotal !== 0 && (
+                <div className="dka-it dka-free"><span className="ic" /><span className="n">ยังไม่ได้ใส่ในแผน</span><span className="num">{formatBaht(salaryLeft - staysTotal)}</span></div>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="dk-sec">
           <div className="grp">

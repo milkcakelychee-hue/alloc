@@ -147,9 +147,11 @@ export async function setPvdContribution(db: AllocDB, goal: Goal, c: PvdContribu
 }
 
 /** แก้ชื่อ ไอคอน สี ยอดเป้า วันครบ โน้ต · ไม่เปลี่ยนแผนเอง (ผู้ใช้ไปแก้ที่แท็บแผน) */
-export async function updateGoal(db: AllocDB, id: string, patch: Partial<Pick<Goal, 'name' | 'icon' | 'color' | 'target' | 'dueMonth' | 'note'>>, now = Date.now()) {
+export async function updateGoal(db: AllocDB, id: string, patch: Partial<Pick<Goal, 'name' | 'icon' | 'color' | 'target' | 'dueMonth' | 'note'>>, now = Date.now(), accountId?: string | null) {
   await db.transaction('rw', [db.goals, db.planItems], async () => {
     await db.goals.update(id, { ...patch, ...(patch.name ? { name: patch.name.trim() } : {}), updatedAt: now });
+    // บัญชีปลายทาง: เปลี่ยนให้ทุกรายการในแผนที่ผูกเป้านี้ (undefined = ไม่แตะ)
+    if (accountId !== undefined) await db.planItems.where('goalId').equals(id).modify({ accountId });
   });
 }
 

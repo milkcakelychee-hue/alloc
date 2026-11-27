@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AllocDB } from './db';
 import { ensureDefaults } from './defaults';
-import { adjustDelta, createGoal, deleteGoalCategory, goalCats, pvdEntry, syncDeposits, spendGoal } from './goalActions';
+import { adjustDelta, createGoal, deleteGoalCategory, goalCats, pvdEntry, syncDeposits, spendGoal, updateGoal } from './goalActions';
 import { confirmPay } from './actions';
 import { goalBalance } from '../calc/goals';
 import { rawAmount } from '../calc/plan';
@@ -33,6 +33,17 @@ describe('สร้างเป้า + บวกยอดเมื่อเง�
     const id = await createGoal(d, { type: 'saving', name: 'เงินเก็บ', icon: 'piggy', color: 'green', target: B(12000), opening: 0, dueMonth: null, plan: { amount: B(1000), start: '2026-11', accountId: 'acc-1' } }, '2026-10', created);
     const items = await d.planItems.where('goalId').equals(id).toArray();
     expect(items[0].accountId).toBe('acc-1');
+  });
+
+  it('แก้เป้า: เปลี่ยนบัญชีปลายทางของรายการในแผนที่ผูก', async () => {
+    const d = await fresh();
+    const id = await createGoal(d, { type: 'saving', name: 'เงินเก็บ', icon: 'piggy', color: 'green', target: B(12000), opening: 0, dueMonth: null, plan: { amount: B(1000), start: '2026-11' } }, '2026-10', created);
+    await updateGoal(d, id, { name: 'เงินเก็บ' }, created, 'acc-2');
+    expect((await d.planItems.where('goalId').equals(id).first())!.accountId).toBe('acc-2');
+    await updateGoal(d, id, { note: 'x' }, created);
+    expect((await d.planItems.where('goalId').equals(id).first())!.accountId).toBe('acc-2');
+    await updateGoal(d, id, {}, created, null);
+    expect((await d.planItems.where('goalId').equals(id).first())!.accountId).toBeNull();
   });
 
   it('บวกตามแผนเฉพาะรอบที่เงินเข้าแล้ว ครั้งเดียวต่อรอบ', async () => {
